@@ -27,7 +27,14 @@ import javax.persistence.*;
  *                            - name             :객체명과 DB 컬럼명을 다르게 하고 싶은 경우, DB 컬럼명으로 설정할 이름을 name 속성으로 적는다.
  *                            - length           : 길이
  *                            - columnDefinition : 기본값 지정
- * */                                      
+ *
+ *              : @Getter
+ *                , @Builder
+ *                , @AllArgsConstructor
+ *                , @NoArgsConstructor - ✔ @Builder 를 이용해서  객체를 생성하기위해 AllArg,NoArg Constructor
+ *                                         같이 해용해줘야 컴파일 시 에러가 없다.
+ *
+ * */
 @Entity
 @Table(name = "tbl_memo")
 @ToString
