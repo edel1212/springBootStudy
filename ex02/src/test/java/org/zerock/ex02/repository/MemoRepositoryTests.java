@@ -1,12 +1,14 @@
 package org.zerock.ex02.repository;
 
 
+import ch.qos.logback.classic.Logger;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.zerock.ex02.entity.Memo;
 
 import javax.transaction.Transactional;
@@ -164,12 +166,97 @@ public class MemoRepositoryTests {
     /**********************************************/
     /**************Paging TEST*************/
     /*********************************************/
+    /**
+     * @Description : Spring Data JPA 에서 페이징 처리와 정렬은 findAll()이란 메서드를 사용한다
+     *
+     *                findAll()는 jpaRepository 인터페이스의 상위 PagingAndSort Repository 의 메서드이며
+     *                 - 메서드에 전달되는 파라미터는 Pageable 이라는 타입의 객체에 의해 실행되며 해당 메서드로
+     *                   쿼리가 작성된다
+     *                
+     *                또한 finaAll()의 return Type 은 Page<T> :: 페이징 시
+     *                    , Iterable<T>  :: 정렬 return 시 
+     *                    이며  리턴 타입을 Page<T>로 지정하는 경우 반드시 파라미터는 Pageable 이어여한다!
+     *
+     *              -----------------------------------------------------------------------------------
+     *
+     *              : 페이징 처리에  가장 중요한 존재는 Pageable Interface 이며 해당 Interface 는
+     *                페이지 처리에 필요한 정보를 전달하는 용도의 타입의 인터페이스 이기 때문에
+     *
+     *                실제 객체를 생성할 때는 PageRequest 라는 Class 를 사용한다
+     *                -  해당 Class 는 protected 로 선언 되어 있기 떄문에 new 를 사용하여 객체변수 생성이 불가능하다
+     *                - 객체를 생성하기 위해서는 static Method 인 of()를 이용해야한다
+     *                - of()의 Overloading Method
+     *                   - of(int page, int size) : 0부터 시작하는 페이지 번화와 개수 [ 정렬 X ]
+     *                   - of(int page, int size, Sort direction, String ... props ) : 0부터 시작
+     *                                                                                하는 페이지 번화와 개수 
+     *                                                                                , 정랼의 방향과 정렬의 기준
+     *                  - of(int page, int size, Sort sort) : 페이지 번호와 개수, 정렬에 관한 정보
+     *
+     *               ----------------------------------------------------------------------------------
+     *
+     *               ✔ 여기서 주의 깊게 볼 부분은 Return Type 인 Page 이다 그 이유는
+     *                 - 해당 타입은 단순히 해당 목록만을 가져오는데 그치지 않고 실제 페이지 처리에 필요한 전체 데이터의
+     *                   개수를 가져오는 쿼리 역시 같이 처리하기 때문이다
+     *                   ( 데이터가 충분하지 않다면 데이터의 개수를 가져오는 쿼리를 실행하지 않는다. )
+     *
+     * */
     @Test
     void testPageDefault() {
-        //1페이지에 10개씩
+        //1페이지에 10개씩 ✔ 0페이지가 1페이지 이다!
         Pageable pageable = PageRequest.of(0,10);
         //findAll 가 필요로 하는 매개변수는 Pageable 이다!
         Page<Memo> result = memoRepository.findAll(pageable);
         System.out.println(result);
     }
-}   
+
+    @Test
+    void testPageDefaultDtls() {
+        Pageable pageable = PageRequest.of(0,10);
+        
+        Page<Memo> result = memoRepository.findAll(pageable);
+        
+        System.out.println(result);
+        
+        System.out.println("----------------------------------------------");
+
+        System.out.println("total Pages : " + result.getTotalPages()); // 총 페이지
+        System.out.println("Total Count : " + result.getTotalElements()); //전체 개수
+        System.out.println("Page Number : " + result.getNumber());  //현재 페이지 번호
+        System.out.println("Page Size   : " + result.getSize() ); //페이지당 데이터 개수
+        System.out.println("Has Nest Page ? : " + result.hasNext()); //다음페이지 유무
+        System.out.println("First Page? : " + result.isFirst()); // 시작페이지 여부
+
+        System.out.println("----------------------------------------------");
+    
+        /**
+         * 실제 페이지의 데이터를 처리하는 것은 getContent() 메서드이다
+         * */
+        result.getContent().forEach(System.out::println);
+    }
+
+
+    @Test
+    void testSort() {
+        Sort sort1 = Sort.by("mno").descending(); //DESC - 내림차순
+        Pageable pageable = PageRequest.of(0,10,sort1); 
+        Page<Memo> result = memoRepository.findAll(pageable);
+        System.out.println("DESC 내림차순 descending() 사용");
+        result.getContent().forEach(System.out::println);
+
+        System.out.println("--------------------------------------");
+        
+        System.out.println("ASC 오름차순 ascending() 사용");
+        Sort sort2 = Sort.by("memoText").ascending(); //ASC 오름차순
+        pageable = PageRequest.of(0,10,sort2);
+        result = memoRepository.findAll(pageable);
+        result.getContent().forEach(System.out::println);
+
+        System.out.println("--------------------------------------");
+        System.out.println("정렬 방법 2개 혼합 mno Desc And memoText ASC");
+        Sort sortAll = sort1.and(sort2); // and를 이용해서 두 정렬을 연결함
+        pageable = PageRequest.of(0,10, sortAll);
+        result = memoRepository.findAll(pageable);
+        result.getContent().forEach(System.out::println);
+        
+    }
+}
