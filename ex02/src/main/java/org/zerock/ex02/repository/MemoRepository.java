@@ -3,6 +3,8 @@ package org.zerock.ex02.repository;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.zerock.ex02.entity.Memo;
 
+import java.util.List;
+
 /**
 *  @Description : 1) JpaRepository는 인테페이스이며 Spring Data
  *                   JPA는 이를 상속하는 인터페이스를 상속하는 인터페이스를 선언하는 것만으로
@@ -15,4 +17,6 @@ import org.zerock.ex02.entity.Memo;
  *
 * */
 public interface MemoRepository extends JpaRepository<Memo, Long> {
+    // findBy "TargetColumn" "Between" "OrderBy" "TargetColumn" "Desc"
+    List<Memo> findByMnoBetweenOrderByMnoDesc(Long from, Long to);
 }
