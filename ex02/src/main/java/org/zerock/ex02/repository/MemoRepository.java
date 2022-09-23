@@ -1,5 +1,7 @@
 package org.zerock.ex02.repository;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.zerock.ex02.entity.Memo;
 
@@ -19,4 +21,21 @@ import java.util.List;
 public interface MemoRepository extends JpaRepository<Memo, Long> {
     // findBy "TargetColumn" "Between" "OrderBy" "TargetColumn" "Desc"
     List<Memo> findByMnoBetweenOrderByMnoDesc(Long from, Long to);
+
+    /**
+     * @Description  : 위의 메서드의 경이 이름도길도 혼동하기 쉽다
+     *                 메서드 쿼리는 다행히도 Pageable 를 파라미터로 받아
+     *                 사용이 가능하다
+     *
+     *                 ✔ Pageable 에서 정렬하여 사용!
+     *
+     *                 🎈 Pageable 을 사용 했으므로 Return 값은 Page가 됨!
+     * */
+    Page<Memo> findByMnoBetween(Long from, Long to, Pageable pageable);
+
+    /***
+     * @Description  : 삭제 매서드 쿼리 __> mno 가 10보다 작은 데이터 삭제
+     * */
+    void deleteMemoByMnoLessThan(Long num);
+
 }

@@ -3,6 +3,10 @@ package org.zerock.ex02.repository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.zerock.ex02.entity.Memo;
 
 import java.util.List;
@@ -63,6 +67,50 @@ public class MemeQueryMethodTest {
          * */
         List<Memo> list = memoRepository.findByMnoBetweenOrderByMnoDesc(70L,80L);
         list.forEach(System.out::println);
+    }
+
+    /***
+     *
+     * result : Hibernate:
+     *              select
+     *                  memo0_.mno as mno1_0_,
+     *                  memo0_.memo_text as memo_tex2_0_
+     *              from
+     *                  tbl_memo memo0_
+     *              where
+     *                  memo0_.mno between ? and ?
+     *              order by
+     *                  memo0_.mno desc limit ?
+     *          Hibernate:
+     *              select
+     *                  count(memo0_.mno) as col_0_0_
+     *              from
+     *                  tbl_memo memo0_
+     *              where
+     *                  memo0_.mno between ? and ?
+     *
+     *    -------------------------------------------------
+     * 
+     *          Memo(mno=50, memoText=Sample...50)
+     *          Memo(mno=49, memoText=Sample...49)
+     *          Memo(mno=48, memoText=Sample...48)
+     *          Memo(mno=47, memoText=Sample...47)
+     *          Memo(mno=46, memoText=Sample...46)
+     *          Memo(mno=45, memoText=Sample...45)
+     *          Memo(mno=44, memoText=Sample...44)
+     *          Memo(mno=43, memoText=Sample...43)
+     *          Memo(mno=42, memoText=Sample...42)
+     *          Memo(mno=41, memoText=Sample...41)
+     *
+     * */
+    @Test
+    public void testQueryMethodWithPageable(){
+        Pageable pageable = PageRequest.of(0,10, Sort.by("mno").descending());
+
+        Page<Memo> result = memoRepository.findByMnoBetween(40L,50L,pageable);
+
+        result.forEach(System.out::println);
+
     }
 
 }
