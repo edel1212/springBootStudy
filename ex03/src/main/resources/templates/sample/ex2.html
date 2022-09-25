@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+        .target{
+            color : red
+        }
+    </style>
+</head>
+<body>
+    <h1 th:text="${'I am ex2 get Model Data and Processing Loop Logic'}"></h1>
+    <!--
+        - ${list} __>  Service 단에서 Model 로 넘긴 데이터
+
+        - th : each = " 각각의 index의 data : Loop Target "
+
+        -  [[  내가  ]] th:each 에서 나온 각각의 Index별 데이터 를 표현 하는 방식
+       -->
+    <h2>th:each 를 사용하여 Model 로 받아온 데이터 표출 --> th:text 사용❌</h2>
+    <p>th:each="dto : ${list}"</p>
+    <ul>
+        <li th:each="dto : ${list}">
+            [[${dto}]]
+        </li>
+    </ul>
+
+    <h2> each 에 변수명을 추가해서 사용해서 각각의 index 번호를 알수있다. </h2>
+    <p>th:each="dto , indexNum : ${list}"</p>
+    <ul>
+        <li th:each="dto , indexNum : ${list}">
+            인덱스 번호 :: [[${indexNum.index}]] --->   [[${dto}]]
+        </li>
+    </ul>
+
+    <h2>조건문 사용 - 5의 배수</h2>
+    <p>th:each="dto , indexNum : ${list}" th:if="${dto.sno % == 0}"</p>
+    <ul>
+        <li th:each="dto , indexNum : ${list}" th:if = "${dto.sno % 5 == 0}">
+            인덱스 번호 :: [[${indexNum.index}]] --->   [[${dto}]]
+        </li>
+    </ul>
+
+    <h2>조건문 사용 - if~else</h2>
+    <p>th:if = "${dto.sno % 5 == 0}" th:text = "${'---------' + dto.sno}"</p>
+    <p>th:unless = "${dto.sno % 5 == 0}" th:text = "${'---------' + dto.first}"</p>
+    <ul>
+        <li th:each="dto , indexNum : ${list}">
+            <span th:if = "${dto.sno % 5 == 0}" th:text = "${'---------' + dto.sno}"></span>
+            <span th:unless = "${dto.sno % 5 == 0}" th:text = "${'---------' + dto.first}"></span>
+        </li>
+    </ul>
+
+    <h2>삼항 연산자 :: 특이하게도 th 에서는 true 일경우만 해줘도 Error가 없음</h2>
+    <p>- 단 else 문을 띄어넘는게 아니라 공백값이 들어가 나온다!</p>
+    <p>th:each="dto , indexNum : ${list}" th:text="${dto.sno % 5 == 0 } ? ${dto.sno}"</p>
+    <ul>
+        <li th:each="dto , indexNum : ${list}" th:text="${dto.sno % 5 == 0 } ? ${dto.sno}">
+        </li>
+    </ul>
+
+    <h2>삼항 연산자 :: 일반 비번 boolean ? true : false</h2>
+    <p>th:each="dto , indexNum : ${list}" th:text="${dto.sno % 5 == 0 } ? ${dto.sno} : ${dto.first}"</p>
+    <ul>
+        <li th:each="dto , indexNum : ${list}" th:text="${dto.sno % 5 == 0 } ? ${dto.sno} : ${dto.first}">
+        </li>
+    </ul>
+
+    <h2>조건에 맞게 addClass __> th:class 는 삼항식 false 일 경우를 써줘야함</h2>
+    <p>th:each="dto , indexNum : ${list}" th:class = "${dto.sno % 5 == 0 ? 'target' : ''}"/p>
+    <ul>
+        <li th:each="dto , indexNum : ${list}" th:class = "${dto.sno % 5 == 0 ? 'target' : ''}">
+            [[${dto}]]
+        </li>
+    </ul>
+
+</body>
+</html>
