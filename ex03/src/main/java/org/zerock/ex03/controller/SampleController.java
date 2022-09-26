@@ -12,6 +12,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.LongStream;
 
 /**
  * @Description  : 기본적으로 Spring 과 비슷하다 void의 메서드일경우 해당 URL에 따라 Directory 및 html 파일명이 정해진다
@@ -101,6 +102,14 @@ public class SampleController {
         log.info("ex3 ............ I'm GetMapping ");
     }
 
+    @GetMapping({"/exLink"})
+    public void exLinkModel(Model model){
+        List<SampleDTO> list = LongStream.rangeClosed(0,10).mapToObj(i->{
+            return SampleDTO.builder().sno(i).first("first"+i).last("last"+ i).regTime(LocalDateTime.now()).build();
+        }).collect(Collectors.toList());
+        model.addAttribute("list",list);
+    }
 
-    //TODO >> th :block
+    //TODO How to Use Thymeleaf Layout include !
+
 }

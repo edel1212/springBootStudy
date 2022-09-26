@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+
+    <h1>th:Link Test</h1>
+    <p>@{} 를 사용한다!</p>
+
+
+    <h3>Get 방식 URL 만들기</h3>
+    <p> th:href="@{/sample/exView(sno=${dto.sno})}" </p>
+    <p> result :: /sample/exView?sno=0 </p>
+    <ul>
+        <th:block th:each="dto : ${list}">
+            <li >
+                <a th:href="@{/sample/exView(sno=${dto.sno})}">[[${dto}]]</a>
+            </li>
+        </th:block>
+    </ul>
+
+    <h3>Get 방식 URL 만들기 __ PathVariable 방식</h3>
+    <p> th:href="@{/sample/exView/{sno}(sno = ${dto.sno})}"</p>
+    <p> result :: /sample/exView/0 ..... 10 </p>
+    <ul>
+        <th:block th:each="dto : ${list}">
+            <li >
+                <a th:href="@{/sample/exView/{sno}(sno = ${dto.sno})}">[[${dto}]]</a>
+            </li>
+        </th:block>
+    </ul>
+
+    <h3>Java8Time</h3>
+    <p> 사용하기 위해서는 build.gradle 에 <br/> implementation group: 'org.thymeleaf.extras', name: 'thymeleaf-extras-java8time' 를<br/> 추가해줘야함</p>
+    <p> "dto"는기본적으로 앞에서 th:each 로 넘겨준 값임   [[${#temporals.format(dto.regTime,'yyyy/MM/dd')}]]</p>
+    <ul>
+        <th:block th:each="dto : ${list}">
+            <li >
+                [[${dto.sno}]] --------------- [[${#temporals.format(dto.regTime,'yyyy/MM/dd')}]]
+            </li>
+        </th:block>
+    </ul>
+
+</body>
+</html>

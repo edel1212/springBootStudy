@@ -75,5 +75,16 @@
         </li>
     </ul>
 
+    <h2>th:block</h2>
+    <p>th:block 으로 감싸서 th를 사용이 가능하다!</p>
+    <p>th:block th:each="dto : ${list}"</p>
+    <p>th:text="${dto.sno % 5 == 0 } ? ${dto.sno} : ${dto.first}"</p>
+    <p>/th:block</p>
+    <ul>
+        <th:block th:each="dto : ${list}">
+            <li th:text="${dto.sno % 5 == 0 } ? ${dto.sno} : ${dto.first}"></li>
+        </th:block>
+    </ul>
+
 </body>
 </html>

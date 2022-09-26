@@ -27,6 +27,10 @@ dependencies {
 	annotationProcessor 'org.projectlombok:lombok'
 	providedRuntime 'org.springframework.boot:spring-boot-starter-tomcat'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	
+	//html에서 java8Time 을 사용하기 위해 추가
+	// https://mvnrepository.com/artifact/org.thymeleaf.extras/thymeleaf-extras-java8time
+	implementation group: 'org.thymeleaf.extras', name: 'thymeleaf-extras-java8time'
 }
 
 tasks.named('test') {
