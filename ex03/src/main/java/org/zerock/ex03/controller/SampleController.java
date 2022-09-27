@@ -110,6 +110,9 @@ public class SampleController {
         model.addAttribute("list",list);
     }
 
-    //TODO How to Use Thymeleaf Layout include !
+    @GetMapping("/exLayout1")
+    public void exLayout1(){
+        log.info("exLayout!!");
+    }
 
 }
