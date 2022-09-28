@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+    <p>매서드를 이용하는 방식으로 가져오는 방식임</p>
+    <p>th:block th:replace="~{/fragments/fragment3::target( ~{this::#ulFirst} , ~{this::#ulSecond} ) }"</p>
+    <th:block th:replace="~{/fragments/fragment3::target( ~{this::#ulFirst} , ~{this::#ulSecond} ) }"></th:block>
+
+
+    <ul id="ulFirst">
+        <li>AAA</li>
+        <li>BBB</li>
+        <li>CCC</li>
+    </ul>
+    <ul id="ulSecond">
+        <li>111</li>
+        <li>222</li>
+        <li>333</li>
+    </ul>
+
+</body>
+</html>
