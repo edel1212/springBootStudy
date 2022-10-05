@@ -13,6 +13,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.stream.IntStream;
 
@@ -61,7 +62,28 @@ public class GuestbookRepositoryTests {
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     //Querydsl Test Start!
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    //TODO 이어서 단계별 분석 시작!
+
+    /**
+     * @Description : 해당 테스트 목적 -> 제목(title)에 '1'이 들어가 있는 엔티티들을 검색하는것
+     *
+     *                ✔ 1 ) 동적으로 처리하기 위해 Q도메인 Class를 얻어온다, Q도메인 Class를 이용하면
+     *                      엔티티 클래스에 선언된 title, content 같은 필드 변수 활용이 가능해짐!
+     *                      ---  쉽게 설명하면 객체 변수를 만들어 각각의 엔티티 변수에 접근하여
+     *                           contains() 같은 메서드가 사용이 가능해짐!
+     *                
+     *                ✔ 2 ) BooleanBuilder는 Where문에 들어가는 조건을 넣어주는 컨테이너로 생각하면 된다.
+     *                      --- 쉽게 설명하면 Where 문의 조건을 넣을 객체
+     *                
+     *                ✔ 3) 원하는 조건을 만들어준다
+     *                     해당 만들어준 조건의 Type은 BooleanExpression 이어야한다
+     *                     이유는 --> 2번에서 만든 builder에 넣어줘야하기 때문임!
+     *
+     *                ✔ 4) 만들어진 조건은 where 문에 and 또는 or 등으로 합쳐준다.
+     *                     --- 체이닝 가능함! 뒤에 계속 이어붙여서 조건을 만들어줄 수 있음
+     *
+     *                ✔ 5) BooleanBuilder 는 GuestBookRepository 에 추가된 QuerydslPredicateExcutor 인터페이스의
+     *                     findAll()을 사용할 수있다.
+     * */
     @Test
     public void testQuery1(){
         Pageable pageable = PageRequest.of(0, 10, Sort.by("gno").descending());
@@ -82,6 +104,57 @@ public class GuestbookRepositoryTests {
 
     }
 
+    /**
+     * @Description  : 해당 테스트 목적 -> 다중 항목 검색 테스트
+     *
+     * */
+    @Test
+    public void testQuery2(){
+        Pageable pageable = PageRequest.of(0,10,Sort.by("gno").descending());
+        QGuestbook qGuestbook = QGuestbook.guestbook;
+
+        String keyword = "1";
+
+        BooleanBuilder booleanBuilder = new BooleanBuilder();
+
+        BooleanExpression exTitle = qGuestbook.title.contains(keyword);
+
+        BooleanExpression exContent = qGuestbook.content.contains(keyword);
+    
+        //두가지 조건을 or 조건으로 합침
+        BooleanExpression exAll = exTitle.or(exContent); // 1-------------------------
+    
+        //조건식을 booleanBulider에 주입
+        booleanBuilder.and(exAll); //2------------------------
+        
+        //gno 값이 0보다 크다 라는 뜻
+        booleanBuilder.and(qGuestbook.gno.gt(0L));//3------------------
+
+        Page<Guestbook> result = guestbookRepository.findAll(booleanBuilder,pageable);
+
+        result.stream().forEach(System.out::println);
+    }
+
+    @Test
+    public void testQuery3(){
+        QGuestbook qGuestbook = QGuestbook.guestbook;
+
+        BooleanBuilder builder = new BooleanBuilder();
+
+        BooleanExpression titleChk = qGuestbook.title.contains("23");
+        BooleanExpression contentChk = qGuestbook.content.contains("23");
+        BooleanExpression writerChk = qGuestbook.writer.contains("23");
+
+        builder.or(titleChk).or(contentChk).or(writerChk).and(qGuestbook.gno.gt(100));
+
+        Iterable<Guestbook> result = guestbookRepository.findAll(builder);
+
+        result.forEach(System.out::println);
+
+
+
+
+    }
 
 
 }
