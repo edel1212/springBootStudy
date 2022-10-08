@@ -1,11 +1,15 @@
 package com.yoo.guestbook.service;
 
 import com.yoo.guestbook.dto.GuestbookDTO;
+import com.yoo.guestbook.dto.PageRequestDTO;
+import com.yoo.guestbook.dto.PageResultDTO;
 import com.yoo.guestbook.entitiy.Guestbook;
 
 public interface GuestbookService {
 
     Long register(GuestbookDTO dto);
+
+    PageResultDTO<GuestbookDTO, Guestbook> getList(PageRequestDTO requestDTO);
 
     /**
      * @Description : Entity 객체를 DTO 객체로 변환하기 위해 사용함!
@@ -26,6 +30,17 @@ public interface GuestbookService {
                 .title(dto.getTitle())
                 .content(dto.getContent())
                 .writer(dto.getWriter())
+                .build();
+    }
+
+    default  GuestbookDTO entityToDto(Guestbook entity){
+        return GuestbookDTO.builder()
+                .gno(entity.getGno())
+                .title(entity.getTitle())
+                .content(entity.getContent())
+                .writer(entity.getWriter())
+                .regDate(entity.getRegeDate())
+                .modDate(entity.getModDate())
                 .build();
     }
 
