@@ -3,7 +3,33 @@
 
 <th:block th:replace="~{/layout/basic :: setContent(~{this::content})}">
     <th:block  th:fragment="content">
-        <h1>GuestBOok List Page</h1>
+
+        <h1 class="mt-4">GuestBook List Page
+            GuestBook List
+        </h1>
+
+        <table class="table table-striped">
+            <thead>
+            <tr>
+                <th scope="col">#</th>
+                <th scope="col">Title</th>
+                <th scope="col">Writer</th>
+                <th scope="col">Regdate</th>
+            </tr>
+            </thead>
+            <tbody>
+
+            <tr th:each="dto : ${result.dtoList}" >
+                <th scope="rpw">[[${dto.gno}]]</th>
+                <td>[[${dto.title}]]</td>
+                <td>[[${dto.writer}]]</td>
+                <td>[[${#temporals.format(dto.regDate, 'yyyy/MM/dd')}]]</td>
+            </tr>
+            </tbody>
+        </table>
+
+    <!--   TODO 페이징번호    -->
+
     </th:block>
 </th:block>
 </html>
