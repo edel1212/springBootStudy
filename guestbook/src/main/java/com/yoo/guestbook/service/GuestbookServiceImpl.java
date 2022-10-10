@@ -110,7 +110,7 @@ public class GuestbookServiceImpl implements GuestbookService{
 
         booleanBuilder.and(expression); // gno > 0 조건 and 주입
 
-        if(type.isEmpty() || type.trim().isBlank()){ //검색 조건이 없을 경우
+        if(type == null){ //검색 조건이 없을 경우
             return booleanBuilder;
         }
 
@@ -125,6 +125,15 @@ public class GuestbookServiceImpl implements GuestbookService{
         }
         if (type.equals("w")) {
             conditionBuilder.or(qGuestbook.writer.contains(keyword));
+        }
+        if (type.equals("tc")) {
+            conditionBuilder.or(qGuestbook.title.contains(keyword))
+                    .or(qGuestbook.writer.contains(keyword));
+        }
+        if (type.equals("tcw")) {
+            conditionBuilder.or(qGuestbook.title.contains(keyword))
+                    .or(qGuestbook.writer.contains(keyword))
+                    .or(qGuestbook.writer.contains(keyword));
         }
 
         booleanBuilder.and(conditionBuilder);// 모든 조건을 하나로 합침

@@ -11,8 +11,9 @@
 
       <!--페이지 번호  -->
       <input type="hidden" name="page" th:value="${requestDTO.page}">
-      <!--<input type="hidden" name="type" th:value="${requestDTO.type}" >
-      <input type="hidden" name="keyword" th:value="${requestDTO.keyword}" >-->
+      <!--   검색 조건 처리   -->
+      <input type="hidden" name="type" th:value="${requestDTO.type}" >
+      <input type="hidden" name="keyword" th:value="${requestDTO.keyword}" >
 
 
       <div class="form-group">
@@ -74,11 +75,15 @@
       });
 
       //목록으로 이동
-      $(".modifyBtn").click((e)=>{
-        let pageInfo = $("input[name='page']");
+      $(".listBtn").click((e)=>{
+        let page = $("input[name='page']");
+        let type = $("input[name='type']");
+        let keyword = $("input[name='keyword']");
 
         actionForm.empty();//form 의 데어터 삭제
-        actionForm.append(pageInfo); // 목록페이지로  이동할 내용을 추가
+        actionForm.append(page); // 페이지번호
+        actionForm.append(keyword); // 키워드
+        actionForm.append(type); // 타입
         actionForm.attr("action","/guestbook/list");
         actionForm.attr("method","get");
         console.lof(actionForm.html());

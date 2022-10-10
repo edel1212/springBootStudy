@@ -83,11 +83,23 @@ public class GuestbookController {
 
     @PostMapping("/modify")
     public String modify(GuestbookDTO guestbookDTO, @ModelAttribute("requestDTO") PageRequestDTO pageRequestDTO , RedirectAttributes redirectAttributes){
-        log.info("modify");
+        log.info("post modify");
 
         service.modify(guestbookDTO);
 
+        /**
+         * @Description  : read Controller 를 보면 받는 부분이 long gno 와
+         *                 @ModelAttribute("requestDTO) 를 사용해서
+         *                 받지만 아래의 응답 값은 key 로 던져주는데 받을 수 있는 이유는
+         *                 해당 아래 방법으로 던질경우 URL을 살펴보면
+         *
+         *                 ~~ /modify?gno=170&page=17&type=tc&keyword=title 와 같은 경우로 넘겨줘서
+         *                 알아서 binding 되어서 view 단에서  ${requestDTO.type}와 같이
+         *                 사용이 가능했던 것이다
+         * */
         redirectAttributes.addAttribute("page",pageRequestDTO.getPage());
+        redirectAttributes.addAttribute("type",pageRequestDTO.getType());
+        redirectAttributes.addAttribute("keyword",pageRequestDTO.getKeyword());
         redirectAttributes.addAttribute("gno",guestbookDTO.getGno());
         return "redirect:/guestbook/read";
     }
