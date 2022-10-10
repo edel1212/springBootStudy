@@ -11,6 +11,12 @@ public interface GuestbookService {
 
     PageResultDTO<GuestbookDTO, Guestbook> getList(PageRequestDTO requestDTO);
 
+    GuestbookDTO read(Long gno);
+
+    void remove(long gno);
+
+    void modify(GuestbookDTO guestbookDTO);
+
     /**
      * @Description : Entity 객체를 DTO 객체로 변환하기 위해 사용함!
      *                

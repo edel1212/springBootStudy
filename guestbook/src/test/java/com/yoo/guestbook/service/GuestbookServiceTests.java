@@ -4,6 +4,7 @@ import com.yoo.guestbook.dto.GuestbookDTO;
 import com.yoo.guestbook.dto.PageRequestDTO;
 import com.yoo.guestbook.dto.PageResultDTO;
 import com.yoo.guestbook.entitiy.Guestbook;
+import com.yoo.guestbook.entitiy.QGuestbook;
 import lombok.extern.log4j.Log4j2;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -80,5 +81,36 @@ public class GuestbookServiceTests {
         resultDTO.getPageList().forEach(log::info);
     }
 
+    @Test
+    public void testRead(){
+        log.info("Read Test");
+        GuestbookDTO result = guestbookService.read(300L);
+        log.info(result);
+    }
+
+
+    @Test
+    public void  testSearch() {
+        log.info("searchTest");
+
+        PageRequestDTO pageRequestDTO = PageRequestDTO.builder()
+                .page(1)
+                .size(10)
+                .keyword("흑곰")
+                .type("t")
+                .build();
+
+        PageResultDTO<GuestbookDTO, Guestbook> resultDTO = guestbookService.getList(pageRequestDTO);
+
+        log.info("Prev ::: " + resultDTO.isPrev());
+        log.info("Next ::: " + resultDTO.isNext());
+        log.info("Total ::: " + resultDTO.getTotalPage());
+
+        log.info("-------------------------------------------------");
+        resultDTO.getDtoList().forEach(log::info);
+
+        log.info("-------------------------------------------------");
+        resultDTO.getPageList().forEach(log::info);
+    }
 
 }

@@ -17,6 +17,10 @@ public class PageRequestDTO {
 
     private int page;
     private int size;
+    
+    //검색조건
+    private String type;
+    private String keyword;
 
     /**
      * @Description : 기본 생성자로 기본 페이지 1과 size 를 10으로 지정함
