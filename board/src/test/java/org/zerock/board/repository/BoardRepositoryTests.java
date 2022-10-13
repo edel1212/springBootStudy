@@ -4,6 +4,7 @@ import lombok.extern.log4j.Log4j2;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.transaction.annotation.Transactional;
 import org.zerock.board.entity.Board;
 import org.zerock.board.entity.Member;
 
@@ -42,6 +43,7 @@ public class BoardRepositoryTests {
     }
 
     @Test
+    @Transactional //Board Class 의 fetch 방식 변경을 했기 때문임
     public void testRead1(){
         Optional<Board> result = boardRepository.findById(100L); // 100번의 Board Data
         Board board = new Board();
