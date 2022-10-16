@@ -8,6 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.zerock.board.entity.Board;
 import org.zerock.board.entity.Member;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.IntStream;
@@ -76,6 +77,17 @@ public class BoardRepositoryTests {
         on board0_.writer_email=member1_.email*/
 
     }
+
+
+    @Test
+    public void testReadWithWriter(){
+        Object result = boardRepository.getBoardWithWriter(100L);
+        Object[] arr = (Object[]) result;
+
+        log.info("------------------------");
+        log.info(Arrays.toString(arr));
+    }
+
 
     //__Eof__
 }
