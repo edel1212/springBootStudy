@@ -1,9 +1,13 @@
 package org.zerock.board.repository;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.zerock.board.entity.Board;
+
+import java.util.List;
 
 public interface BoardRepository extends JpaRepository<Board, Long> {
     /**
@@ -45,4 +49,19 @@ public interface BoardRepository extends JpaRepository<Board, Long> {
      * **/
     @Query("SELECT b, w FROM Board b LEFT JOIN b.writer w WHERE b.bno =:bno") //JPQL 처리
     Object getBoardWithWriter(@Param("bno") Long bno);
+
+    /**
+     * @Descripciton  : 해당 JPQL 의 JOIN Query를 보면 위와 다르게 ON 이용하여 연관관계를 만들어서
+     *                  사용한 것을 확인 할 수 있다!
+     * */
+    @Query("SELECT b, r FROM Board b LEFT JOIN Reply r ON r.board = b WHERE b.bno = :bno")
+    List<Object[]> getBoardWithReply(@Param("bno") Long bno);
+
+    @Query("SELECT b, w, count(r) " +
+            "FROM Board b " +
+            "LEFT JOIN b.writer w " +
+            "LEFT JOIN Reply r ON r.board = b " +
+            "GROUP BY b")
+    Page<Object[]> getBoardWithReplyCount(Pageable pageable);
+
 }

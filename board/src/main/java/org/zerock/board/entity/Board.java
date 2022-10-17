@@ -9,6 +9,7 @@ import javax.persistence.*;
 @NoArgsConstructor
 @Getter
 @Builder
+@ToString
 public class Board  extends BaseEntity{
 
     @Id

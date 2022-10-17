@@ -4,6 +4,10 @@ import lombok.extern.log4j.Log4j2;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.transaction.annotation.Transactional;
 import org.zerock.board.entity.Board;
 import org.zerock.board.entity.Member;
@@ -79,6 +83,20 @@ public class BoardRepositoryTests {
     }
 
 
+    /**
+     * @Descripciton  : 중요 ! 연관관계에서 헷갈리면 안되는것은
+     *                 바로 타겟이 되는 Entity 기준으로 봐야한다는것이다
+     *
+     *                 ✔ 내가 햇거렸던것은 Member Class 를보면 연관관계가 없고
+     *                   Reply Class 를 보면 오히려 Board 타입의 변수로 @ManyToOne 을 사용해주고
+     *                   있는데 왜 Reply 에 Join 시 on 을 쓰지 했는데
+     *
+     *                  🎈 알고보니 해당 Board Class 를 보면 Member 타입의 writer 로
+     *                     오히려 그렇게 pk를 잡고 있었다
+     *
+     *
+     * **/
+
     @Test
     public void testReadWithWriter(){
         Object result = boardRepository.getBoardWithWriter(100L);
@@ -88,6 +106,56 @@ public class BoardRepositoryTests {
         log.info(Arrays.toString(arr));
     }
 
+    @Test
+    public void testGetBoardWithReply(){
+        log.info("with Reply Test ! ::: Use join on!!");
+
+        /*
+         * 자료 형태
+         * [ [Board(bno=100, title=Title..100, content=Content...100), Reply(rno=55, text=ReplyText...55, replyer=guest55)]
+         *    , [Board(bno=100, title=Title..100, content=Content...100), Reply(rno=71, text=ReplyText...71, replyer=guest71)]
+         *    , [Board(bno=100, title=Title..100, content=Content...100), Reply(rno=211, text=ReplyText...211, replyer=guest211)]
+         *    , [Board(bno=100, title=Title..100, content=Content...100), Reply(rno=248, text=ReplyText...248, replyer=guest248)] ]
+         * */
+        List<Object[]> result = boardRepository.getBoardWithReply(100L); // 100번의 번호를 갖는 Board + Reply
+
+        result.stream()
+                .map(Arrays::toString)
+                .forEach(log::info);
+        /*   Result Query
+         *
+         * select
+         * board0_.bno as bno1_0_0_,
+         *         reply1_.rno as rno1_2_1_,
+         * board0_.moddate as moddate2_0_0_,
+         *         board0_.regdate as regdate3_0_0_,
+         * board0_.content as content4_0_0_,
+         *         board0_.title as title5_0_0_,
+         * board0_.writer_email as writer_e6_0_0_,
+         *         reply1_.board_bno as board_bn4_2_1_,
+         * reply1_.replyer as replyer2_2_1_,
+         *         reply1_.text as text3_2_1_
+         * from
+         * board board0_
+         * left outer join
+         * reply reply1_
+         * on (
+         *         reply1_.board_bno=board0_.bno
+         * )
+         * where
+         * board0_.bno=?
+        */
+    }
+
+    @Test
+    public void testWithReplayCount(){
+        Pageable  pageable = PageRequest.of(0,10, Sort.by("bno").descending());
+
+        Page<Object[]> result = boardRepository.getBoardWithReplyCount(pageable);
+
+        result.get().map(Arrays::toString).forEach(log::info);
+
+    }
 
     //__Eof__
 }
