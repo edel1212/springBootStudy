@@ -157,5 +157,15 @@ public class BoardRepositoryTests {
 
     }
 
+    @Test
+    public void testRead3(){
+        Object result = boardRepository.getBoardByBno(100L);
+
+        //들어온 result 는  배열 형식으로 각각의 값이 들어간다 (Board b , Member w, Reply r )
+        Object[] arr = (Object[]) result;
+        Arrays.stream(arr).forEach(log::info);
+    }
+
+
     //__Eof__
 }

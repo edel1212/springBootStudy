@@ -64,4 +64,17 @@ public interface BoardRepository extends JpaRepository<Board, Long> {
             "GROUP BY b")
     Page<Object[]> getBoardWithReplyCount(Pageable pageable);
 
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////
+    // 조회 화면에서 필요한 메서드 정의                                                       //
+    ///////////////////////////////////////////////////////////////////////////////////////
+
+    @Query("SELECT b, w, COUNT(r) " +
+            "FROM Board b LEFT JOIN b.writer w " +
+            "LEFT OUTER JOIN Reply r ON r.board = b " +
+            " WHERE b.bno = :bno")
+    Object getBoardByBno(@Param("bno") Long bno);
+
+    //__Eof__
 }
