@@ -22,5 +22,19 @@ public interface BoardService {
                 .build();
     }
     
+    // Entity 객체들을 --> DTO 객체로 변경 [ 페이징시 Page<E> 의 제네릭에 사용하기 위해 DTO 변환이 필요 ]
+    default BoardDTO entityToDTO(Board board, Member member, Long replyCount){
+        return BoardDTO.builder()
+                .bno(board.getBno())
+                .title(board.getTitle())
+                .content(board.getContent())
+                .regDate(board.getRegeDate())
+                .modDate(board.getModDate())
+                .writerEmail(member.getEmail()) // Member 객체에서 받아옴
+                .writerName(member.getName())  // Member 객체에서 받아옴
+                .replyCount(replyCount.intValue()) //Parameter 의 Type이 Long으로 받아오기에 변환해줌 
+                .build();
+    }
+    
     //__Eof__
 }
