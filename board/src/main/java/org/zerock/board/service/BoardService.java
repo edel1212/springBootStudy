@@ -1,12 +1,19 @@
 package org.zerock.board.service;
 
 import org.zerock.board.dto.BoardDTO;
+import org.zerock.board.dto.PageRequestDTO;
+import org.zerock.board.dto.PageResultDTO;
 import org.zerock.board.entity.Board;
 import org.zerock.board.entity.Member;
 
 public interface BoardService {
     //등록
     public Long register(BoardDTO dto);
+
+    //페이징 목록
+    PageResultDTO<BoardDTO,Object[]> getList(PageRequestDTO pageRequestDTO);
+
+    //TODO 단건 조회
     
     //받아온 DTO 데이터를 --> Entity 객체로 변환
     default Board dtoToEntity(BoardDTO dto){
