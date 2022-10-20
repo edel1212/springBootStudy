@@ -166,6 +166,5 @@ public class BoardRepositoryTests {
         Arrays.stream(arr).forEach(log::info);
     }
 
-
     //__Eof__
 }

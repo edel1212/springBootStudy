@@ -1,6 +1,7 @@
 package org.zerock.board.service;
 
 import lombok.extern.log4j.Log4j2;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -44,4 +45,48 @@ public class BoardServiceTests {
         result.getDtoList().forEach(log::info);
 
     }
+
+    @Test
+    public void getTest(){
+        log.info("get Test");
+
+        BoardDTO result = service.get(100L);
+        log.info(result);
+
+    }
+
+    @Test
+    @DisplayName("게시글 삭제 테스트 해당 bno는 존재해야함")
+    public void testRemove(){
+        log.info("delete Test");
+        service.removeWithReplies(100L);
+        /*
+         === Result Query -- Reply 가 먼저 삭제된 후 Board가 삭제 된것을 볼 수 있다.
+        * Hibernate:
+        * delete
+        *         from
+        * reply
+        *         where
+        * board_bno=?
+        * Hibernate:
+        * select
+        * board0_.bno as bno1_0_0_,
+        *         board0_.moddate as moddate2_0_0_,
+        * board0_.regdate as regdate3_0_0_,
+        *         board0_.content as content4_0_0_,
+        * board0_.title as title5_0_0_,
+        *         board0_.writer_email as writer_e6_0_0_
+        * from
+        * board board0_
+        * where
+        * board0_.bno=?
+        * Hibernate:
+        * delete
+        *         from
+        * board
+        *         where
+        * bno=?
+        * */
+    }
+
 }

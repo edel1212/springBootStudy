@@ -56,7 +56,8 @@ public interface BoardRepository extends JpaRepository<Board, Long> {
      * */
     @Query("SELECT b, r FROM Board b LEFT JOIN Reply r ON r.board = b WHERE b.bno = :bno")
     List<Object[]> getBoardWithReply(@Param("bno") Long bno);
-
+    
+    //페이징목록 + 댓글 수
     @Query("SELECT b, w, count(r) " +
             "FROM Board b " +
             "LEFT JOIN b.writer w " +
@@ -69,7 +70,8 @@ public interface BoardRepository extends JpaRepository<Board, Long> {
     ///////////////////////////////////////////////////////////////////////////////////////
     // 조회 화면에서 필요한 메서드 정의                                                       //
     ///////////////////////////////////////////////////////////////////////////////////////
-
+    
+    //단건 조회
     @Query("SELECT b, w, COUNT(r) " +
             "FROM Board b LEFT JOIN b.writer w " +
             "LEFT OUTER JOIN Reply r ON r.board = b " +

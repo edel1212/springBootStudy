@@ -13,7 +13,11 @@ public interface BoardService {
     //페이징 목록
     PageResultDTO<BoardDTO,Object[]> getList(PageRequestDTO pageRequestDTO);
 
-    //TODO 단건 조회
+    //단건 조회
+    BoardDTO get(Long bno);
+    
+    //삭제 -- ✔ Reply ReplyRepository 에서 삭제 Method가 필요함
+    void removeWithReplies(Long bno);
     
     //받아온 DTO 데이터를 --> Entity 객체로 변환
     default Board dtoToEntity(BoardDTO dto){
