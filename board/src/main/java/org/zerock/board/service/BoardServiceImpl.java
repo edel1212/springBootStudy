@@ -11,10 +11,10 @@ import org.zerock.board.dto.PageRequestDTO;
 import org.zerock.board.dto.PageResultDTO;
 import org.zerock.board.entity.Board;
 import org.zerock.board.entity.Member;
-import org.zerock.board.entity.Reply;
 import org.zerock.board.repository.BoardRepository;
 import org.zerock.board.repository.ReplyRepository;
 
+import java.util.Optional;
 import java.util.function.Function;
 
 @Service
@@ -75,6 +75,20 @@ public class BoardServiceImpl implements BoardService{
         replyRepository.deleteByBno(bno);
         //이후 개시글 삭제
         repository.deleteById(bno);
+
+    }
+
+    @Override
+    public void modify(BoardDTO boardDTO) {
+        Optional<Board> board = repository.findById(boardDTO.getBno());
+
+        if(board.isPresent()){
+            Board result = board.get();
+            result.changeTitle(boardDTO.getTitle());
+            result.changeContent(boardDTO.getContent());
+            repository.save(result);
+        }
+
 
     }
 }

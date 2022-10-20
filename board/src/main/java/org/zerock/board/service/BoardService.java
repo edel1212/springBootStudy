@@ -18,7 +18,10 @@ public interface BoardService {
     
     //삭제 -- ✔ Reply ReplyRepository 에서 삭제 Method가 필요함
     void removeWithReplies(Long bno);
-    
+
+    //게시글 수정
+    void modify(BoardDTO boardDTO);
+
     //받아온 DTO 데이터를 --> Entity 객체로 변환
     default Board dtoToEntity(BoardDTO dto){
 

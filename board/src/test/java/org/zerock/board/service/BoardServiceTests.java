@@ -50,7 +50,7 @@ public class BoardServiceTests {
     public void getTest(){
         log.info("get Test");
 
-        BoardDTO result = service.get(100L);
+        BoardDTO result = service.get(2L);
         log.info(result);
 
     }
@@ -87,6 +87,18 @@ public class BoardServiceTests {
         *         where
         * bno=?
         * */
+    }
+
+    @Test
+    public void testModify(){
+        log.info("modify!");
+        BoardDTO boardDTO = BoardDTO.builder()
+                .bno(2L)
+                .title("제목변경 테스트")
+                .content("내용 변경 테스트")
+                .build();
+
+        service.modify(boardDTO);
     }
 
 }
