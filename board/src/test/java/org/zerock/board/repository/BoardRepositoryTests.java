@@ -166,5 +166,31 @@ public class BoardRepositoryTests {
         Arrays.stream(arr).forEach(log::info);
     }
 
+    @Test
+    public void searchTest1(){
+        boardRepository.search1();
+    }
+
+    @Test
+    public void searchWithLeftJoinTest(){
+        boardRepository.search2WithJoin();
+    }
+
+    @Test
+    public void searchWithTuple(){
+        boardRepository.search3WithJoin();
+    }
+
+    ////////////////////////////////////////////////
+
+    //JPQL + Querydls Paging test
+    @Test
+    public void testSearchPage(){
+        Pageable pageable = PageRequest.of(0,10 , Sort.by("bno").descending());
+        //TODO -- 해당 로직 구현 필요
+        Page<Object[]> result = boardRepository.searchPage("t","1",pageable);
+    }
+
+
     //__Eof__
 }

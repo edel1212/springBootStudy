@@ -6,10 +6,12 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.zerock.board.entity.Board;
+import org.zerock.board.repository.search.SearchBoardRepository;
 
 import java.util.List;
 
-public interface BoardRepository extends JpaRepository<Board, Long> {
+//SearchBoardRepository 상속 추가
+public interface BoardRepository extends JpaRepository<Board, Long> , SearchBoardRepository {
     /**
      * @Descripciton  :  해당 쿼리는 정상 적인 쿼리와 다르다 해당 쿼리를 DBMS로 돌려도 안나옴!
      * 
