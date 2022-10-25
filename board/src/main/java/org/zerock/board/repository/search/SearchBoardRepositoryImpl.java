@@ -1,10 +1,17 @@
 package org.zerock.board.repository.search;
 
+import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.Tuple;
+import com.querydsl.core.types.Order;
+import com.querydsl.core.types.OrderSpecifier;
+import com.querydsl.core.types.dsl.BooleanExpression;
+import com.querydsl.core.types.dsl.PathBuilder;
 import com.querydsl.jpa.JPQLQuery;
 import lombok.extern.log4j.Log4j2;
+import org.aspectj.weaver.ast.Or;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.support.QuerydslRepositorySupport;
 import org.zerock.board.entity.Board;
 import org.zerock.board.entity.QBoard;
@@ -120,6 +127,86 @@ public class SearchBoardRepositoryImpl extends QuerydslRepositorySupport impleme
     public Page<Object[]> searchPage(String type, String keyword, Pageable pageable) {
 
         log.info("search Page....");
+
+        QBoard board = QBoard.board;
+        QReply reply = QReply.reply;
+        QMember member = QMember.member;
+
+        JPQLQuery<Board> jpqlQuery = from(board);
+        jpqlQuery.leftJoin(member).on(board.writer.eq(member));
+        jpqlQuery.leftJoin(reply).on(reply.board.eq(board));
+
+        /*
+        * SELECT b, w, count(r) FROM Board b
+        * LEFT JOIN b.writer w LEFT JOIN REPLY r ON r.board = b
+        * */
+        JPQLQuery<Tuple> tuple = jpqlQuery.select(board,member,reply.count());
+
+        //Querydsl
+        BooleanBuilder booleanBuilder = new BooleanBuilder();
+        BooleanExpression expression = board.bno.gt(0L);
+
+        booleanBuilder.and(expression);// bno 가 0보다 크고
+
+        if(!type.isEmpty()){
+            String[] typeArr = type.split("");
+            //검색조건 작성
+            BooleanBuilder conditionBuilder = new BooleanBuilder();
+            for(String typeData : typeArr){
+                switch (typeData){
+                    case "t":
+                        conditionBuilder.or(board.title.contains(keyword));
+                        break;
+                    case "w":
+                        conditionBuilder.or(member.email.contains(keyword));
+                        break;
+                    case "c":
+                        conditionBuilder.or(board.content.contains(keyword));
+                        break;
+                }
+                booleanBuilder.and(conditionBuilder);
+            }
+        }
+
+        tuple.where(booleanBuilder); // 완성된 조건문을 tuple 에 주입
+
+        /////////////////
+        // Sort Logic  //
+        /////////////////
+        /**
+         * @Description  : 정렬 시 문제
+         *                 해당 Method 의 파라미터로 pageable 을 받아 JPQLQuery의 orderBy()로
+         *                 처리하면 될것 같지만 JPQL 에서는 Pageable 의 Sort 객체를 지원하지
+         *                 않는 다는 문제가 있다.
+         *
+         *                 ✔ 따라서 orderBy()의 경우 OderSpecifier<T extends Comparable>로 처리해야함
+         *                 ✔ 해당 OderSpecifier 에서 매개변수의 타입은 2가지인데
+         *                    - Order, Expression 인데 둘다 타입은 querydsl.core... 쪽이다.
+         *
+         *                 ❔ 그럼 왜 pageable 을 파라미터로 받았는가?
+         *                    - sort 객체의 값을 forEach()를 사용해서 OderSpecifier 를 만들기 위해.
+         *                    - JPQLQuery 의 offset() 과 limit()를 이용하여 페이지를 처리하기 위함.
+         *
+         *
+         *
+         *
+         * **/
+
+        // get sortObject from pageable
+        Sort sort = pageable.getSort();
+
+    //TODO 해당코드 미완성.. 확인필요 이해하기 어려움 .. 구글링 필요함...
+        sort.forEach(order->{
+            Order direction = order.isAscending() ? Order.ASC : Order.DESC; //어떤 정렬인지 삼항연산을 통해 주입
+            String prop = order.getProperty();
+
+            PathBuilder oderByExpression = new PathBuilder(Board.class,"board");
+
+            tuple.orderBy(new OrderSpecifier(direction,oderByExpression.get(prop)));
+        });
+        tuple.groupBy(board);
+
+
 
         return null;
     }
