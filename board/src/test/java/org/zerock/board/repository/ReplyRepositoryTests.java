@@ -119,7 +119,7 @@ public class ReplyRepositoryTests {
     public void testListByBoard(){
         log.info("Used Method Query");
 
-        List<Reply> replyList = replyRepository.getRepliesByBoardOrderByRno(
+        List<Reply> replyList = replyRepository.getReplyByBoardOrderByRno(
                 Board.builder().bno(96L).build()
         );
         log.info(replyList);
