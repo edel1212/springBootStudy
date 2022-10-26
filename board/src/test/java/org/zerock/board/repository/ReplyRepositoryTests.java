@@ -1,6 +1,7 @@
 package org.zerock.board.repository;
 
 import lombok.extern.log4j.Log4j2;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -111,6 +112,17 @@ public class ReplyRepositoryTests {
             log.info(reply.getBoard());
         }
 
+    }
+
+    @DisplayName("메서드 명으로 쿼리 생성")
+    @Test
+    public void testListByBoard(){
+        log.info("Used Method Query");
+
+        List<Reply> replyList = replyRepository.getRepliesByBoardOrderByRno(
+                Board.builder().bno(96L).build()
+        );
+        log.info(replyList);
     }
 
     //__Eof__
