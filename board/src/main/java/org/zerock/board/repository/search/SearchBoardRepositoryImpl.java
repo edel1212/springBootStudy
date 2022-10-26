@@ -8,8 +8,8 @@ import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.PathBuilder;
 import com.querydsl.jpa.JPQLQuery;
 import lombok.extern.log4j.Log4j2;
-import org.aspectj.weaver.ast.Or;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.support.QuerydslRepositorySupport;
@@ -19,6 +19,7 @@ import org.zerock.board.entity.QMember;
 import org.zerock.board.entity.QReply;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @Description : 해당 Class 는 BoardRepository 를 확장하기 위한 class 이며 확장 시 다음의 단계를 거친다
@@ -148,7 +149,7 @@ public class SearchBoardRepositoryImpl extends QuerydslRepositorySupport impleme
 
         booleanBuilder.and(expression);// bno 가 0보다 크고
 
-        if(!type.isEmpty()){
+        if(type != null){
             String[] typeArr = type.split("");
             //검색조건 작성
             BooleanBuilder conditionBuilder = new BooleanBuilder();
@@ -195,19 +196,34 @@ public class SearchBoardRepositoryImpl extends QuerydslRepositorySupport impleme
         // get sortObject from pageable
         Sort sort = pageable.getSort();
 
-    //TODO 해당코드 미완성.. 확인필요 이해하기 어려움 .. 구글링 필요함...
+        //sort 변수를 loop 하는 이유는 Sort 조건이 여러개일수 있기 때문이다!!
         sort.forEach(order->{
             Order direction = order.isAscending() ? Order.ASC : Order.DESC; //어떤 정렬인지 삼항연산을 통해 주입
-            String prop = order.getProperty();
+            String prop = order.getProperty(); //찾은 정렬 방식을 변수에 주입
 
-            PathBuilder oderByExpression = new PathBuilder(Board.class,"board");
+            PathBuilder<Board> orderByExpression = new PathBuilder<Board>(Board.class,"board");
 
-            tuple.orderBy(new OrderSpecifier(direction,oderByExpression.get(prop)));
+            tuple.orderBy(new OrderSpecifier(direction,orderByExpression.get(prop)));
         });
         tuple.groupBy(board);
 
+        //Page 처리
+        tuple.offset(pageable.getOffset());
+        tuple.limit(pageable.getPageSize());
 
+        List<Tuple> result = tuple.fetch();
 
-        return null;
+        log.info(result);
+
+        //totalCout
+        long count = tuple.fetchCount();
+        log.info("COUNT: " +count);
+
+        return new PageImpl<Object[]>(
+                result.stream()
+                        .map(Tuple::toArray)
+                        .collect(Collectors.toList()),pageable,count
+        );
+
     }
 }
