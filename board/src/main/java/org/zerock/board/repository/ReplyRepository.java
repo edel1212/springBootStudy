@@ -17,4 +17,6 @@ public interface ReplyRepository extends JpaRepository<Reply,Long> {
     //게시물로 댓글 목록 가져오기 -- JpaRepository 내 메서드 쿼리 사용
     //✔ 굳이 Replies 가 아니어도 괜찮다 Reply 로 해도 문제 X
     List<Reply> getRepliesByBoardOrderByRno(Board board);
+
+    List<Reply> getReplyByBoardOrderByRno(Board build);
 }
