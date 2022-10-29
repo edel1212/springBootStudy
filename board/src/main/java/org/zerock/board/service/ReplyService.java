@@ -12,7 +12,7 @@ public interface ReplyService {
     Long register(ReplyDTO replyDTO);
     
     //Bno에 맞는 Reply  List
-    List<ReplyDTO> getLost(Long bno);
+    List<ReplyDTO> getList(Long bno);
     
     //수정
     void modify(ReplyDTO replyDTO);
