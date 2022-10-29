@@ -1,16 +1,14 @@
 package org.zerock.board.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
+@Data
+@ToString
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@Data
 public class ReplyDTO {
 
     private Long rno;
@@ -21,7 +19,8 @@ public class ReplyDTO {
 
     private Long bno;
 
-    private LocalDateTime regDte, modDate;
-
+    // Entity 기준 BaseEntity 에서 작성된것
+    private LocalDateTime regDate;
+    private LocalDateTime modDate;
 }
 

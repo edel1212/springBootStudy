@@ -41,7 +41,7 @@ public interface ReplyService {
                 .rno(reply.getRno())
                 .text(reply.getText())
                 .replyer(reply.getReplyer())
-                .regDte(reply.getRegeDate())
+                .regDate(reply.getRegeDate())
                 .modDate(reply.getModDate())
                 .build();
     }

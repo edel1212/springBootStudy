@@ -25,7 +25,7 @@ public class ReplyRepositoryTests {
 
         IntStream.rangeClosed(1,300).forEach(i->{
             //1부터 100까지 임의 번호
-            long bno = (long) ( Math.random() * 100 + 1 );
+            long bno = 1L;//(long) ( Math.random() * 100 + 1 );
 
             //Board 객체 변수를 만들어줌 PK가 있어야함! 
             Board board = Board.builder().bno(bno).build();

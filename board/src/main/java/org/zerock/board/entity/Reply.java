@@ -5,10 +5,10 @@ import lombok.*;
 import javax.persistence.*;
 
 @Entity
-@Getter
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
+@Getter
 @ToString
 public class Reply extends BaseEntity{
 

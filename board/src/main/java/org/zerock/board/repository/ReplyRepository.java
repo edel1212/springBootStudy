@@ -18,5 +18,5 @@ public interface ReplyRepository extends JpaRepository<Reply,Long> {
     //✔ 굳이 Replies 가 아니어도 괜찮다 Reply 로 해도 문제 X
     List<Reply> getRepliesByBoardOrderByRno(Board board);
 
-    List<Reply> getReplyByBoardOrderByRno(Board build);
+    List<Reply> getReplyByBoardOrderByRno(Board board);
 }

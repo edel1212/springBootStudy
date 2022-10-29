@@ -46,6 +46,67 @@
       <button type="button" class="btn btn-info">List</button>
     </a>
 
+    <!-- ReplySection -->
+    <div>
+      <div class="mt-4">
+        <h5>
+          <span class="badge badge-secondary replyCount">Reply Count [[${dto.replyCount}]]</span>
+        </h5>
+      </div>
+      <div class="list-group replyList">
+
+      </div>
+    </div>
+
   </th:block>
 
 </th:block>
+
+<script th:inline="javascript">
+
+  const bno = [[${dto.bno}]];
+
+  reloadReplyList();
+
+  const replyCount = document.querySelector(".replyCount");
+
+  //버튼 이벤트
+  replyCount.addEventListener("click",()=>{
+    reloadReplyList();
+  })//click Event
+
+  const listGroup = document.querySelector(".replyList");
+
+  //DateSetFunction
+  function formatTime(str){
+
+    const date = new Date(str);
+
+    return  date.getFullYear() + "-" + ( date.getMonth() + 1 ) + "-" + date.getHours()  + ":" + date.getMinutes();;
+  }
+
+  function reloadReplyList(){
+    $.getJSON('/replies/board/'+bno, (arr)=>{
+      let htmlStr = "";
+
+      //refresh ReplyCount html
+      replyCount.innerHTML = "Reply Count" + arr.length;
+
+      //draw reply List
+      arr.forEach( reply => {
+        htmlStr += `<div class="card-body" data-rno="${reply.rno}">`;
+        htmlStr += `<b>${reply.rno}</b>`;
+        htmlStr += `<h5 class="card-title">${reply.text}</h5>`;
+        htmlStr += `<h6 class="card-subtitle mb-2 text-muted">${reply.replyer}</h5>`;
+        htmlStr += `<p class="card-text">`+formatTime(`${reply.regDate}`)+`</p>`;
+        htmlStr += `</div>`;
+      })
+      listGroup.innerHTML = htmlStr;
+    })
+  }
+
+
+
+
+
+</script>
