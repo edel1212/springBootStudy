@@ -50,6 +50,9 @@
     <div>
       <div class="mt-4">
         <h5>
+          <span class="badge badge-info addReply">add Reply</span>
+        </h5>
+        <h5>
           <span class="badge badge-secondary replyCount">Reply Count [[${dto.replyCount}]]</span>
         </h5>
       </div>
@@ -57,6 +60,36 @@
 
       </div>
     </div>
+
+    <!-- modal -->
+    <div class="modal" tabindex="-1" role="dialog" style="background-color:#000000b0">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Modal title</h5>
+
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <div class="form-group">
+              <label >Replyer</label>
+              <input type="text" class="form-control" name="replyer" >
+            </div>
+            <div class="form-group">
+              <label >Reply</label>
+              <input type="text" class="form-control" name="replyText" placeholder="Reply Text..." >
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary modalCloseBtn" data-dismiss="modal">Close</button>
+            <button type="button" class="btn btn-primary replySaveBtn">Save</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
 
   </th:block>
 
@@ -105,8 +138,55 @@
     })
   }
 
+//Modal
+const modal = document.querySelector(".modal");
+// add Reply But click Event
+document.querySelector(".addReply").addEventListener("click",()=>{
 
+   //input init
+   document.querySelector("input[name='replyer']").value = "";
+   document.querySelector("input[name='replyText']").value = "";
 
+   //modal Show
+   modal.style.display = "block";
+})
 
+//Modal close Click Event
+document.querySelector(".modalCloseBtn").addEventListener("click",()=>{
+   //hide Show
+   modal.style.display = "none";
+});
+
+//Save Reply Btn Click Event
+document.querySelector(".replySaveBtn").addEventListener("click",()=>{
+
+   //make Body Data
+   let reply = {
+     bno : bno,
+     replyer : document.querySelector("input[name='replyer']").value ,
+     text    : document.querySelector("input[name='replyText']").value
+   }
+
+   $.ajax({
+    url : "/replies/",
+    method : "post",
+    data : JSON.stringify(reply),
+    contentType : "application/json; charset=utf-8",
+    dataType : "json",
+    success : (data)=>{
+      console.log(123)
+      const newRno = Number(data);
+      alert(newRno + "번 댓글이 등록되었습니다.");
+      //reDraw
+      reloadReplyList();
+    },
+    error : function(request,status,error){
+      console.log("code:"+request.status+"\n"+"message:"+request.responseText+"\n"+"error:"+error);
+    }
+   });
+
+   //hide Show
+   modal.style.display = "none";
+});
 
 </script>
