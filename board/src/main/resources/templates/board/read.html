@@ -74,6 +74,7 @@
           </div>
           <div class="modal-body">
             <div class="form-group">
+              <input type="text" class="form-control" name="rno" style="display:none" >
               <label >Replyer</label>
               <input type="text" class="form-control" name="replyer" >
             </div>
@@ -83,8 +84,10 @@
             </div>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-secondary modalCloseBtn" data-dismiss="modal">Close</button>
             <button type="button" class="btn btn-primary replySaveBtn">Save</button>
+            <button type="button" class="btn btn-primary replyModifyBtn">Modify</button>
+            <button type="button" class="btn btn-primary replyRemoveBtn">Remove</button>
+            <button type="button" class="btn btn-secondary modalCloseBtn" data-dismiss="modal">Close</button>
           </div>
         </div>
       </div>
@@ -144,16 +147,17 @@ const modal = document.querySelector(".modal");
 document.querySelector(".addReply").addEventListener("click",()=>{
 
    //input init
+   document.querySelector("input[name='rno']").value = "";
    document.querySelector("input[name='replyer']").value = "";
    document.querySelector("input[name='replyText']").value = "";
 
-   //modal Show
+   //modal Modal
    modal.style.display = "block";
 })
 
 //Modal close Click Event
 document.querySelector(".modalCloseBtn").addEventListener("click",()=>{
-   //hide Show
+   //hide Modal
    modal.style.display = "none";
 });
 
@@ -189,4 +193,78 @@ document.querySelector(".replySaveBtn").addEventListener("click",()=>{
    modal.style.display = "none";
 });
 
+// ReplyList Click Event
+document.querySelector(".replyList").addEventListener("click",(e)=>{
+    let rno = 0;
+    let selectEle = null;
+    if(e.target.dataset.rno){
+      selectEle = e.target;
+      rno = selectEle.dataset.rno;
+    } else{
+      selectEle = e.target.parentElement;
+      rno = selectEle.dataset.rno
+    }
+    //0번은 있을 수없으므로 return
+    if(rno === 0) return;
+
+    document.querySelector("input[name='rno']").value = rno;
+
+    //Modal Data Setting
+    for(let i of e.target.parentElement.children){
+      if(i.classList.contains('card-title')){
+        document.querySelector("input[name='replyText']").value = i.innerHTML
+      }
+      if(i.classList.contains('card-subtitle')){
+        document.querySelector("input[name='replyer']").value   = i.innerHTML
+      }
+    }
+
+    //modal Show
+    modal.style.display = "block";
+
+  })
+
+
+  // RemoveReply Click Event
+  document.querySelector(".replyRemoveBtn").addEventListener("click",(e)=>{
+    const rno = document.querySelector("input[name='rno']").value ;
+    $.ajax({
+      url : "/replies/" + rno,
+      method : "delete",
+      success : (result) => {
+          if(result === "success"){
+            alert("댓글이 삭제되었습니다");
+          }
+          //modal hide
+          modal.style.display = "none";
+          reloadReplyList();
+        }
+    })
+  })
+
+  // Modify Click Event
+  document.querySelector(".replyModifyBtn").addEventListener("click",(e)=>{
+    let rno =  document.querySelector("input[name='rno']").value ;
+    let reply = {
+      rno : rno ,
+      bno : bno,
+      replyer : document.querySelector("input[name='replyer']").value ,
+      text    : document.querySelector("input[name='replyText']").value
+    }
+
+    $.ajax({
+      url : "/replies/" + rno,
+      method : "put",
+      data : JSON.stringify(reply),
+      contentType : "application/json; charset=utf-8",
+      success : (result) => {
+          if(result === "success"){
+            alert("댓글이 수정되었습니다.");
+          }
+          //modal hide
+          modal.style.display = "none";
+          reloadReplyList();
+        }
+    })
+  })
 </script>
