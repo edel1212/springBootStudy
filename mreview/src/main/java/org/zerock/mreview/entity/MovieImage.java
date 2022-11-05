@@ -5,9 +5,9 @@ import lombok.*;
 import javax.persistence.*;
 
 @Entity
-@Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 @Getter
 @ToString
 public class MovieImage {
