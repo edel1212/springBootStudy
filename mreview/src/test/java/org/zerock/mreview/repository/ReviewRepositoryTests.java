@@ -1,4 +1,4 @@
-package org.zerock.mreview.Repository;
+package org.zerock.mreview.repository;
 
 import lombok.extern.log4j.Log4j2;
 import org.junit.jupiter.api.Test;
@@ -9,7 +9,6 @@ import org.zerock.mreview.entity.Movie;
 import org.zerock.mreview.entity.Review;
 
 import java.util.List;
-import java.util.Random;
 import java.util.stream.IntStream;
 
 @SpringBootTest

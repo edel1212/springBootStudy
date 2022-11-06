@@ -1,4 +1,4 @@
-package org.zerock.mreview.Repository;
+package org.zerock.mreview.repository;
 
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;

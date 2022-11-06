@@ -1,4 +1,4 @@
-package org.zerock.mreview.Repository;
+package org.zerock.mreview.repository;
 
 import lombok.extern.log4j.Log4j2;
 import org.junit.jupiter.api.Test;
