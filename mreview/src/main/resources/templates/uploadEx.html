@@ -3,6 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <title>Title</title>
+    <script
+            src="https://code.jquery.com/jquery-3.6.1.js"
+            integrity="sha256-3zlB5s2uwoUzrXK3BT7AX3FyvojsraNFxCc2vC/7pNI="
+            crossorigin="anonymous"></script>
 </head>
 <body>
 
@@ -14,7 +18,30 @@
 
         document.querySelector(".uploadBtn").addEventListener("click",()=>{
 
-            //TODO Logic
+             let formData = new FormData();
+
+             let inputFile = document.querySelector("input[name='uploadFiles']").files;
+
+             for(let i of inputFile){
+                console.log(i);
+                formData.append("uploadFiles",i);
+             }
+
+            //비동기 통신 -ajax
+            $.ajax({
+                url : '/uploadAjax',
+                processData : false,
+                contentType : false,
+                data : formData,
+                type : 'post',
+                dataType : 'json',
+                success : function(result){
+                 console.log(result)
+                },
+                error : function(jqXHR, textStatus, errorThrown ){
+                    console.log(textStatus);
+                }
+            })
 
         });// click
 
