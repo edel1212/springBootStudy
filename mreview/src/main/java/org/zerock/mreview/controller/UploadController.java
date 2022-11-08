@@ -6,9 +6,16 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.multipart.MultipartFile;
+import org.thymeleaf.util.DateUtils;
 
 import java.io.File;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
+import java.util.Objects;
+import java.util.UUID;
 
 @Controller
 @Log4j2
@@ -28,12 +35,53 @@ public class UploadController {
         log.info("-----------------------");
 
         for(MultipartFile uploadFile : uploadFiles){
+            
+            //.getContentType()를 사용하여 확장자를 체크가 가능함
+            if(!Objects.requireNonNull(uploadFile.getContentType()).startsWith("image")){
+                log.warn("this file is not image type");
+                return;
+            }
+            
+            //.getOriginalFilename() 에서는 IE 나 Edge 에서는 전체 경로가 들어오므로 잘라줌
             String originalFile = uploadFile.getOriginalFilename();
+            assert originalFile != null;
             String fileName = originalFile.substring(originalFile.lastIndexOf("\\")+1);
 
             log.info("fileName ::: " + fileName);
-        }
-        //TODO : template might not exist or might not be accessible by any of the configured Template Resolvers ---Error Check
+
+            //날짜 폴더 생성
+            String folderPath = makeFolder();
+
+            String uuid = UUID.randomUUID().toString();
+            
+            //전체 파일 명 -> + UUID + 구분자 _ 사용
+            String saveName = uploadPath + File.separator + folderPath + File.separator + uuid + "_" + fileName;
+
+            Path savePath = Paths.get(saveName);
+            try {
+                uploadFile.transferTo(savePath);
+            }catch (Exception e){
+                e.printStackTrace();
+            }//try -catch
+
+        }//end loop
+        
     }
 
+
+    private String makeFolder(){
+        String str = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy/MM/dd"));
+
+        String folderPath = str.replace("/", File.separator);
+
+        //Make folder
+        File uploadPathFolder = new File(uploadPath, folderPath);
+
+        if(!uploadPathFolder.exists()){
+            boolean success = uploadPathFolder.mkdirs();
+            log.info(success);
+        }
+
+        return folderPath;
+    }
 }
