@@ -16,10 +16,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 
 @Controller
 @Log4j2
@@ -38,7 +35,7 @@ public class UploadController {
     @PostMapping("/uploadAjax")
     public ResponseEntity<List<UploadResultDTO>> uploadFile(MultipartFile[] uploadFiles){
 
-        //TODO Add List
+        List<UploadResultDTO> resultDTOList = new ArrayList<>();
 
         log.info("-----------------------");
         log.info(uploadFiles);
@@ -49,6 +46,7 @@ public class UploadController {
             //.getContentType()를 사용하여 확장자를 체크가 가능함
             if(!Objects.requireNonNull(uploadFile.getContentType()).startsWith("image")){
                 log.warn("this file is not image type");
+                //이미지가 아닐경우 403 Forbidden Error
                 return new ResponseEntity<>(HttpStatus.FORBIDDEN);
             }
             
@@ -69,13 +67,14 @@ public class UploadController {
 
             Path savePath = Paths.get(saveName);
             try {
-                uploadFile.transferTo(savePath);
+                uploadFile.transferTo(savePath); //실제 데이터를 저장하는 Logic
+                resultDTOList.add(UploadResultDTO.builder().fileName(fileName).folderPath(folderPath).uuid(uuid).build());
             }catch (Exception e){
                 e.printStackTrace();
             }//try -catch
 
         }//end loop
-        return new ResponseEntity<>(HttpStatus.OK);
+        return new ResponseEntity<>(resultDTOList,HttpStatus.OK);
     }
 
 
