@@ -13,6 +13,10 @@
     <input name="uploadFiles" type="file" multiple>
     <button class="uploadBtn">upload</button>
 
+    <div class="uploadResult">
+        <!--   Load Image     -->
+    </div>
+
     <script>
 
 
@@ -36,7 +40,8 @@
                 type : 'post',
                 dataType : 'json',
                 success : function(result){
-                 console.log(result)
+                 console.log(result);
+                 showUploadImages(result);
                 },
                 error : function(jqXHR, textStatus, errorThrown ){
                     console.log(textStatus);
@@ -44,6 +49,16 @@
             })
 
         });// click
+
+        //get Image
+        function showUploadImages(arr){
+            console.log("arr",arr);
+
+            const divArea = document.querySelector(".uploadResult");
+
+            arr.map( (data) => "<img src='/display?fileName=" +  data['imageURL'] + "'>")
+            .forEach( (img) => divArea.insertAdjacentHTML("beforeend",img));
+        }
 
     </script>
 
