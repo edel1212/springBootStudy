@@ -131,7 +131,20 @@ public class UploadController {
         return result;
     }
 
-
+    //파일 삭제
+    @PostMapping("/removeFile")
+    public ResponseEntity<Boolean> removeFile(String fileName){
+        //TODO make logic
+        String srcFileName = null;
+        try {
+            srcFileName = URLDecoder.decode(fileName, StandardCharsets.UTF_8);
+        } catch (Exception ex){
+            ex.printStackTrace();
+        }
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+    
+    
     private String makeFolder(){
         String str = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy/MM/dd"));
 
