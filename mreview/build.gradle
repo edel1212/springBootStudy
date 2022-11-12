@@ -37,6 +37,9 @@ dependencies {
 	// https://mvnrepository.com/artifact/org.thymeleaf.extras/thymeleaf-extras-java8time
 	implementation group: 'org.thymeleaf.extras', name: 'thymeleaf-extras-java8time'
 
+	// https://mvnrepository.com/artifact/net.coobird/thumbnailator
+	implementation group: 'net.coobird', name: 'thumbnailator', version: '0.4.18'
+
 }
 
 tasks.named('test') {
