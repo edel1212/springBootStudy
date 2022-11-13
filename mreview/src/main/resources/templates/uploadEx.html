@@ -61,24 +61,27 @@
                 + "<button class='removeBtn' data-name='" +  data['imageURL']  + "'>remove</button>";
                 })
             .forEach( (img) => divArea.insertAdjacentHTML("beforeend",img));
+
+
+            //Remove Btn Event
+            document.querySelector(".removeBtn")?.addEventListener("click",(e)=>{
+                const fileName = e.target.dataset.name;
+
+                $.post("/remove",{fileName : fileName}, (result)=>{
+                    console.log("result",result);
+                    if(result === true) {
+                        document.querySelectorAll('[data-name]').forEach((datInfo)=>{
+                            if( datInfo.dataset.name === fileName){
+                                datInfo.remove()
+                            }
+                        })
+                    }//if
+                })
+            })
+
         }
 
-        //Remove Btn Event
-        document.querySelector(".removeBtn").addEventListener("click",(e)=>{
-            const fileName = e.target.dataset.name;
 
-            $.post("/remove",{fileName : fileName}, (result)=>{
-                console.log("result",result);
-                if(result === true) {
-                    document.querySelectorAll('[data-name]').forEach((datInfo)=>{
-                        if( datInfo.dataset.name === fileName){
-                            datInfo.remove()
-                        }
-                    })
-
-                }
-            })
-        })
 
     </script>
 

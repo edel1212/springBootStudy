@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Title</title>
+    <script
+      src="https://code.jquery.com/jquery-3.6.1.js"
+      integrity="sha256-3zlB5s2uwoUzrXK3BT7AX3FyvojsraNFxCc2vC/7pNI="
+      crossorigin="anonymous"
+    ></script>
+  </head>
+  <body>
+    <input name="uploadFiles" type="file" multiple />
+    <button class="uploadBtn">upload</button>
+
+    <div class="uploadResult">
+      <!--   Load Image     -->
+    </div>
+
+    <script>
+      document.querySelector(".uploadBtn").addEventListener("click", () => {
+        let formData = new FormData();
+
+        let inputFile = document.querySelector(
+          "input[name='uploadFiles']"
+        ).files;
+
+        for (let i of inputFile) {
+          console.log(i);
+          formData.append("uploadFiles", i);
+        }
+
+        //비동기 통신 -ajax
+        $.ajax({
+          url: "/uploadAjax",
+          processData: false,
+          contentType: false,
+          data: formData,
+          type: "post",
+          dataType: "json",
+          success: function (result) {
+            console.log(result);
+            showUploadImages(result);
+          },
+          error: function (jqXHR, textStatus, errorThrown) {
+            console.log(textStatus);
+          },
+        });
+      }); // click
+
+      //get Image
+      function showUploadImages(arr) {
+        console.log("arr", arr);
+
+        const divArea = document.querySelector(".uploadResult");
+
+        arr
+          .map((data) => {
+            return (
+              "<img src='/display?fileName=" +
+              data["thumbnailURL"] +
+              "'>" +
+              "<button class='removeBtn' data-name='" +
+              data["imageURL"] +
+              "'>remove</button>"
+            );
+          })
+          .forEach((img) => divArea.insertAdjacentHTML("beforeend", img));
+      }
+
+      //Remove Btn Event
+      document.querySelector(".removeBtn")?.addEventListener("click", (e) => {
+        const fileName = e.target.dataset.name;
+
+        $.post("/remove", { fileName: fileName }, (result) => {
+          console.log("result", result);
+          if (result === true) {
+            document.querySelectorAll("[data-name]").forEach((datInfo) => {
+              if (datInfo.dataset.name === fileName) {
+                datInfo.remove();
+              }
+            });
+          } //if
+        });
+      });
+    </script>
+  </body>
+</html>
