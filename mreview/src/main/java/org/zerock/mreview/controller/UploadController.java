@@ -134,14 +134,30 @@ public class UploadController {
     //파일 삭제
     @PostMapping("/removeFile")
     public ResponseEntity<Boolean> removeFile(String fileName){
-        //TODO make logic
         String srcFileName = null;
         try {
+            log.info("---------------------");
+            log.info(fileName);
+            log.info("---------------------");
+            //받아온 파일정보를 decoding
             srcFileName = URLDecoder.decode(fileName, StandardCharsets.UTF_8);
+
+            //Decoding 된 정보로 File 객체 생성
+            File file = new File(uploadPath + File.separator + srcFileName);
+            //파일 삭제
+            boolean result = file.delete();
+
+            //상단에서 가져온 File 객체를 활용하여 Path + "Thumbnail 구분자" + 파일명으로 File 객체 생성
+            File thumbnail = new File(file.getPath() + "s_" + file.getName());
+            //Thumbnail 삭제
+            result = thumbnail.delete();
+
+            return new ResponseEntity<>(result, HttpStatus.OK);
+
         } catch (Exception ex){
             ex.printStackTrace();
+            return new ResponseEntity<>(false,HttpStatus.INTERNAL_SERVER_ERROR);
         }
-        return new ResponseEntity<>(HttpStatus.OK);
     }
     
     
