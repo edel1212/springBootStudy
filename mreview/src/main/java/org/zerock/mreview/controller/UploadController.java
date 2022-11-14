@@ -147,8 +147,13 @@ public class UploadController {
             //파일 삭제
             boolean result = file.delete();
 
-            //상단에서 가져온 File 객체를 활용하여 Path + "Thumbnail 구분자" + 파일명으로 File 객체 생성
-            File thumbnail = new File(file.getPath() + "s_" + file.getName());
+            //상단에서 가져온 File 객체를 활용하여 file의 Parent 경로 + "Thumbnail 구분자" + 파일명으로 File 객체 생성
+            File thumbnail = new File(file.getParent(),"s_" + file.getName());
+
+            log.info("--------thumbnail-------------");
+            log.info(thumbnail);
+            log.info("---------------------");
+
             //Thumbnail 삭제
             result = thumbnail.delete();
 

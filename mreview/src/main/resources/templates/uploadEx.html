@@ -58,29 +58,27 @@
 
             arr.map( (data) => {
                return "<img src='/display?fileName=" +  data['thumbnailURL'] + "'>"
-                + "<button class='removeBtn' data-name='" +  data['imageURL']  + "'>remove</button>";
+                + "<button class='removeBtn' onClick='delFile(" +  data['imageURL']  + ")' data-name='" +  data['imageURL']  + "'>remove</button>";
                 })
             .forEach( (img) => divArea.insertAdjacentHTML("beforeend",img));
+        }
 
+        function delFile(data){
 
-            //Remove Btn Event
-            document.querySelector(".removeBtn")?.addEventListener("click",(e)=>{
-                const fileName = e.target.dataset.name;
+            const fileName = data;
 
-                $.post("/remove",{fileName : fileName}, (result)=>{
-                    console.log("result",result);
-                    if(result === true) {
-                        document.querySelectorAll('[data-name]').forEach((datInfo)=>{
-                            if( datInfo.dataset.name === fileName){
-                                datInfo.remove()
-                            }
-                        })
-                    }//if
-                })
+            $.post("/removeFile",{fileName : fileName}, (result)=>{
+                console.log("result",result);
+                if(result === true) {
+                    document.querySelectorAll('[data-name]').forEach((datInfo)=>{
+                        if( datInfo.dataset.name === fileName){
+                            datInfo.remove()
+                        }
+                    })
+                }//if
             })
 
         }
-
 
 
     </script>
