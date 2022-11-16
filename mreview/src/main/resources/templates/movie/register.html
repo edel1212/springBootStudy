@@ -27,6 +27,29 @@
             <button type="submit" class="btn btn-primary">Submit</button>
         </form>
 
+        <script>
+            let regex = new RegExp("(.*?)\.(exe|sh|zip|alz|tiff)$");
+            let maxSize = 10485760; //10MB
+
+            function checkExtension(fileName, fileSize){
+                if(fileSize >= maxSize){
+                    alert("파일사이즈 초과");
+                    return false;
+                }
+                if(regex.test(fileName)){
+                    alert("해당 파일은 업로드할수 없습니다.");
+                    return false;
+                }
+                return true;
+            }
+
+            document.querySelector(".custom-file-input").addEventListener("change",(data)=>{
+               let fileName = "";
+
+                debugger;
+            })
+        </script>
+
     </th:block>
 
 </th:block>

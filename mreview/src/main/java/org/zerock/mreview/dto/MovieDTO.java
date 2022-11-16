@@ -22,6 +22,6 @@ public class MovieDTO {
 
     private String title;
 
-    private List<MovieImageDTO> imageDTOList = new ArrayList<>();
+    private List<MovieImageDTO> imageDTOList;
 
 }
