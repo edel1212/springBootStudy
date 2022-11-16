@@ -44,7 +44,10 @@
             }
 
             document.querySelector(".custom-file-input").addEventListener("change",(data)=>{
-               let fileName = "";
+                const filesData  = data.target.files;
+                for(let i of filesData){
+                    document.querySelector(".custom-file-label").insertAdjacentHTML("beforeend",i.name + "   ");
+                }
 
                 debugger;
             })
