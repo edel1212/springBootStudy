@@ -26,7 +26,7 @@
 
             </div>
 
-            <button type="submit" class="btn btn-primary">Submit</button>
+            <button type="button" class="btn btn-primary registerBtn">Submit</button>
         </form>
 
 
@@ -196,6 +196,23 @@
                 });// ajax
             })//FileUpload Input Change Event--End
 
+            //////////////////////////////////////////////
+            //Submit Btn  Event                         //
+            //////////////////////////////////////////////
+            /**
+             * @Description : 기존 Form 을 사용해서 데이터를 보낼 시 
+             *                Controller 에서 받는 DTO 형식과 다르기에 
+             *                아래와 같이 input hidden 을 추가 후
+             *                submit() 시킴!
+             * 
+             * Error : movieDTO ::: MovieDTO(mno=null, title=123, imageDTOList=null) ==> [imageDTOList] nullpointException
+             * 
+            */
+            document.querySelector(".registerBtn").addEventListener("click",(e)=>{
+                e.preventDefault();
+                let str = ""
+                //TODO 이어서 하자!
+            })
         </script>
 
     </th:block>
