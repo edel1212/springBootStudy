@@ -44,12 +44,73 @@
             }
 
             document.querySelector(".custom-file-input").addEventListener("change",(data)=>{
+
+                //File Data
                 const filesData  = data.target.files;
-                for(let i of filesData){
-                    document.querySelector(".custom-file-label").insertAdjacentHTML("beforeend",i.name + "   ");
+                //Make From Object
+                const formData = new FormData();
+
+                //File Length
+                /**
+                * Description : file Index 를 구함 Array의 길이 -1을 해줘서
+                *               파일 명 및 ~~ 외 N 개를 위하여 -1 을 해줌
+                */
+                let fileLength = filesData.length - 1;
+                //FileAppend Flag
+                let appended = false;
+
+                if(fileLength === -1){
+                    document.querySelector(".custom-file-label").innerHTML = "";
+                    return;
                 }
 
-                debugger;
+                for(let i of filesData){
+                    //file Check
+                    if(!checkExtension(i.name, i.size)){
+                        return false;
+                    }//if
+                    console.log(i);
+
+                    //Add File to From
+                    formData.append("uploadFiles",i);
+                    appended = true;
+                }
+
+                //Append Flag check
+                if(!appended) return;
+
+                //Write File Name To Label
+                document.querySelector(".custom-file-label").innerHTML =  filesData[fileLength].name  + " 외" + fileLength + "개"
+
+                /**
+                * 개발자 debugger 상으로는 values()가 비어있음
+                * console.log()상으로 찍으면 나옴
+                */
+                for(let form of formData.values()){
+                    console.log(form);
+                }
+
+                //실제 업로드 부분
+                $.ajax({
+                    url : "/uploadAjax"
+                    , processData : false
+                    , contentType : false
+                    , data : formData
+                    , type : 'POST'
+                    , dataType : 'json'
+                    , success : function(result){
+                        console.log(result);
+                    },
+                    error : function(jqXHR, textStatus, errorThrown){
+                        console.log("jqXHR",jqXHR);
+                        console.log("textStatus",textStatus);
+                        console.log("errorThrown",errorThrown);
+                    }
+
+
+                })
+
+
             })
         </script>
 
