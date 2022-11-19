@@ -94,14 +94,13 @@
                     str + " <div>";
                     str += "<button type='button' data-file=\'" ;
                     str +=  obj.thumbnailURL + "\' "
-                    str +=  "onClick=thumbnailDelete('"+ obj.fileName + "')"
-                    str += " class='btn-warning btn-sm deleteBtn'>X</button><br>";
+                    str +=  "onClock=thumbnailDelete('"+ obj.thumbnailURL + "')"
+                    str += " class='btn-warning btn-sm'>X</button><br>";
                     str += "<img src='/display?fileName=" + obj.thumbnailURL + "'>";
                     str += "</div>";
                     str + "</li>";
                 });
                 document.querySelector(".uploadResult ul").innerHTML = str;
-
             }
 
            /**
@@ -109,20 +108,8 @@
             * @param targetFile : data-file 값
             * @return void
             */
-            function thumbnailDelete(targetData = "noData"){
-                //Delete
-                $.ajax({
-                    url: '/removeFile',
-                    data: {fileName: targetData},
-                    dataType:'text',
-                    type: 'POST',
-                    success: function(result){
-                        alert(result);
-                        //Delete target Element
-                        document.querySelector("[data-file='"+targetData+"']").parentElement.remove();
-                    }
-                }); //$.ajax
-
+            function thumbnailDelete(targetData){
+                alert(targetData);
             }
 
 
