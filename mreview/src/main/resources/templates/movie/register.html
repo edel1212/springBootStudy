@@ -2,6 +2,8 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <th:block th:replace="~{/layout/basic :: setContent(~{this::content} )}">
 
+
+
     <th:block th:fragment="content">
 
         <h1 class="mt-4">Movie Register Page</h1>
@@ -27,6 +29,40 @@
             <button type="submit" class="btn btn-primary">Submit</button>
         </form>
 
+
+        <div class="uploadResult">
+            <ul>
+
+            </ul>
+        </div>
+
+        <style>
+            .uploadResult {
+                width: 100%;
+                background-color: gray;
+                margin-top: 10px;
+            }
+
+            .uploadResult ul {
+                display: flex;
+                flex-flow: row;
+                justify-content: center;
+                align-items: center;
+                vertical-align: top;
+
+            }
+
+            .uploadResult ul li {
+                list-style: none;
+                padding: 10px;
+                margin-left: 2em;
+            }
+
+            .uploadResult ul li img {
+                width: 100px;
+            }
+        </style>
+
         <script>
             let regex = new RegExp("(.*?)\.(exe|sh|zip|alz|tiff)$");
             let maxSize = 10485760; //10MB
@@ -43,6 +79,31 @@
                 return true;
             }
 
+            //Show File Image (thumbnail)
+            /**
+            * @param uploadResultArr : ajax success FileData
+            * @return void
+            */
+            function showResult(uploadResultArr){
+                let uploadUL = document.querySelector(".uploadResult ul");
+                let str = "";
+                uploadResultArr.forEach( (obj) => {
+                    str += "<li data-name='"+obj.fileName+"' ";
+                    str += "data-path='"+obj.uploadPath+"' " ;
+                    str += "data-uuid='"+obj.uuid+"' >";
+                    str + " <div>";
+                    str += "<button type='button' data-file=\'" + obj.thumbnailURL + "\' "
+                    str += "class='btn-warning btn-sm'>X</button><br>";
+                    str += "<img src='/display?fileName=" + obj.thumbnailURL + "'>";
+                    str += "</div>";
+                    str + "</li>";
+                });
+                document.querySelector(".uploadResult ul").innerHTML = str;
+            }
+
+            //////////////////////////////////////////////
+            //FileUpload Input Change Event             //
+            //////////////////////////////////////////////
             document.querySelector(".custom-file-input").addEventListener("change",(data)=>{
 
                 //File Data
@@ -100,18 +161,16 @@
                     , dataType : 'json'
                     , success : function(result){
                         console.log(result);
+                        showResult(result);
                     },
                     error : function(jqXHR, textStatus, errorThrown){
                         console.log("jqXHR",jqXHR);
                         console.log("textStatus",textStatus);
                         console.log("errorThrown",errorThrown);
                     }
+                });// ajax
+            })//FileUpload Input Change Event--End
 
-
-                })
-
-
-            })
         </script>
 
     </th:block>
