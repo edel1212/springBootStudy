@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<th:block th:replace="~{/layout/basic :: setContent(~{this::content} )}">
+
+    <th:block th:fragment="content">
+
+        <h1 class="mt-4">Review List Page
+            <span>
+                <a th:href="@{/review/register}">
+                    <button type="button" class="btn btn-outline-primary">REGISTER
+                    </button>
+                </a>
+            </span>
+        </h1>
+
+        <table class="table table-striped">
+            <thead>
+            <tr>
+                <th scope="col">#</th>
+                <th scope="col">Picture</th>
+                <th scope="col">review Count</th>
+                <th scope="col">AVG Rating</th>
+                <th scope="col">Regdate</th>
+            </tr>
+            </thead>
+            <tbody>
+
+                <tr th:each="dto : ${result.dtoList}">
+                    <!-- Movie Num -->
+                    <th scope="row">
+                        <a th:href="@{/movie/read( mno = ${dto.mno}, page = ${result.page} )}">
+                            [[${dto.mno}]]
+                        </a>
+                    </th>
+
+                    <!-- Image -->
+                    <td>
+                       <img th:if="${dto.imageDTOList.size() > 0 && dto.imageDTOList[0].path != null}"
+                            th:src="|/display?fileName=${dto.imageDTOList.get(0).getThumbnailURL()}|">
+                        [[${dto.title}]]
+                    </td>
+
+                    <!-- review Cnt -->
+                    <td>
+                        <b>[[${dto.reviewCnt}]]</b>
+                    </td>
+
+                    <!-- avg -->
+                    <td>
+                        <b>[[${dto.avg}]]</b>
+                    </td>
+
+                    <!-- Date -->
+                    <td>[[${#temporals.format(dto.regDate, 'yyyy/MM/dd')}]]</td>
+                </tr>
+            </tbody>
+        </table>
+
+
+
+        <script th:inline="javascript">
+
+
+        </script>
+
+    </th:block>
+
+</th:block>

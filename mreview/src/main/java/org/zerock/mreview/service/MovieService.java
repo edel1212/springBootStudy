@@ -2,6 +2,8 @@ package org.zerock.mreview.service;
 
 import org.zerock.mreview.dto.MovieDTO;
 import org.zerock.mreview.dto.MovieImageDTO;
+import org.zerock.mreview.dto.PageRequestDTO;
+import org.zerock.mreview.dto.PageResultDTO;
 import org.zerock.mreview.entity.Movie;
 import org.zerock.mreview.entity.MovieImage;
 
@@ -13,7 +15,45 @@ import java.util.stream.Collectors;
 public interface MovieService {
 
     Long register(MovieDTO movieDTO);
-    
+
+    PageResultDTO<MovieDTO, Object[]> getList(PageRequestDTO requestDTO);
+
+    /////////////////////////////////////////////////////////////////////////////////////
+    //default Method                                                                    //
+    /////////////////////////////////////////////////////////////////////////////////////
+    /**
+     * Entity -> DTO
+     * */
+    default MovieDTO entitiesTiDTO(Movie movie, List<MovieImage> movieImages, Double avg, Long reviewCnt){
+        //Change Movie -> MovieDTO
+        MovieDTO movieDTO = MovieDTO.builder()
+                .mno(movie.getMno())
+                .title(movie.getTitle())
+                .regDate(movie.getRegeDate())
+                .modDate(movie.getModDate())
+                .build();
+
+        //Change List<MovieImage> -> List<MovieImageDTO>
+        List<MovieImageDTO> movieImageDTOList = movieImages.stream().map(movieImage ->{
+                return MovieImageDTO.builder()
+                        .imgName(movieImage.getImgName())
+                        .path(movieImage.getPath())
+                        .uuid(movieImage.getUuid())
+                        .build();
+        }).collect(Collectors.toList());
+
+        //상단에서 Change 한 List
+        movieDTO.setImageDTOList(movieImageDTOList);
+        //평균
+        movieDTO.setAvg(avg);
+        //Review Count
+        movieDTO.setReviewCnt(reviewCnt.intValue());
+
+
+
+        return movieDTO;
+    }
+
     /**
      * DTO - > Entity 로 전환하기 위함
      * - 이전 예제들과 다른점은 MovieImage 객체들도 같이 변환해 줘야하기에
