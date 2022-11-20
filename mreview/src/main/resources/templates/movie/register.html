@@ -11,7 +11,7 @@
         <form action="/movie/register" method="post">
             <div class="form-group">
                 <label >Title</label>
-                <input type="text" class="form-control" name="title" placeholder="Enter Title">
+                <input type="text" class="form-control regTitle" name="title" placeholder="Enter Title">
             </div>
 
             <div class="form-group fileForm">
@@ -206,12 +206,29 @@
              *                submit() 시킴!
              * 
              * Error : movieDTO ::: MovieDTO(mno=null, title=123, imageDTOList=null) ==> [imageDTOList] nullpointException
-             * 
+             *
+             * ✔ 주의 사항 : 헷갈리면 안되는것 !!
+             *              1) Controller 단에 전달 시 비동기통신으로 할거면 @ResponseBody 로 받아줘야함! 당연한거임
+             *                    - form 방식과 비동기방식은 다른것이기 때문임
+             *
+             *              2) client 에서 변수 전달 시 변수 명으로 해야함 헷갈리지 말자
+             *                - ex) MovieDTO -> List<MovieImageDTO> imageDTOList 경우
+             *                      - 하단처럼 imageDTOList[index].Key 값으로 해야함!
+             *                         ✔ MovieImageDTO << Class 명으로 헷가리지 말자!
             */
             document.querySelector(".registerBtn").addEventListener("click",(e)=>{
                 e.preventDefault();
-                let str = ""
-                //TODO 이어서 하자!
+                let str = "";
+                document.querySelectorAll(".uploadResult li").forEach((li, index) => {
+                    const dataSet = li.dataset;
+                    str += "<input type='hidden' name='imageDTOList["+index+"].uuid' value='"+dataSet.uuid+"'>";
+                    str += "<input type='hidden' name='imageDTOList["+index+"].imgName' value='"+dataSet.name+"'>";
+                    str += "<input type='hidden' name='imageDTOList["+index+"].path' value='"+dataSet.path+"'>";
+                });//forEach
+                //만들어진 hidden 추가
+                document.querySelector(".box").innerHTML = str;
+                //Do submit
+                document.querySelector("form").submit();
             })
         </script>
 
