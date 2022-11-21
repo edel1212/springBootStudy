@@ -44,7 +44,12 @@ public class PageResultDTO<DTO,EN> {
         //마지막 페이지 번호   : 반올림( 현재페이지/ 한번에 보여줄 목록 수 ) / 페이지 넘버 개수
         int tempEnd = (int) Math.ceil(this.page/ 10.0) * this.size;
 
-        this.start = tempEnd - this.size - 1;
+        /**
+         * size -1 을 먼저 해주는것이 중요함 안그러면 start 값이 꼬여버림..
+         * ex) ❌ 10 - 10 -1  = -1
+         *     ✔ 10 - (10 -1) = 1
+         * */
+        this.start = tempEnd - (this.size-1) ; // 시작 페이지는 end page 에서 (size-1) 값임
 
         this.prev = start > 1;
 
