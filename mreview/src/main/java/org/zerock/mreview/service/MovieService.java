@@ -18,6 +18,8 @@ public interface MovieService {
 
     PageResultDTO<MovieDTO, Object[]> getList(PageRequestDTO requestDTO);
 
+    MovieDTO getMovie(Long mno);
+
     /////////////////////////////////////////////////////////////////////////////////////
     //default Method                                                                    //
     /////////////////////////////////////////////////////////////////////////////////////
