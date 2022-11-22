@@ -39,4 +39,13 @@ public class Review extends BaseEntity{
     private int grade;
 
     private String text;
+
+    public void changeGrade(int grade){
+        this.grade = grade;
+    }
+
+    public void changeText(String text){
+        this.text = text;
+    }
+
 }
