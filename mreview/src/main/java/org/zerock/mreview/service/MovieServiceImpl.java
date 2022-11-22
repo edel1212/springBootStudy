@@ -15,6 +15,7 @@ import org.zerock.mreview.entity.MovieImage;
 import org.zerock.mreview.repository.MovieImageRepository;
 import org.zerock.mreview.repository.MovieRepository;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -66,7 +67,19 @@ public class MovieServiceImpl implements MovieService{
     @Override
     public MovieDTO getMovie(Long mno) {
         List<Object[]> result = movieRepository.getMovieWithAll(mno);
-        //TODO 2022-11-22 이어서하자
-        return null;
+
+        Movie movie = (Movie) result.get(0)[0]; //Movie Entity 는 가장 앞에 존재 - result의 모든 Row 가 동일값
+
+        List<MovieImage> movieImageList = new ArrayList<>(); //result에서 받아온 데이터를  넣을 Array
+        result.forEach(arr->{
+            MovieImage movieImage = (MovieImage)arr[1]; //result.get(index)번쨰의 [1] 데이터를 주입
+            movieImageList.add(movieImage);
+        });
+        
+        Double avg = (Double) result.get(0)[2]; //평균 평점 - result의 모든 Row 값은 동일한 값임
+
+        Long reviewCnt = (Long) result.get(0)[3];//리뷰 개수 - result의 모든 Row 값은 동일한 값임
+
+        return this.entitiesTiDTO(movie, movieImageList, avg, reviewCnt);
     }
 }
