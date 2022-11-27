@@ -49,8 +49,8 @@ public class ReviewServiceImpl implements ReviewService{
         if(result.isPresent()){
             Review movieReview = result.get();
             //getter()를 이용해 Entity 값을 변경 후 save 해준다.
-            movieReview.changeGrade(movieReview.getGrade());
-            movieReview.changeText(movieReview.getText());
+            movieReview.changeGrade(movieReviewDTO.getGrade());
+            movieReview.changeText(movieReviewDTO.getText());
             reviewRepository.save(movieReview);
         }
 

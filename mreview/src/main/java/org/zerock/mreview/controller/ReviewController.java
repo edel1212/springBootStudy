@@ -33,7 +33,7 @@ public class ReviewController {
 
 
     @PostMapping("/{mno}")
-    public ResponseEntity<Long> adReview(@RequestBody ReviewDTO movieReviewDTO){
+    public ResponseEntity<Long> addReview(@RequestBody ReviewDTO movieReviewDTO){
         log.info("-------------add MovieReview--------------");
         log.info("reviewDTO ::: " + movieReviewDTO);
 

@@ -100,7 +100,7 @@
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-secondary closeReviewModalBtn" data-dismiss="modal">Close</button>
                         <button type="button" class="btn btn-primary reviewSaveBtn">Save changes</button>
                         <button type="button" class="btn btn-warning modifyBtn">Modify </button>
                         <button type="button" class="btn btn-danger removeBtn">Remove </button>
@@ -133,6 +133,176 @@
         <link th:href="@{/css/starrr.css}" rel="stylesheet">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.2.0/css/font-awesome.min.css">
 
+        <script>
+
+            // starrr 문제가있음 추후 라이브러리 교체 또는 라디오박스로 진행하는게 좋을듯
+            let grade = 3 ;
+
+            let mno = [[${dto.mno}]];
+
+            //Load Review List
+            getMovieReviews();
+
+
+            //DateFormat
+            function formatTime(str){
+                return new Intl.DateTimeFormat("ko").format(new Date(str));
+            }
+
+            //get Review List
+            function getMovieReviews(){
+                $.getJSON('/reviews/'+mno+'/all', function (arr) {
+                       var str = '';
+                       $.each(arr, function (idx, review) {
+                          str += '<div class="card-body" data-reviewnum="'+review.reviewnum+'" data-mid="'+review.mid+'">';
+
+                          str += '<h5 class="card-title" style="display: flex; justify-content: space-between;" >'+review.text+'<span><strong>['+review.grade+']</strong></span></h5>';
+                          str += '<h6 class="card-subtitle mb-2 text-muted">'+review.nickname+'</h6>';
+                          str += '<p class="card-text">'+formatTime(review.regDate)+'</p>';
+
+                          str += '</div>';
+                       });
+                       $('.reviewList').html(str);
+                    });
+            }
+
+            //reviewNumber setting
+            let reviewnum = 0;
+
+            //Review Click Event
+            document.querySelector(".reviewList").addEventListener("click",(e)=>{
+                const target = e.target;
+
+                let  targetReview = target;
+
+                // Select elem Check
+                if(!target.classList.contains("card-body")){
+                    targetReview = e.target.parentElement;
+                }
+
+                //set review Number
+                reviewnum = targetReview.dataset.reviewnum;
+
+                //Member Number
+                const midNum = targetReview.dataset.mid;
+
+                //RegisterBtn Hide
+                document.querySelector(".reviewSaveBtn").style.display = "none";
+                //Show modify and remove Btn
+                document.querySelector(".removeBtn").style.disply = "block";
+                document.querySelector(".modifyBtn").style.disply = "block";
+
+                //Set Value
+                document.querySelector("input[name='mid']").value = midNum;
+                document.querySelector("input[name='text']").value = targetReview.firstChild.firstChild.textContent;
+
+                //Show Modal
+                document.querySelector(".reviewModal").style.display = "block";
+            })
+
+            //Review Modal
+            const reviewMoal = document.querySelector(".reviewModal");
+
+            //Review Register Click Event
+            document.querySelector(".addReviewBtn").addEventListener("click",(e)=>{
+
+                //RegisterBtn Show
+                document.querySelector(".reviewSaveBtn").style.display = "block";
+                //Hide modify and remove Btn
+                document.querySelector(".removeBtn").style.disply = "none";
+                document.querySelector(".modifyBtn").style.disply = "none";
+
+                //set inputValue
+                const mid = document.querySelector("input[name='mid']");
+                const text = document.querySelector("input[name='text']");
+
+                //init
+                mid.value  = "";
+                text.value = "";
+                
+                //Modal Show
+                reviewMoal.style.display = "block";
+
+                //add Review
+                document.querySelector(".reviewSaveBtn").addEventListener("click",(e)=>{
+                    //make Review JSONData
+                    const data = {
+                        mno : mno ,
+                        grade : grade,
+                        text : text.value,
+                        mid : mid.value
+                    }
+
+                    //send Data
+                    $.ajax({
+                        url : "/reviews/"+mno,
+                        type: "POST",
+                        data : JSON.stringify(data), // data
+                        contentType : "application/json; charset=uft-8",
+                        dataType : "text",
+                        success : function(result){
+                            console.log("result", result);
+                            self.location.reload();
+                        },error : function(err){
+                            console.log(err);
+                        }
+                    })
+                    reviewMoal.style.display = "none";
+                });// add Review Event
+
+            });//click Event
+
+            //remove Event
+            document.querySelector(".removeBtn").addEventListener("click",(e)=>{
+
+
+
+
+                //Modal Hide
+                reviewMoal.style.display = "none";
+            });//click
+
+            //modify Btn Event
+            document.querySelector(".modifyBtn").addEventListener("click",(e)=>{
+
+                //set inputValue
+                const mid = document.querySelector("input[name='mid']");
+                const text = document.querySelector("input[name='text']");
+
+                //make Review JSONData
+                const data = {
+                    reviewnum : reviewnum,
+                    mno : mno ,
+                    grade : grade,
+                    text : text.value,
+                    mid : mid.value
+                }
+
+                $.ajax({
+                    url: `/reviews/${mno}/${reviewnum}`,
+                    type : "PUT",
+                    data : JSON.stringify(data),
+                    contentType : "application/json; charset=utf-8",
+                    dataType : "text",
+                    success: function(result){
+                    console.log(result);
+                    self.location.reload();
+                    }, error : function(error){
+                        console.log(error);
+                    }
+                });//ajax
+
+                //Modal Hide
+                reviewMoal.style.display = "none";
+            });//click Event
+
+            //close Btn Event
+            document.querySelector(".closeReviewModalBtn").addEventListener("click",(e)=>{
+                //Modal Hide
+                reviewMoal.style.display = "none";
+            });//click Event
+
+        </script>
 
 
     </th:block>
