@@ -254,8 +254,23 @@
 
             //remove Event
             document.querySelector(".removeBtn").addEventListener("click",(e)=>{
+                const data = {
+                    reviewnum : reviewnum
+                };
 
-
+                 $.ajax({
+                    url: `/reviews/${mno}/${reviewnum}`,
+                    type : "DELETE",
+                    data : JSON.stringify(data),
+                    contentType : "application/json; charset=utf-8",
+                    dataType : "text",
+                    success: function(result){
+                    console.log(result);
+                    self.location.reload();
+                    }, error : function(error){
+                        console.log(error);
+                    }
+                });//ajax
 
 
                 //Modal Hide
