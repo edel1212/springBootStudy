@@ -94,7 +94,7 @@ public class UploadController {
     }
 
     @GetMapping("/display")
-    public ResponseEntity<byte[]> geFile(String fileName){
+    public ResponseEntity<byte[]> geFile(String fileName, String size){
 
         //return Data
         ResponseEntity<byte[]> result = null;
@@ -109,6 +109,16 @@ public class UploadController {
 
             log.info("file ::" + file);
             
+            /**
+             * @Description : 원본 사이즈를 구하기 위한 로직
+             *               Parameter인 Size의 유무체르로 구분한다
+             * */
+            if(size != null && size.equals("1")){
+                file = new File(file.getParent(), file.getName().substring(2));
+            }
+            //TODO :: 2022-11-28 Client 에서 넘겨주는 size 값 추가 후 원본 이미지 기능 개발
+
+
             //Header 객체 생성
             HttpHeaders headers = new HttpHeaders();
             
