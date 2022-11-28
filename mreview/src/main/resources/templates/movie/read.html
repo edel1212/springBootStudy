@@ -123,7 +123,7 @@
 
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-secondary imgModalCloseBtn" data-dismiss="modal">Close</button>
                     </div>
                 </div>
             </div>
@@ -316,6 +316,31 @@
                 //Modal Hide
                 reviewMoal.style.display = "none";
             });//click Event
+
+            //////////////////////////////
+            //Thumbnail Image Click Event
+            //////////////////////////////
+            document.querySelector(".uploadResult ul").addEventListener("click",(e)=>{
+                const target = e.target;
+                const nodeName = target.nodeName;
+
+                if(nodeName === 'UL' | nodeName === 'LI' ) return;
+
+                const dataFile = target.parentElement.dataset.file;
+
+                //Insert Image to Modal
+                document.querySelector(".imageModal .modal-body").innerHTML = `<img style="with=100%" src="/display?fileName=${dataFile}&size=1">`
+
+                //Show ImageModal
+                document.querySelector(".imageModal").style.display ="block"
+
+            });// thumbnail Click
+
+            //Close Img Modal Close Btn
+            document.querySelector(".imgModalCloseBtn").addEventListener("click",(e)=>{
+                //Show ImageModal
+                document.querySelector(".imageModal").style.display ="none"
+            })
 
         </script>
 

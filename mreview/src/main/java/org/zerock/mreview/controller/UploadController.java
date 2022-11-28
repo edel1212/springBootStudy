@@ -105,19 +105,33 @@ public class UploadController {
 
             log.info("fileName :: "+ srcFileName);
 
+            /**
+             * File.separator+ srcFileName   :: \2022\11\21/s_7b71fbdc-90dd-44e2-92ba-27a23e3597be_권정열-R10421.jpg
+             * */
             File file = new File(uploadPath + File.separator+ srcFileName);
 
             log.info("file ::" + file);
+            //파일의 Dir + 썸네일 경로
             
             /**
              * @Description : 원본 사이즈를 구하기 위한 로직
              *               Parameter인 Size의 유무체르로 구분한다
              * */
             if(size != null && size.equals("1")){
+                /***
+                 * file.getParent(),              :: 파일의 Dir 경로
+                 * file.getName().substring(2)    :: 7b71fbdc-90dd-44e2-92ba-27a23e3597be_권정열-R10421.jpg
+                 *
+                 * @Description : .substring(2) 이유는 받다오는 이미지의 주소값은 썸네일의 주소값으로 항상
+                 *                 _s 가붙어 있으므로 해당 앞부분을 제외하면 원본 이미지의 주소임!
+                 *
+                 */
                 file = new File(file.getParent(), file.getName().substring(2));
+                /*
+                 * 파일의 Dir 경로 + 7b71fbdc-90dd-44e2-92ba-27a23e3597be_권정열-R10421.jpg
+                **/
+                //
             }
-            //TODO :: 2022-11-28 Client 에서 넘겨주는 size 값 추가 후 원본 이미지 기능 개발
-
 
             //Header 객체 생성
             HttpHeaders headers = new HttpHeaders();
@@ -127,7 +141,10 @@ public class UploadController {
              *
              * 해주는 이유❔
              *  - 파일의 확장자에따라 브라우저에 전송하는 MIME타입이 달려쟈아 하므로
-             * */
+             *
+             *  Files.probeContentType❔
+             *  - 해당 경로의 파일의 확장자를 확인함 단! 확인하지 못하면 null을 반환함
+            * */
             headers.add("Content-Type", Files.probeContentType(file.toPath()));
             //파일 데이터 처리
             result = new ResponseEntity<>(FileCopyUtils.copyToByteArray(file),
