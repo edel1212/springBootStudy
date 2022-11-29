@@ -44,18 +44,27 @@ public class SecurityConfig{
     protected SecurityFilterChain configure(HttpSecurity httpSecurity) throws Exception{
         
         
-        //antMatchers("???") 의 URL 은 **/* 와같은 앤트 스타일 패턴으로 자원을 선택도 가능함 
+        //antMatchers("???") 의 URL 은 **/* 와같은 앤트 스타일 패턴으로 자원을 선택도 가능함
         httpSecurity.authorizeHttpRequests((auth) ->{
             auth.antMatchers("/sample/all").permitAll();     // 누구나 로그인 없이도 /sample/all 에 접근 가능
             auth.antMatchers("/sample/member").hasRole("USER");  //User 권한을 갖으면 /sample/member 에 접근 가능
         });
-
+        /***
+         * - formLogin() 추가 시 :: 인가 , 인증에 문제시 자동으로 로그인 화면으로 이동시켜줌
+         *
+         * ❌ 단점은 해당 매서드를 이용하는 경우에는 별도의 디자인을 적용 불가능한 Spring Security 에서 제공하는 UI를 사용해야함
+         * ✔ loginPage() 혹은 loginProcessUrl(), defaultSuccessUrl(), failureUrl() 등을 이용하면
+         *    필요한 설정을 지정할 수있다.
+         *    - 대부분의 어플리게이션은 고유의 디자인을 적용하기 떄문에 loginPage()를 이용해 별도의 페이지를 만들어 사용!
+         * */
         httpSecurity.formLogin();
-        httpSecurity.csrf().disable();
+        httpSecurity.csrf().disable(); // csrf 사용  X
         httpSecurity.logout();
 
         return httpSecurity.build();
     }
+
+    //TODO CSRF 2022-11-29
 
     /**
      * 임시 계정 생성
