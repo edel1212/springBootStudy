@@ -3,11 +3,13 @@ package org.zerock.club.config;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
+import org.springframework.security.web.SecurityFilterChain;
 
 /**
  * @Description : 해당 Class 는 시큐리티 관련 기느응ㄹ  쉽게 설정하기 위한 Class 이다
@@ -33,9 +35,33 @@ public class SecurityConfig{
     PasswordEncoder passwordEncoder(){
         return new BCryptPasswordEncoder();
     }
-
+    
+    /**
+     * 설정을 통한 권한에 따른 URL 접근 제한
+     * - throws Exception 필수이다
+     * */
     @Bean
-    public InMemoryUserDetailsManager userDetailService(){
+    protected SecurityFilterChain configure(HttpSecurity httpSecurity) throws Exception{
+        
+        
+        //antMatchers("???") 의 URL 은 **/* 와같은 앤트 스타일 패턴으로 자원을 선택도 가능함 
+        httpSecurity.authorizeHttpRequests((auth) ->{
+            auth.antMatchers("/sample/all").permitAll();     // 누구나 로그인 없이도 /sample/all 에 접근 가능
+            auth.antMatchers("/sample/member").hasRole("USER");  //User 권한을 갖으면 /sample/member 에 접근 가능
+        });
+
+        httpSecurity.formLogin();
+        httpSecurity.csrf().disable();
+        httpSecurity.logout();
+
+        return httpSecurity.build();
+    }
+
+    /**
+     * 임시 계정 생성
+     * */
+    @Bean
+    protected InMemoryUserDetailsManager userDetailService(){
         UserDetails user = User.builder()
                 .username("user1")                                      //ID
                 .password(passwordEncoder().encode("1111"))  // PW - Security 는 encoding 된 PW를 꼭 사용해아함
