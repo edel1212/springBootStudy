@@ -11,6 +11,9 @@ public class ClubApplication {
 	 *
 	 *  - 해당 패스워드는 spring security 에서 자동으로 제공하는 화면인 : localhost:8080 에 접속 시
 	 *    로그인을 할수 있는 PW 이다 - id :: <b>user</b>
+	 *    
+	 *    -------------------------------------------------------
+	 *    1) SecurityConfig.java 에서 주입한 InMemoryUserDetailsManager로 계정 User1 __ 123 추가함
 	 * */
 	public static void main(String[] args) {
 		SpringApplication.run(ClubApplication.class, args);
