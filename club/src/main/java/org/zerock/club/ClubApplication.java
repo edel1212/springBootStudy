@@ -2,8 +2,10 @@ package org.zerock.club;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 
 @SpringBootApplication
+@EnableJpaAuditing // Entity Class에 지정된 @EntityListeners(value = AuditingEntityListener.class) 읽기 위함
 public class ClubApplication {
 	/**
 	 * 서버 실행 시 Spring security 가 추가된 후 console 창에 임시 패스워드가 생성된것을 확인 가능함
