@@ -76,17 +76,17 @@ public class SecurityConfig{
     /**
      * 임시 계정 생성
      * */
-    @Bean
-    protected InMemoryUserDetailsManager userDetailService(){
-        UserDetails user = User.builder()
-                .username("user1")                                      //ID
-                .password(passwordEncoder().encode("1111"))  // PW - Security 는 encoding 된 PW를 꼭 사용해아함
-                .roles("USER")                                          //권한
-                .build();
-        log.info("userDetailsService!!!!");
-        log.info(user);
-        //log :: org.springframework.security.core.userdetails.User [Username=user1, Password=[PROTECTED], Enabled=true, AccountNonExpired=true, credentialsNonExpired=true, AccountNonLocked=true, Granted Authorities=[ROLE_USER]]
-        return new InMemoryUserDetailsManager(user);
-    }
+//    @Bean
+//    protected InMemoryUserDetailsManager userDetailService(){
+//        UserDetails user = User.builder()
+//                .username("user1")                                      //ID
+//                .password(passwordEncoder().encode("1111"))  // PW - Security 는 encoding 된 PW를 꼭 사용해아함
+//                .roles("USER")                                          //권한
+//                .build();
+//        log.info("userDetailsService!!!!");
+//        log.info(user);
+//        //log :: org.springframework.security.core.userdetails.User [Username=user1, Password=[PROTECTED], Enabled=true, AccountNonExpired=true, credentialsNonExpired=true, AccountNonLocked=true, Granted Authorities=[ROLE_USER]]
+//        return new InMemoryUserDetailsManager(user);
+//    }
 
 }
