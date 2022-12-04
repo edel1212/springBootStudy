@@ -68,10 +68,14 @@ public class SecurityConfig{
         httpSecurity.csrf().disable();  // csrf 사용  X
         httpSecurity.logout();          // 로그아웃 페이지 생성  URL : host/logout
 
+        //Google social Login 추가
+        httpSecurity.oauth2Login();
+
+
         return httpSecurity.build();
     }
 
-    
+
 
     /**
      * 임시 계정 생성
