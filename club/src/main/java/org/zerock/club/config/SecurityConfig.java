@@ -1,16 +1,19 @@
 package org.zerock.club.config;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
+import org.zerock.club.security.service.ClubOAuth2USerDetailsService;
 
 /**
  * @Description : 해당 Class 는 시큐리티 관련 기느응ㄹ  쉽게 설정하기 위한 Class 이다
@@ -30,8 +33,12 @@ import org.springframework.security.web.SecurityFilterChain;
  * */
 @Configuration
 @Log4j2
+@RequiredArgsConstructor
+@EnableWebSecurity
 //@EnableGlobalMethodSecurity(prePostEnabled = true, securedEnabled = true)
 public class SecurityConfig{
+
+    private final ClubOAuth2USerDetailsService customOAuth2UserService;
 
     @Bean
     PasswordEncoder passwordEncoder(){
@@ -71,7 +78,9 @@ public class SecurityConfig{
         httpSecurity.logout();          // 로그아웃 페이지 생성  URL : host/logout
 
         //Google social Login 추가
-        httpSecurity.oauth2Login();
+        httpSecurity.oauth2Login()
+                .userInfoEndpoint()
+                .userService(customOAuth2UserService);
 
 
         return httpSecurity.build();
