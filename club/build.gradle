@@ -41,6 +41,10 @@ dependencies {
 	// ✔have to make oauth.properties
 	implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
 
+	compileOnly 'org.projectlombok:lombok'
+	// test 환경 lombok 사용 가능하끔 설정
+	testCompileOnly 'org.projectlombok:lombok'
+	testAnnotationProcessor 'org.projectlombok:lombok'
 }
 
 tasks.named('test') {
