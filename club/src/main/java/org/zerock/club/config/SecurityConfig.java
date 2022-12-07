@@ -73,12 +73,17 @@ public class SecurityConfig{
          * ✔ logoutUrl(), logoutSuccessUrl() 등으로  커스텀 페이지 제작 가능
          *   , invalidateHttpSession() , deleteCookies() 를 추가해 세션 , 쿠기도 삭제 가능
          * */
-        httpSecurity.formLogin();       // 권한이 없는 페이지 -> 로그인 페이지 이동
-        httpSecurity.csrf().disable();  // csrf 사용  X
-        httpSecurity.logout();          // 로그아웃 페이지 생성  URL : host/logout
+//        httpSecurity.formLogin();       // 권한이 없는 페이지 -> 로그인 페이지 이동
+//        httpSecurity.csrf().disable();  // csrf 사용  X
+//        httpSecurity.logout();          // 로그아웃 페이지 생성  URL : host/logout
 
         //Google social Login 추가
-        httpSecurity.oauth2Login()
+        httpSecurity.formLogin()
+                .and()
+                .csrf()
+                .disable()
+                .oauth2Login()
+                //.loginPage("/loginFrom")
                 .userInfoEndpoint()
                 .userService(customOAuth2UserService);
 
