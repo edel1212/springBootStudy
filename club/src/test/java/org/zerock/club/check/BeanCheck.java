@@ -23,4 +23,11 @@ public class BeanCheck {
 
     }
 
+
+    @Test
+    public void exceptionTest(){
+        int num = 100 / 0;
+        //System.out.println(num);
+    }
+
 }
