@@ -1,11 +1,18 @@
 package org.zerock.club.security.service;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
+import org.zerock.club.entity.ClubMember;
+import org.zerock.club.entity.ClubMemberRole;
+import org.zerock.club.repository.ClubMemberRepository;
+
+import java.util.Optional;
 
 /**
  * @Description : 해당 Class 는 UserDetailsService(Interface) 의 OAuth2 버전으로 생각하면 된다
@@ -17,7 +24,12 @@ import org.springframework.stereotype.Service;
  * */
 @Service
 @Log4j2
+@RequiredArgsConstructor
 public class ClubOAuth2USerDetailsService extends DefaultOAuth2UserService {
+
+    private final ClubMemberRepository repository;
+
+    private final PasswordEncoder passwordEncoder;
 
     /***
      * @Description : 삽질내용 .. 해당  loadUser 메서드가 연결되지 않아서..
@@ -37,7 +49,13 @@ public class ClubOAuth2USerDetailsService extends DefaultOAuth2UserService {
      *               - logging.level.org.zerock.security = debug       ## ❌
      *               - logging.level.org.zerock.club.security = debug  ## ✔
      *               실행은 되나 패키지 명을 써주자
-     * */
+     *
+     *
+     *               ✔ 해당 Method 는  OAuth Login 시 에만 탄다!✔
+     *              
+     *               ✔ 해당 Method 는  Google 로그인이 성공하지 않으면 타지 않음!
+     *                 따라서 해당 메스드에 탔다는건 구글 인증이 되었다는것임
+     * */   
 
     @Override
     public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
@@ -47,18 +65,62 @@ public class ClubOAuth2USerDetailsService extends DefaultOAuth2UserService {
 
         String clientName = userRequest.getClientRegistration().getClientName();
 
-        log.info("clientName : " + clientName);
+        log.info("clientName : " + clientName); //사용하는 Client Api 명 [Google]
         log.info(userRequest.getAdditionalParameters());
 
         OAuth2User oAuth2User = super.loadUser(userRequest);
         log.info("=================================");
         oAuth2User.getAttributes().forEach((k,v) -> {
+            //sub, picture, email, email_verified ... 출력
             log.info(k + ":" + v);
         });
 
+        String email = null;
+    
+        //구글일경우 oAuth 객체헤서 email 정보를 가져옴
+        if(clientName.equals("Google")) email = oAuth2User.getAttribute("email");
+
+        log.info("email::: " + email);
+
+        ClubMember member = saveSocialMember(email);
 
         return oAuth2User;
 
     }
 
+
+    /**
+     * @Descripton : Social Login 시 받아온 정보를 토대로 회원 정보를
+     *               DB에 저장하는 Method
+     * */
+    private ClubMember saveSocialMember(String email){
+
+        //기존에 동일한 이메일로 가입한 회원이 있는지 조회
+        Optional<ClubMember> result = repository.findByEmail(email,true);// Email , Social  유무
+
+        //이미 가입한 회원일경우 return
+        if(result.isPresent()) return result.get();
+
+        /**
+         * 없다면 회원 추가 다만 여기서 문제는 비밀번호는 어떤걸로 해줘야하나 ..고민해봐야함
+         * 
+         * */
+        ClubMember clubMember = ClubMember.builder()
+                .email(email)
+                .name(email)
+                .password(passwordEncoder.encode("1111")) // Spring Security 는 Pw Encoding 필수
+                .fromSocial(true)
+                .build();
+    
+        //권한 추가 -- USER
+        clubMember.addMemberRole(ClubMemberRole.USER);
+    
+        //DB 등록
+        repository.save(clubMember);
+
+        return clubMember;
+
+    }
+
+    //__Eof__
 }
