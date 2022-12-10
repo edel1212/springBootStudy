@@ -2,6 +2,7 @@ package org.zerock.club.security.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
@@ -11,8 +12,10 @@ import org.springframework.stereotype.Service;
 import org.zerock.club.entity.ClubMember;
 import org.zerock.club.entity.ClubMemberRole;
 import org.zerock.club.repository.ClubMemberRepository;
+import org.zerock.club.security.dto.ClubAuthMemberDTO;
 
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * @Description : 해당 Class 는 UserDetailsService(Interface) 의 OAuth2 버전으로 생각하면 된다
@@ -84,7 +87,22 @@ public class ClubOAuth2USerDetailsService extends DefaultOAuth2UserService {
 
         ClubMember member = saveSocialMember(email);
 
-        return oAuth2User;
+        ClubAuthMemberDTO clubAuthMemberDTO = new ClubAuthMemberDTO(
+                member.getEmail(),                          //ID
+                member.getPassword(),                       //PW
+                true,                              //로그인 구분
+                member.getRoleSet().stream()
+                        .map( role -> 
+                                new SimpleGrantedAuthority("ROLE_"+role.name()))
+                        .collect(Collectors.toList()),      //권한
+                oAuth2User.getAttributes()                  //개정정보
+        );
+
+        clubAuthMemberDTO.setName(member.getName());
+
+        //해당 ClubAuthMemberDTO는 OAuth2User를 Impl 시킴
+        //다형성으로 인해 반환값으로 사용 가능해짐
+        return clubAuthMemberDTO;
 
     }
 
