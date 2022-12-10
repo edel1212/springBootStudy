@@ -35,7 +35,14 @@ import java.util.stream.Collectors;
 public class ClubUserDetailService implements UserDetailsService {
 
     final private ClubMemberRepository clubMemberRepository;
-
+    
+    /**
+     * - from Login 시 
+     *   해당 loadUserByUsername()가 동작
+     * 
+     * - 소셜 로그인 버튼 시에는 해당 메서드가 아닌
+     *   ClubOAuth2UserDetailService.loadUser()가 동작
+     * */
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         log.info("ClubUserDetailsService userName(ID):::" + username);
@@ -49,6 +56,13 @@ public class ClubUserDetailService implements UserDetailsService {
         log.info("-----------------------");
         log.info(clubMember);
 
+        /***
+         * ✅✅ 해당  생성자를 만들때 id Pw 검사를 하는것임!! ✅✅
+         *
+         *  1) clubMember 객체에는 DB에서 가져온 encoding 된 PW를 가지고있고
+         *  2) Client 단에서 넘어온 password 를 encoding 한 후 비교
+         *  3) 다르면 당연히 비밀번호가 다른것이기 떄문에 UsernameNotFoundException!!
+         * */
         //User 을 상속받은 Class 이기떄문에 권한 체크가 가능함!
         ClubAuthMemberDTO clubAuthMember = new ClubAuthMemberDTO(
           clubMember.getEmail(),
