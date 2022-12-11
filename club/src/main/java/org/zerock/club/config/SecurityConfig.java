@@ -13,6 +13,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
+import org.zerock.club.security.handler.ClubLoginSuccessHandler;
 import org.zerock.club.security.service.ClubOAuth2USerDetailsService;
 
 /**
@@ -72,17 +73,26 @@ public class SecurityConfig{
          * ✔ logoutUrl(), logoutSuccessUrl() 등으로  커스텀 페이지 제작 가능
          *   , invalidateHttpSession() , deleteCookies() 를 추가해 세션 , 쿠기도 삭제 가능
          * */
-        httpSecurity.formLogin();       // 권한이 없는 페이지 -> 로그인 페이지 이동
+        httpSecurity.formLogin().successHandler(successHandler());       // 권한이 없는 페이지 -> 로그인 페이지 이동
         httpSecurity.csrf().disable();  // csrf 사용  X
         httpSecurity.logout();          // 로그아웃 페이지 생성  URL : host/logout
 
         //Google social Login 추가
-        httpSecurity.oauth2Login();
+        httpSecurity.oauth2Login()
+                .successHandler(successHandler());  //하위에 만들어준 Method Call
 
         return httpSecurity.build();
     }
 
-
+    /**
+     * @Description : AuthenticationSuccessHandler 를 구현한 Class
+     *               - Bean Annotation 을 퉁해 Spring Container 에 주입해준다.
+     *               ✔ 로그인 성공 시 진행될 로직을 구현해놓은 Class 를 반환한다.
+     * */
+    @Bean
+    public ClubLoginSuccessHandler successHandler(){
+        return new ClubLoginSuccessHandler( passwordEncoder() );
+    }
 
     /**
      * 임시 계정 생성

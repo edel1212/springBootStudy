@@ -6,6 +6,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 import org.zerock.club.entity.ClubMember;
 import org.zerock.club.repository.ClubMemberRepository;
@@ -79,7 +80,6 @@ public class ClubUserDetailService implements UserDetailsService {
         clubAuthMember.setName(clubMember.getName()); //진짜 이름
         clubAuthMember.setFromSocial(clubMember.isFromSocial()); //소셜 구분
 
-        
         return clubAuthMember;
     }
 }
