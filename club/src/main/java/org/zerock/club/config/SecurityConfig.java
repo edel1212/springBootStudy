@@ -2,6 +2,7 @@ package org.zerock.club.config;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
@@ -15,6 +16,7 @@ import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.zerock.club.security.handler.ClubLoginSuccessHandler;
 import org.zerock.club.security.service.ClubOAuth2USerDetailsService;
+import org.zerock.club.security.service.ClubUserDetailService;
 
 /**
  * @Description : 해당 Class 는 시큐리티 관련 기느응ㄹ  쉽게 설정하기 위한 Class 이다
@@ -31,14 +33,23 @@ import org.zerock.club.security.service.ClubOAuth2USerDetailsService;
  *  - 스프링 시큐리티에서 가장 핵심적인 기능을 하는 필터는 <b>AuthenticationManager</b>이다
  *     - 해당 필터가 가진 인증처리 메서드는 파라미터도 Authentication 타입이고 반환 타입 또한
  *       Authentication 이다
+ *       
+ *  
+ *  -------------------------------------------------------------------------------------
+ *   
+ * @Desceiptoin : Annotation 으로 Url 별 권한 메칭 방법 
+ *               - @EnableGlobalMethodSecurity(prePostEnabled = true, securedEnabled = true) 추가
+ *               - 원하는 권한의 Controller Method 에 @PreAuthorize 추가
+ *                  -> ex) @PreAuthorize("hasRole('추가')")
  * */
 @Configuration
 @Log4j2
-@RequiredArgsConstructor
-//@EnableGlobalMethodSecurity(prePostEnabled = true, securedEnabled = true)
+@EnableGlobalMethodSecurity(prePostEnabled = true, securedEnabled = true) //어노테이션으로 url 권한 설정하기 위함.
 public class SecurityConfig{
 
-    //private final ClubOAuth2USerDetailsService customOAuth2UserService;
+    @Autowired
+    private ClubUserDetailService clubUSerDetailService;
+
 
     @Bean
     PasswordEncoder passwordEncoder(){
@@ -52,12 +63,17 @@ public class SecurityConfig{
     @Bean
     protected SecurityFilterChain configure(HttpSecurity httpSecurity) throws Exception{
         
-        
+        /***---------------------*---------------------*---------------------*/
+        /** url Matching  방법  [ EnableGlobalMethodSecurity 사용으로 주석처리 ] */
+        /***---------------------*---------------------*---------------------*/
         //antMatchers("???") 의 URL 은 **/* 와같은 앤트 스타일 패턴으로 자원을 선택도 가능함
-        httpSecurity.authorizeHttpRequests((auth) ->{
-            auth.antMatchers("/sample/all").permitAll();     // 누구나 로그인 없이도 /sample/all 에 접근 가능
-            auth.antMatchers("/sample/member").hasRole("USER");  //User 권한을 갖으면 /sample/member 에 접근 가능
-        });
+//        httpSecurity.authorizeHttpRequests((auth) ->{
+//            auth.antMatchers("/sample/all").permitAll();     // 누구나 로그인 없이도 /sample/all 에 접근 가능
+//            auth.antMatchers("/sample/member").hasRole("USER");  //User 권한을 갖으면 /sample/member 에 접근 가능
+//        });
+//---------------------------------------------------------------------------------------------------------
+
+
         /***
          * 1)  login form
          * - formLogin() 추가 시 :: 인가 , 인증에 문제시 자동으로 로그인 화면으로 이동시켜줌
@@ -73,14 +89,19 @@ public class SecurityConfig{
          * ✔ logoutUrl(), logoutSuccessUrl() 등으로  커스텀 페이지 제작 가능
          *   , invalidateHttpSession() , deleteCookies() 를 추가해 세션 , 쿠기도 삭제 가능
          * */
-        httpSecurity.formLogin().successHandler(successHandler());       // 권한이 없는 페이지 -> 로그인 페이지 이동
+        httpSecurity.formLogin();       // 권한이 없는 페이지 -> 로그인 페이지 이동
         httpSecurity.csrf().disable();  // csrf 사용  X
         httpSecurity.logout();          // 로그아웃 페이지 생성  URL : host/logout
 
         //Google social Login 추가
         httpSecurity.oauth2Login()
                 .successHandler(successHandler());  //하위에 만들어준 Method Call
-
+        
+        //RememberMe 기능 추가
+        httpSecurity.rememberMe()
+                .tokenValiditySeconds(60*60*24*7)  //cookie 유지 기간 -- 7일
+                .userDetailsService(clubUSerDetailService); // userDetailService 추가 필요 - Spring Bean 주입 !
+        
         return httpSecurity.build();
     }
 
