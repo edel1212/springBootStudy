@@ -6,7 +6,50 @@
 </head>
 <body>
     <script>
-        console.log("hello!");
+        //registerTest();
+        stringTest();
+
+////////////////////////////////////////////////////////
+        function registerTest(){
+
+            const  testData = {"num":null,"title":"Test","content":"Test  Content","writerEmail":"user90@naver.com","regDate":null,"modDate":null}
+
+            fetch("/notes/", {
+              method: "POST",
+              headers: {
+                Accept: "application/json",
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(testData),
+            })
+              .then((response) => response.json())
+              .then((data) => {
+                console.log(data);
+              })
+              .catch((error) => console.log(error));
+        }
+////////////////////////////////////////////////////////
+
+         function stringTest(){
+
+            const  testData = {"num":null,"title":"Test","content":"Test  Content","writerEmail":"user90@naver.com","regDate":null,"modDate":null}
+
+            fetch("/notes/stringTest", {
+              method: "POST",
+              headers: {
+                Accept: "application/json",
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(testData),
+            })
+              .then((response) => response.text())
+              .then((data) => {
+              //  debugger;
+                console.log(data);
+              })
+              .catch((error) => console.log(error));
+        }
+
     </script>
 </body>
 </html>
