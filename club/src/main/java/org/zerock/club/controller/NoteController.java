@@ -3,13 +3,13 @@ package org.zerock.club.controller;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.zerock.club.dto.NoteDTO;
 import org.zerock.club.service.NoteService;
+
+import java.util.List;
 
 @RestController
 @Log4j2
@@ -19,6 +19,8 @@ public class NoteController {
 
     private final NoteService noteService;
 
+
+    //등록
     @PostMapping(value = "")
     public ResponseEntity<Long> register(@RequestBody NoteDTO noteDTO){
 
@@ -32,7 +34,26 @@ public class NoteController {
         return new ResponseEntity<>(num, status);
     }
 
-    @PostMapping("stringTest")
+    //단건 조회
+    @GetMapping(value = "/{num}" , produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<NoteDTO> read(@PathVariable Long num){
+        log.info("----------------------");
+        log.info("read Num :: " + num);
+        return new ResponseEntity<>(noteService.get(num),HttpStatus.OK);
+    }
+
+
+    //다건 조회
+    @GetMapping(value = "/all", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<List<NoteDTO>> getList(String email){
+        log.info("------------getList------------");
+        log.info("email ::: " + email);
+        return new ResponseEntity<>(noteService.getAllWithWriter(email), HttpStatus.OK);
+    }
+
+    //////////////////////////////////////////////////////////////////
+    // produces 는 Client 단에서 Headers -> Accept 옵션을 줄 것이면 맞춰주자! [ 안써주면 반환값만 JSON 으로 맞춰주면 됨 ]
+    @PostMapping(value = "stringTest" , produces = MediaType.APPLICATION_JSON_VALUE)  
     public String stringResponseTest(@RequestBody NoteDTO noteDTO){
         log.info(noteDTO);
         return "Hello!";

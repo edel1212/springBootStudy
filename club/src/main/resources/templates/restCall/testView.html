@@ -6,8 +6,9 @@
 </head>
 <body>
     <script>
-        //registerTest();
-        stringTest();
+        //registerTest(); //등록
+        //getTest();      //단건 조회
+        //stringTest();   //Accept -> produces Test
 
 ////////////////////////////////////////////////////////
         function registerTest(){
@@ -29,6 +30,29 @@
               .catch((error) => console.log(error));
         }
 ////////////////////////////////////////////////////////
+        function getTest(){
+
+            fetch("/notes/1")
+              .then((response) =>{
+                    return response.json()
+                })
+              .then((data) => {
+                console.log(data);
+              })
+              .catch((error) => console.log(error));
+        }
+////////////////////////////////////////////////////////
+        //✔중요!✔ GET 방식에는 body가 못들어감!! --- URL로 값을 전달해야함! 당연한거임.. GET방식이니까..
+        function getListTest(){
+            const testData = { email : "user90@naver.com"}
+            fetch("/notes/all?email="+testData.email)
+              .then((response) => response.json())
+              .then((data) => {
+                console.log(data);
+              })
+              .catch((error) => console.log(error));
+        }
+////////////////////////////////////////////////////////
 
          function stringTest(){
 
@@ -37,7 +61,7 @@
             fetch("/notes/stringTest", {
               method: "POST",
               headers: {
-                Accept: "application/json",
+                Accept: "application/json", //Server 단에서 produces 설정을   MediaType.APPLICATION_JSON_VALUE 하면 error
                 "Content-Type": "application/json",
               },
               body: JSON.stringify(testData),
