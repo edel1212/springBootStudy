@@ -5,12 +5,14 @@
     <title>RestAPI Call View</title>
 </head>
 <body>
-    <script>
+</body>
+<script>
         //registerTest(); //등록
         //getTest();      //단건 조회
         //stringTest();   //Accept -> produces Test
 
 ////////////////////////////////////////////////////////
+//- 등록
         function registerTest(){
 
             const  testData = {"num":null,"title":"Test","content":"Test  Content","writerEmail":"user90@naver.com","regDate":null,"modDate":null}
@@ -30,6 +32,7 @@
               .catch((error) => console.log(error));
         }
 ////////////////////////////////////////////////////////
+//- 단건조회
         function getTest(){
 
             fetch("/notes/1")
@@ -42,6 +45,21 @@
               .catch((error) => console.log(error));
         }
 ////////////////////////////////////////////////////////
+//- 삭제
+       function deleteTest(num){
+            fetch(`/notes/${num}`,{
+               method: "DELETE",
+            })
+              .then((response) =>{
+                    return response.text() //반환 Type은 string임!!
+                })
+              .then((data) => {
+                console.log(data);
+              })
+              .catch((error) => console.log(error));
+        }
+////////////////////////////////////////////////////////
+//- 다건 조회
         //✔중요!✔ GET 방식에는 body가 못들어감!! --- URL로 값을 전달해야함! 당연한거임.. GET방식이니까..
         function getListTest(){
             const testData = { email : "user90@naver.com"}
@@ -53,7 +71,24 @@
               .catch((error) => console.log(error));
         }
 ////////////////////////////////////////////////////////
-
+//- 수정
+        function modifyTest(num){
+        const  testData = {"title":"Modify","content":"Modify  Content","writerEmail":"user90@naver.com","regDate":null,"modDate":null}
+            fetch(`/notes/${num}`,{
+                method: "PUT",
+                headers: {
+                   "Content-Type": "application/json",
+                },
+                body: JSON.stringify(testData),
+            })
+              .then((response) => response.text())
+              .then((data) => {
+                console.log(data);
+              })
+              .catch((error) => console.log(error));
+        }
+////////////////////////////////////////////////////////
+// async header Test
          function stringTest(){
 
             const  testData = {"num":null,"title":"Test","content":"Test  Content","writerEmail":"user90@naver.com","regDate":null,"modDate":null}
@@ -75,5 +110,4 @@
         }
 
     </script>
-</body>
 </html>

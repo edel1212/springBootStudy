@@ -51,6 +51,30 @@ public class NoteController {
         return new ResponseEntity<>(noteService.getAllWithWriter(email), HttpStatus.OK);
     }
 
+
+    //수정
+    @PutMapping(value = "/{num}" , produces = MediaType.TEXT_PLAIN_VALUE)
+    public ResponseEntity<String> modify(@PathVariable Long num, @RequestBody NoteDTO noteDTO){
+
+        log.info("------------modify--------");
+        noteDTO.setNum(num);
+        log.info("NoteDTO ::: " + noteDTO);
+
+        noteService.modify(noteDTO);
+
+        return new ResponseEntity<>("modify",HttpStatus.OK);
+    }
+    
+    //삭제
+    @DeleteMapping(value = "/{num}", produces = MediaType.TEXT_PLAIN_VALUE) //반환 Type String 이기 때문임
+    public ResponseEntity<String> remove(@PathVariable Long num){
+        log.info("---------remove-----------");
+        log.info("num ::: " + num);
+        noteService.delete(num);
+        return new ResponseEntity<>("removed",HttpStatus.OK);
+    }
+
+
     //////////////////////////////////////////////////////////////////
     // produces 는 Client 단에서 Headers -> Accept 옵션을 줄 것이면 맞춰주자! [ 안써주면 반환값만 JSON 으로 맞춰주면 됨 ]
     @PostMapping(value = "stringTest" , produces = MediaType.APPLICATION_JSON_VALUE)  
