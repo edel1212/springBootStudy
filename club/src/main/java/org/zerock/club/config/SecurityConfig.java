@@ -14,6 +14,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.zerock.club.security.filter.ApiCheckFilter;
 import org.zerock.club.security.handler.ClubLoginSuccessHandler;
 import org.zerock.club.security.service.ClubOAuth2USerDetailsService;
@@ -102,7 +103,17 @@ public class SecurityConfig{
         httpSecurity.rememberMe()
                 .tokenValiditySeconds(60*60*24*7)  //cookie 유지 기간 -- 7일
                 .userDetailsService(clubUSerDetailService); // userDetailService 추가 필요 - Spring Bean 주입 !
-        
+
+
+        /////////////////////////////////////////////////////////
+        // Filter 순서 변경
+        // - UsernamePasswordAuthenticationFilter 필터 이전에 실행되게 끔 설정
+        // - 해당 UsernamePasswordAuthenticationFilter 는 사용자의
+        //   아이디와 패스워드를 기반으로 동작하는 필터이다!.
+        // - 그러므로 인가 받은 사용자만 사용하게끔 한것임!
+        /////////////////////////////////////////////////////////
+        httpSecurity.addFilterBefore(apiCheckFilter(), UsernamePasswordAuthenticationFilter.class);
+
         return httpSecurity.build();
     }
 
