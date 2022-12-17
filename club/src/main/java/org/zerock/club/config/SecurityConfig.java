@@ -111,6 +111,8 @@ public class SecurityConfig{
         // - 해당 UsernamePasswordAuthenticationFilter 는 사용자의
         //   아이디와 패스워드를 기반으로 동작하는 필터이다!.
         // - 그러므로 인가 받은 사용자만 사용하게끔 한것임!
+        // - 👿 해당 apiCheckFilter() 내 소스를 보면 match 가될떄 return 을 시키므로
+        //   API 를 Call 해도 response 해주느 Data가 없는것을 확인할 수있음!
         /////////////////////////////////////////////////////////
         httpSecurity.addFilterBefore(apiCheckFilter(), UsernamePasswordAuthenticationFilter.class);
 
@@ -149,7 +151,7 @@ public class SecurityConfig{
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     @Bean
     public ApiCheckFilter apiCheckFilter(){
-        return  new ApiCheckFilter();
+        return  new ApiCheckFilter("/notes/**/*"); // Ant 형식으로 Filter를 할 URL 추가
     }
     
     //__Eof__

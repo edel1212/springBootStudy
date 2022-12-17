@@ -1,6 +1,7 @@
 package org.zerock.club.security.filter;
 
 import lombok.extern.log4j.Log4j2;
+import org.springframework.util.AntPathMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import javax.servlet.FilterChain;
@@ -23,11 +24,32 @@ import java.io.IOException;
  * */
 @Log4j2
 public class ApiCheckFilter extends OncePerRequestFilter {
+    /**
+     * URL 경로에 맞는 것만 Filter 하기 위함
+     * */
+     private final AntPathMatcher antPathMatcher;
+     private final String pattern;
+
+    public ApiCheckFilter(String pattern){
+        this.pattern = pattern;
+        this.antPathMatcher = new AntPathMatcher();
+    }
+
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        log.info("ApiCheckFilter...........................");
-        log.info("ApiCheckFilter...........................");
-        log.info("ApiCheckFilter...........................");
+
+        log.info("RequestURI :: " + request.getRequestURI());
+
+        boolean matchFlag = this.antPathMatcher.match(this.pattern, request.getRequestURI()); //URI 와 URI Pattern 비교
+        log.info("matchFlag ::: " + matchFlag);
+
+        if(matchFlag){
+            log.info("ApiCheckFilter...........................");
+            log.info("ApiCheckFilter...........................");
+            log.info("ApiCheckFilter...........................");
+            return;
+        }//if
+
         filterChain.doFilter(request,response); // 다음 단계로 넘어가는 역할을 해줌
     }
 }
