@@ -21,6 +21,7 @@ public class SampleController {
     
     //@AuthenticationPrincipal 를 사용하면 별도의  케스팅 없이 데이터를
     //사용이 가능함
+    @PreAuthorize("hasRole('MEMBER')")
     @GetMapping("/member")
     public void exMember(@AuthenticationPrincipal ClubAuthMemberDTO clubAuthMemberDTO){
         
