@@ -70,6 +70,23 @@
               })
               .catch((error) => console.log(error));
         }
+
+//- 다건 조회 + [ AuthHeader! --- ApiCheckFilter 확인 ]
+        function getListAddAuthHeadersTest(){
+            const testData = { email : "user90@naver.com"}
+            fetch("/notes/all?email="+testData.email,{
+                method : "GET",
+                headers : {
+                    'Authorization' : '12345678'
+                }
+            })
+              .then((response) => response.json())
+              .then((data) => {
+                console.log(data);
+              })
+              .catch((error) => console.log(error));
+        }
+
 ////////////////////////////////////////////////////////
 //- 수정
         function modifyTest(num){
