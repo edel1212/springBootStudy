@@ -2,6 +2,7 @@ package org.zerock.club.security.filter;
 
 import lombok.extern.log4j.Log4j2;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.authentication.AbstractAuthenticationProcessingFilter;
@@ -29,10 +30,14 @@ public class ApiLoginFilter extends AbstractAuthenticationProcessingFilter {
         log.info("attemptAuthentication");
 
         String email = request.getParameter("email");
-        String pw = "1111";
+        String pw    = request.getParameter("pw");
+
+        //ClubUserDetailService.loadUserByUsername(String username) 에서 확인 후  token  생성
+        UsernamePasswordAuthenticationToken authToken =
+                new UsernamePasswordAuthenticationToken(email, pw);
 
         if(email == null) throw new BadCredentialsException("email cannot be null"); //자격, 적격, 적성, 자격 증명서, 성적(인물)증명서이 없다는 Exception
 
-        return null;
+        return getAuthenticationManager().authenticate(authToken);
     }
 }

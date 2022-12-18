@@ -8,6 +8,11 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.zerock.club.security.dto.ClubAuthMemberDTO;
 
+/***
+ *  @PreAuthorize("hasRole('??')")  :: hasRole 이 붙었기에 ROLE_을 생략해서 넣은것이다
+ *                                     그러므로 생략된거 DB에도 ROLE_??? 로 들어가있가있음!
+ *                                     헷갈리지 말자!
+ * */
 @Controller
 @Log4j2
 @RequestMapping("/sample/")
@@ -21,7 +26,7 @@ public class SampleController {
     
     //@AuthenticationPrincipal 를 사용하면 별도의  케스팅 없이 데이터를
     //사용이 가능함
-    @PreAuthorize("hasRole('MEMBER')")
+    @PreAuthorize("hasRole('MANAGER')")
     @GetMapping("/member")
     public void exMember(@AuthenticationPrincipal ClubAuthMemberDTO clubAuthMemberDTO){
         

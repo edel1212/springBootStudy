@@ -14,6 +14,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.zerock.club.security.filter.ApiCheckFilter;
 import org.zerock.club.security.filter.ApiLoginFilter;
+import org.zerock.club.security.handler.ApiLoginFailHandler;
 import org.zerock.club.security.handler.ClubLoginSuccessHandler;
 import org.zerock.club.security.service.ClubOAuth2USerDetailsService;
 import org.zerock.club.security.service.ClubUserDetailService;
@@ -146,21 +147,6 @@ public class SecurityConfig{
         return new ClubLoginSuccessHandler( passwordEncoder() );
     }
 
-    /**
-     * 임시 계정 생성
-     * */
-//    @Bean
-//    protected InMemoryUserDetailsManager userDetailService(){
-//        UserDetails user = User.builder()
-//                .username("user1")                                      //ID
-//                .password(passwordEncoder().encode("1111"))  // PW - Security 는 encoding 된 PW를 꼭 사용해아함
-//                .roles("USER")                                          //권한
-//                .build();
-//        log.info("userDetailsService!!!!");
-//        log.info(user);
-//        //log :: org.springframework.security.core.userdetails.User [Username=user1, Password=[PROTECTED], Enabled=true, AccountNonExpired=true, credentialsNonExpired=true, AccountNonLocked=true, Granted Authorities=[ROLE_USER]]
-//        return new InMemoryUserDetailsManager(user);
-//    }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////    
 // Login Filter 추가
@@ -177,6 +163,10 @@ public class SecurityConfig{
     public ApiLoginFilter apiLoginFilter(AuthenticationManager authenticationManager) throws Exception{
         ApiLoginFilter apiLoginFilter = new ApiLoginFilter("/api/login"); //Parameter 로 URI 를받음
         apiLoginFilter.setAuthenticationManager(authenticationManager);
+        
+        //로그인 실패 시 handler 추가
+        apiLoginFilter.setAuthenticationFailureHandler(new ApiLoginFailHandler());
+        
         return apiLoginFilter;
     }
 
