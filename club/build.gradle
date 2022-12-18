@@ -45,6 +45,11 @@ dependencies {
 	// test 환경 lombok 사용 가능하끔 설정
 	testCompileOnly 'org.projectlombok:lombok'
 	testAnnotationProcessor 'org.projectlombok:lombok'
+
+	// JWT - JSON WEB Token 추가 
+	// https://mvnrepository.com/artifact/io.jsonwebtoken/jjwt-api
+	implementation group: 'io.jsonwebtoken', name: 'jjwt-api', version: '0.11.5'
+
 }
 
 tasks.named('test') {
