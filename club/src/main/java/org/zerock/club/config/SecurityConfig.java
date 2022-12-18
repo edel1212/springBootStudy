@@ -5,6 +5,8 @@ import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -16,6 +18,7 @@ import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.zerock.club.security.filter.ApiCheckFilter;
+import org.zerock.club.security.filter.ApiLoginFilter;
 import org.zerock.club.security.handler.ClubLoginSuccessHandler;
 import org.zerock.club.security.service.ClubOAuth2USerDetailsService;
 import org.zerock.club.security.service.ClubUserDetailService;
@@ -77,6 +80,21 @@ public class SecurityConfig{
 
 
         /***
+         * @Description : Spring-boot 의 버전이 올라가면서 authenticationManger() 주입법이 바뀜.
+         *               - 이전에는 해당 Class에 상속관계인 WebSecurityConfigurerAdapter 에서
+         *                 구현된 메서드라 접근이 가능했지만 현재는 deprecated 되어서 Class를 불러온후
+         *                 객체로 만들어준 후 구현해함.
+         * @since 2022.12.18
+         * */
+        AuthenticationManagerBuilder authenticationManagerBuilder = httpSecurity.getSharedObject(AuthenticationManagerBuilder.class);
+        authenticationManagerBuilder.userDetailsService(clubUSerDetailService).passwordEncoder(passwordEncoder());
+        //get AuthenticationManager
+        AuthenticationManager authenticationManager = authenticationManagerBuilder.build();
+
+        //반드시 필요 - 없을시 authenticationManager 읽지 못해 ERROR
+        httpSecurity.authenticationManager(authenticationManager);
+
+        /***
          * 1)  login form
          * - formLogin() 추가 시 :: 인가 , 인증에 문제시 자동으로 로그인 화면으로 이동시켜줌
          *
@@ -116,6 +134,10 @@ public class SecurityConfig{
         /////////////////////////////////////////////////////////
         httpSecurity.addFilterBefore(apiCheckFilter(), UsernamePasswordAuthenticationFilter.class);
 
+        /////////////////////////////////////////////////////////
+        //Login 관련 필터 추가
+        httpSecurity.addFilterBefore(apiLoginFilter(authenticationManager),UsernamePasswordAuthenticationFilter.class);
+
         return httpSecurity.build();
     }
 
@@ -145,9 +167,26 @@ public class SecurityConfig{
 //        return new InMemoryUserDetailsManager(user);
 //    }
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////    
+// Login Filter 추가
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    /**
+     * @Description : Bean 등록 X
+     * - exception is org.springframework.beans.factory.NoSuchBeanDefinitionException: 
+     *   qualifying bean of type 'org.springframework.security.authentication.AuthenticationManager' 
+     *   available: expected at least 1 bean which qualifies as autowire candidate. 
+     *   Dependency annotations: {}
+     *   에러 발생
+     *                
+     * */
+    public ApiLoginFilter apiLoginFilter(AuthenticationManager authenticationManager) throws Exception{
+        ApiLoginFilter apiLoginFilter = new ApiLoginFilter("/api/login"); //Parameter 로 URI 를받음
+        apiLoginFilter.setAuthenticationManager(authenticationManager);
+        return apiLoginFilter;
+    }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////    
-// Api Filter 적용
+// Api Filter 추가
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     @Bean
     public ApiCheckFilter apiCheckFilter(){
