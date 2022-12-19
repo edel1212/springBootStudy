@@ -14,7 +14,8 @@ import java.util.Date;
 @Log4j2
 public class JWTUtil {
 
-    private final String secretKey = "yoo12345678";
+    //256bit보다 커야 한다. 영어 한단어당 8bit 이므로 32글자 이상이어야 한다는 뜻이다. 안그러면 ERROR
+    private final String secretKey = "yooSecretKeyBackGomisVeryCuteTodayIsVvvvaazzz";
 
     /**
      * JWT 버전이 변경되면서 Key 타입으로 파라미터를 넣워줘야하기에
@@ -37,7 +38,8 @@ public class JWTUtil {
 
         return Jwts.builder()
                 .setIssuedAt(new Date())
-                .setExpiration(Date.from(ZonedDateTime.now().plusMinutes(expire).toInstant())) //유지기간
+                //.setExpiration(Date.from(ZonedDateTime.now().plusMinutes(expire).toInstant())) //유지기간
+                .setExpiration(Date.from(ZonedDateTime.now().plusSeconds(1).toInstant())) //유지기간 1초 테스트용
                 .claim("sub",content)
                 .signWith(getSignKey(this.secretKey),SignatureAlgorithm.HS256)                  //내가 설정한 Key 값으로 Signature 생성
                 .compact();
@@ -56,6 +58,8 @@ public class JWTUtil {
                     .parseClaimsJws(tokenStr)
                     .getBody();
             log.info("Claims [Before - DefaultJws]::: " + claims);
+            //info :: {iat=1671456264, exp=1674048264, sub=user95@naver.com}
+
 
             contentValue = claims.getSubject();
         } catch (Exception ex){
