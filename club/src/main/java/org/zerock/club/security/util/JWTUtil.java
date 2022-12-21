@@ -38,8 +38,8 @@ public class JWTUtil {
 
         return Jwts.builder()
                 .setIssuedAt(new Date())
-                //.setExpiration(Date.from(ZonedDateTime.now().plusMinutes(expire).toInstant())) //유지기간
-                .setExpiration(Date.from(ZonedDateTime.now().plusSeconds(1).toInstant())) //유지기간 1초 테스트용
+                .setExpiration(Date.from(ZonedDateTime.now().plusMinutes(expire).toInstant())) //유지기간
+                //.setExpiration(Date.from(ZonedDateTime.now().plusSeconds(1).toInstant())) //유지기간 1초 테스트용
                 .claim("sub",content)
                 .signWith(getSignKey(this.secretKey),SignatureAlgorithm.HS256)                  //내가 설정한 Key 값으로 Signature 생성
                 .compact();

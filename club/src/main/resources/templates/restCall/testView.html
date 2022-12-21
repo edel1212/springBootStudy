@@ -72,12 +72,12 @@
         }
 
 //- 다건 조회 + [ AuthHeader! --- ApiCheckFilter 확인 ]
-        function getListAddAuthHeadersTest(){
+        function getListAddAuthHeadersTest(authorizationKey){
             const testData = { email : "user90@naver.com"}
             fetch("/notes/all?email="+testData.email,{
                 method : "GET",
                 headers : {
-                    'Authorization' : '12345678'
+                    'Authorization' : authorizationKey
                 }
             })
               .then((response) => response.json())

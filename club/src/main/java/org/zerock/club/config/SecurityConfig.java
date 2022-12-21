@@ -18,6 +18,7 @@ import org.zerock.club.security.handler.ApiLoginFailHandler;
 import org.zerock.club.security.handler.ClubLoginSuccessHandler;
 import org.zerock.club.security.service.ClubOAuth2USerDetailsService;
 import org.zerock.club.security.service.ClubUserDetailService;
+import org.zerock.club.security.util.JWTUtil;
 
 /**
  * @Description : 해당 Class 는 시큐리티 관련 기느응ㄹ  쉽게 설정하기 위한 Class 이다
@@ -51,11 +52,14 @@ public class SecurityConfig{
     @Autowired
     private ClubUserDetailService clubUSerDetailService;
 
-
     @Bean
     PasswordEncoder passwordEncoder(){
         return new BCryptPasswordEncoder();
     }
+
+    //JWTUtil Bean 주입
+    @Bean
+    public JWTUtil jwtUtil(){ return  new JWTUtil(); }
 
     /**
      * 설정을 통한 권한에 따른 URL 접근 제한
@@ -161,9 +165,10 @@ public class SecurityConfig{
      *                
      * */
     public ApiLoginFilter apiLoginFilter(AuthenticationManager authenticationManager) throws Exception{
-        ApiLoginFilter apiLoginFilter = new ApiLoginFilter("/api/login"); //Parameter 로 URI 를받음
+        ApiLoginFilter apiLoginFilter = new ApiLoginFilter("/api/login", jwtUtil()); //Parameter 로 URI 를받음
+
         apiLoginFilter.setAuthenticationManager(authenticationManager);
-        
+
         //로그인 실패 시 handler 추가
         apiLoginFilter.setAuthenticationFailureHandler(new ApiLoginFailHandler());
         
@@ -175,7 +180,7 @@ public class SecurityConfig{
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     @Bean
     public ApiCheckFilter apiCheckFilter(){
-        return  new ApiCheckFilter("/notes/**/*"); // Ant 형식으로 Filter를 할 URL 추가
+        return  new ApiCheckFilter("/notes/**/*", jwtUtil()); // Ant 형식으로 Filter를 할 URL 추가
     }
     
     //__Eof__

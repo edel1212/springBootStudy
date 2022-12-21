@@ -5,6 +5,7 @@ import net.minidev.json.JSONObject;
 import org.springframework.util.AntPathMatcher;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
+import org.zerock.club.security.util.JWTUtil;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
@@ -32,9 +33,11 @@ public class ApiCheckFilter extends OncePerRequestFilter {
      * */
      private final AntPathMatcher antPathMatcher;
      private final String pattern;
+     private JWTUtil jwtUtil;
 
-    public ApiCheckFilter(String pattern){
+    public ApiCheckFilter(String pattern, JWTUtil jwtUtil){
         this.pattern = pattern;
+        this.jwtUtil = jwtUtil;
         this.antPathMatcher = new AntPathMatcher();
     }
 
@@ -89,15 +92,30 @@ public class ApiCheckFilter extends OncePerRequestFilter {
      * */
     private boolean checkAuthHeader(HttpServletRequest request){
         boolean checkResult = false;
-
+        
+        //요청받은 ServletRequest 에서 Authorization: token 값을 추출
         String  authHeader = request.getHeader("Authorization");
         
-        //내가 정한 값으로 Equals 시키자
-        if("12345678".equals(authHeader)){
+        //Validation Check
+        if(StringUtils.hasText(authHeader) && authHeader.startsWith("Bearer")){
+
             log.info("Authorization exist : " +authHeader);
-            checkResult = true;
+
+            try {
+                //Bearer(공백) 을 제외 후 token 값만 추출
+                String email = jwtUtil.validateAndExtract(authHeader.substring(7));
+                
+                log.info("validate result :: " + email);//변환 email 확인
+
+                checkResult = email.length() > 0; //TODO DB에서 이메일 체크하는 방법도 괜찮을듯?
+
+            } catch (Exception e){
+                e.printStackTrace();
+            }//try-catch
+            
         }//if
         
+        //실패
         return checkResult;
     }
 
