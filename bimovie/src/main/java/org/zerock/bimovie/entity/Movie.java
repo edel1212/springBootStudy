@@ -34,8 +34,9 @@ public class Movie extends BaseEntity{
 
     @ToString.Exclude
     @Builder.Default
-    @OneToMany(fetch = FetchType.LAZY // 나는 한개 대상은 여러개 -> OneToMany
-                , mappedBy = "movie"  // 실제 데이터베이스에서 자신은 연관관계의 주인이 아니라는것을 명시 한것
+    @OneToMany(fetch = FetchType.LAZY        // 나는 한개 대상은 여러개 -> OneToMany
+                , mappedBy = "movie"         // 실제 데이터베이스에서 자신은 연관관계의 주인이 아니라는것을 명시 한것
+                , cascade = CascadeType.ALL  //상위 엔티티의 모든 상태변화 전파
     )
     private List<Poster> posterList = new ArrayList<>();
 
