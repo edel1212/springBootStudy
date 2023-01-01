@@ -175,11 +175,11 @@ public class MemoRepositoryTests {
      *                
      *                또한 finaAll()의 return Type 은 Page<T> :: 페이징 시
      *                    , Iterable<T>  :: 정렬 return 시 
-     *                    이며  리턴 타입을 Page<T>로 지정하는 경우 반드시 파라미터는 Pageable 이어여한다!
+     *                    이며  리턴 타입을 Page<T>로 지정하는 경우 반드시 파라미터는 Pageable 이어야한다!
      *
      *              -----------------------------------------------------------------------------------
      *
-     *              : 페이징 처리에  가장 중요한 존재는 Pageable Interface 이며 해당 Interface 는
+     *              : 페이징 처리에  가장 중요한 존재는 Pageable Interface 이며 해당 Interface는
      *                페이지 처리에 필요한 정보를 전달하는 용도의 타입의 인터페이스 이기 때문에
      *
      *                실제 객체를 생성할 때는 PageRequest 라는 Class 를 사용한다
@@ -204,7 +204,7 @@ public class MemoRepositoryTests {
     void testPageDefault() {
         //1페이지에 10개씩 ✔ 0페이지가 1페이지 이다!
         Pageable pageable = PageRequest.of(0,10);
-        //findAll 가 필요로 하는 매개변수는 Pageable 이다!
+        //아래의 findAll()읜 Pageable을 매개변수로 요구 __ 단 그냥 List<>로 받는경우는 다른것도 가능함.
         Page<Memo> result = memoRepository.findAll(pageable);
         System.out.println(result);
     }
