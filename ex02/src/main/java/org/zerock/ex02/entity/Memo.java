@@ -33,8 +33,7 @@ import javax.persistence.*;
  *                , @Builder
  *                , @AllArgsConstructor
  *                , @NoArgsConstructor - ✔ @Builder 를 이용해서  객체를 생성하기위해 AllArg, NoArg Constructor
- *                                         같이 사용해줘야 컴파일 시 에러가 없다. ---- 추가 사항 생성자를 따로 추가해서 PK값을 
- *                                         않받고 builder 패턴 적용이 가능함! 
+ *                                         같이 사용해줘야 컴파일 시 에러가 없다.
  * 
  *             : 주의사항 - @Data , @Setter 를 사용하지 않는 이유는 Entity Class의 값은 직접적인 Class의
  *                         수정이 적을 수록 추후 개발에 용의 하기 때문이다
@@ -54,19 +53,5 @@ public class Memo {
 
     @Column(length = 200, nullable = false)
     private String memoText;
-
-
-     /**
-     * 아래와 같이 사용하면 mno의 경우 PK임! 따라서 속성 설정이
-     * GenerationType.IDENTITY인 값을 Builder pattern 에서 제외가 가능함
-     *
-     * 또한 생성자를 추가 줬기 때문에 @AllArgsConstructor 를 사용하지 않아도 된다!
-     * 
-     * 단 현제 프로젝트에서는 DTO를 사용하지 않기 때문에 Error 가 발생함으로 주석처리함.
-     * */
-    // @Builder
-    // public Memo(String memoText){
-    //     this.memoText = memoText;
-    // }
 
 }
