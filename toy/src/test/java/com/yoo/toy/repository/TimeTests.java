@@ -8,11 +8,9 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.IntStream;
 
 @SpringBootTest
@@ -96,6 +94,101 @@ public class TimeTests {
     }
 
 
+    @Test
+    public void testPagingWithSort(){
+        Pageable pageable = PageRequest.of(0,10,Sort.by("dnum").descending() // dnum Desc
+                .and(Sort.by("age").ascending()));                                     // age Asc
 
+        Page<Dog> result = dogRepository.findAll(pageable);
+
+        log.info(result.getContent());
+    }
+
+    @Test
+    public void tt(){
+        log.info("???");
+        log.info((int)(Math.random()*45)+1);
+    }
+
+    @Test
+    public void ageUpdateTest(){
+        List<Dog> dogs = dogRepository.findAll();
+        dogs.forEach(data->{
+            dogRepository.save(
+                Dog.builder().dnum(data.getDnum()).age((int)(Math.random()*45)+1)
+                        .name(data.getName())
+                        .build()
+            );
+        });
+    }
+
+
+    //////////////////////////////
+    //QueryMethod
+    @Test
+    public void queryMethodTest(){
+        log.info(dogRepository.findByAge(1));
+        log.info(dogRepository.findBydnum(20L));
+        log.info(dogRepository.findByName("흑곰!!"));
+    }
+
+    @Test
+    public void queryMethodFirstAndLast(){
+
+        log.info(dogRepository.findFirst2ByAge(10)); //첫 2개
+
+        log.info(dogRepository.findLast1ByAge(10)); //마지막 1개
+        
+        //log.info(dogRepository.findLast2ByAge(10)); //마지막 2개
+    }
+
+
+    @Test
+    public void greaterThanAndLessThanTest(){
+        log.info("----------------");
+        log.info("20살 초과 개수 :: " +dogRepository.findByAgeGreaterThan(20).size());
+        log.info("----------------");
+        log.info("20살 이상 개수 :: " +dogRepository.findByAgeGreaterThanEqual(20).size());
+        log.info("----------------");
+        log.info("20살 이상 미만 :: " +dogRepository.findByAgeLessThan(20).size());
+        log.info("----------------");
+        log.info("20살 이상 이하 :: " +dogRepository.findByAgeLessThanEqual(20).size());
+        log.info("----------------");
+    }
+
+
+    @Test
+    public void isNullOrIsEmptyTest(){
+        log.info("----------------------------------");
+        log.info(dogRepository.findByAgeIsNotNull().size());
+        log.info("----------------------------------");
+        log.info(dogRepository.findByAgeIsNull().size());
+        log.info("----------------------------------");
+    }
+    
+    @Test
+    public void queryInNameTest(){
+        log.info(dogRepository.findByNameIn(List.of("흑곰")));
+    }
+
+    @Test
+    public void likeMethodTest(){
+        log.info("----------------------------");
+        dogRepository.findByNameStartingWith("흑");
+        log.info("----------------------------");
+        dogRepository.findByNameEndingWith("!");
+        log.info("----------------------------");
+        dogRepository.findByNameContains("흑");
+        log.info("----------------------------");
+        dogRepository.findByNameLike("흑");
+        log.info("----------------------------");
+    }
+
+    @Test
+    public void sortTest(){
+        log.info("-----");
+        log.info(dogRepository.findByNameOrderByDnumDesc("흑곰!!"));
+        log.info("-----");
+    }
 
 }
