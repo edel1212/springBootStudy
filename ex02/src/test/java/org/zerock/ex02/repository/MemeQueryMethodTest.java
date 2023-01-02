@@ -8,7 +8,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.test.annotation.Commit;
-import org.springframework.transaction.annotation.Transactional;
 import org.zerock.ex02.entity.Memo;
 
 import java.util.List;

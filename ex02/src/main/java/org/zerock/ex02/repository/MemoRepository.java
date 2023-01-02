@@ -25,6 +25,12 @@ import java.util.List;
 public interface MemoRepository extends JpaRepository<Memo, Long> {
 
     // Query Method 사용 - 간단한 처리에만 사용한다 보면된다.
+    
+    // Mno 의 경우 단건이기에 타입을 맞춰준다.
+    Memo findByMno(Long mno);
+    
+    // MemoText의 경우 다건이기에 List<T>로 지정
+    List<Memo> findByMemoText(String memoText);
 
     // findBy "TargetColumn" "Between" "OrderBy" "TargetColumn" "Desc"
     List<Memo> findByMnoBetweenOrderByMnoDesc(Long from, Long to);
