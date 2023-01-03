@@ -36,7 +36,7 @@ public interface MemoRepository extends JpaRepository<Memo, Long> {
     List<Memo> findByMnoBetweenOrderByMnoDesc(Long from, Long to);
 
     /**
-     * @Description  : 위의 메서드의 경이 이름도길도 혼동하기 쉽다
+     * @Description  : 위의 메서드의 경이 이름도 길고 혼동하기 쉽다
      *                 메서드 쿼리는 다행히도 Pageable 를 파라미터로 받아
      *                 사용이 가능하다
      *
@@ -47,7 +47,7 @@ public interface MemoRepository extends JpaRepository<Memo, Long> {
     Page<Memo> findByMnoBetween(Long from, Long to, Pageable pageable);
 
     /***
-     * @Description  : 삭제 매서드 쿼리 __> mno 가 10보다 작은 데이터 삭제
+     * @Description  : 삭제 매서드 쿼리 __ ">" mno 가 10미만 데이터 삭제
      * */
     @Transactional
     void deleteMemoByMnoLessThan(Long num);
@@ -55,42 +55,53 @@ public interface MemoRepository extends JpaRepository<Memo, Long> {
     /****************************************************************************/
     
     // @Query  어노테이션  사용 - 이 방법을 더 많이 사용함
-    // -메서드이 이름과 상관없이 메서드에 추가한 어노테이션을 통해서 하는 처리가 가능하다
+    // - 메서드의 이름과 상관없이 메서드에 추가한 @Query 어노테이션을 통해 처리가 가능하다
     // - 필요한 데이터만 선별적으로 추찰하는 기능
     // - 데이터베이스에 맞는 순수한 SQL 을 사용하능
     // - insert, update, delete  처리할때는 (@Modifying 과 함께  사용 해야함!!)
-
+    /**
+     * 여기서 주의 깊게 보아야 하는 부분은 Table명은 tbl_memo지만 Entity Class 명으로 작성 되었다.
+     * 컬럼명 또한 맴버변수 명으로 사용!
+     */
     @Query("select m from Memo m order by m.mno desc")
     List<Memo> getListDesc();
 
     /**
-     * @Description  : 주의해야 하는것은 해당 쿼리에서 사용되는 테이블명 및 퀄럼명은
-     *                 사용하려는 Entity Class에서 설정도니 변수 값 및 TalbeName이다!
+     * @Description  : 주의해야 하는것은 해당 쿼리에서 사용되는 테이블명 및 컬럼명은
+     *                 사용하려는 Entity Class의 Class명 변수 값 이다.
      * **/
     @Modifying
+    @Transactional
     @Query("update Memo m set m.memoText = :memoText where m.mno = :mno")
     int updateMemoText(@Param("mno") Long mno, @Param("memoText") String memoText);
     
     /**
-     * @Description  : 위의 방법대로  " : " 를 사용하면 변수를 건건이 입력해줘야해서 번거로울경우
-     *                 " # "  를 사용해서 객체 변수로 전달이 가능하다
+     * @Description  : 위의 방법을 사용하면 변수가 여러개일 경우 불편하다
+     *                " # "  를 사용해서 객체 변수로 전달 받아 사용이 가능하다
      *
-     *                 🎈 주의사항 - #{param.mno} 가 아니라 #{#param.mno} 이다  #이 2개임!!
+     *                 🎈 주의사항 - 1) #{param.mno} 가 아니라 #{#param.mno} 이다  #이 2개임!!
+     *                              2) :#{#..} 앞에 " : " <<- rk 가 있음 !
      * */
     @Transactional
     @Modifying
     @Query("update Memo m set m.memoText = :#{#param.memoText} where m.mno = :#{#param.mno}")
     int updateMemoTestWithObj(@Param("param") Memo memo);
 
-    /**
-     * @Description : 쿼리 메서드와 마찬가지로 @Query 어노테이션을 이용하면
-     *                Pageable 타입의 파라미터를 받아 페이징 처리와 정렬에 대한 부분을
-     *                Pageable 로 대신 처리가 가능하다.
+   /**
+     * @Description : @Query 어노테이션에서도
+     *                Pageable를 Parameter로 받아 페이징 처리와 정렬에 대한 부분을
+     *                Pageable로 처리가 가능하다.
      *
-     *                아래 메서드 처럼 return 타입이 Page<>일 경우 @Query 어노테이션 에서
-     *                countQuery  = "query.." 를 작성하여 카운트를 처리하는 쿼리를 작성이 가능하다
+     *                🎈 주의사항 - countQuery  = "Query문"을 작성하여 카운트를 처리를 해주면 페이징 시
+     *                             카운트를 해주지만 안써줘도 자동으로 쿼리가 작성된다.
+     *                             필수는 아니며 다음에 배울 Native Query를 사용시는 필수이다.
      *
+     *                             단순히 데이터 뿐 아니라 페이지 처리에 필요한 모든 내용을 처리합니다.
      *
+     *                           설명 : 화면에 페이징 처리를 위해서는 전체 데이터의 수를 파악할 필요가 있습니다.
+     *                                  이를 이용해서 전체 몇 개의 페이지로 만들어지는지
+     *                                  이전/다음 페이지의 정보 들도 같이 처리합니다.
+     *                                  <strong>예를 들어 데이터가 부족하면 카운트 쿼리를 실행하지 않습니다.</strong>
      * */
     @Query(value = "select m from Memo m where m.mno > :mno"
             , countQuery = "select count(m) from Memo m where m.mno > :mno"

@@ -8,6 +8,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.test.annotation.Commit;
+import org.springframework.transaction.annotation.Transactional;
 import org.zerock.ex02.entity.Memo;
 
 import java.util.List;
@@ -115,14 +116,15 @@ public class MemeQueryMethodTest {
     }
 
     /**
-     * @Description  : 🎈 주의사항으로 Delete 는 @Transactional 을 사용하지 않으면 에러가 밸상한다.
+     * @Description  : 🎈 주의사항으로 QueryMethod + Delete 테스트 시  @Transactional 
+     *                    을 사용하지 않으면 에러가 밸상한다.
      *                    :::[ interface의 해당 메서드에 붙여 사용해도 괜찮음!! 선택사항임]
-     *                   ❔ Error Msg = No EntityManager with actual transaction available for current thread - cannot reliably process 'remove' call;
+     *                    Error Msg = No EntityManager with actual transaction available for current thread - cannot reliably process 'remove' call;
      *                                  nested exception is javax.persistence.TransactionRequiredException
      *
      *                  - @Commit ?
-     *                    최종결과를 커밋하기 위해 사용됩니다. 해당 어노테이션을 작성하지 않으면 테스트 코드의 deleteBy 는
-     *                    기본적으로 롤백처리되어 결과에 반영되지가 않는다.
+     *                    최종결과를 커밋하기 위해 사용된다. 해당 어노테이션을 작성하지 않아도 Error는 발생하지 않으나
+     *                    테스트 코드의 deleteBy 는 기본적으로 롤백처리되어 DB에 반영되지가 않는다.
      *
      *                 ✔  해당 deleteBy는 실제 개발에서는 많이 사용되지 않는데 그 이유는 삭제쿼리를 한번에 날리는 것이 아닌
      *                    각 엔티티 객체를 하나씩 삭제하기 떄문에 비효일 적이기 때문이다.
@@ -130,7 +132,7 @@ public class MemeQueryMethodTest {
      *                        비효율적인 부분은 개선한다!
      *
      *
-     * result  : Hibernate:
+     * result Query : Hibernate:
      *               select
      *                   memo0_.mno as mno1_0_,
      *                   memo0_.memo_text as memo_tex2_0_
@@ -158,6 +160,7 @@ public class MemeQueryMethodTest {
      *                   mno=?
      * */
     @Commit
+    @Transactional
     @Test
     void testDeleteQueryMethods() {
         memoRepository.deleteMemoByMnoLessThan(9L);
