@@ -9,13 +9,15 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.test.annotation.Commit;
 
+import javax.transaction.Transactional;
 import java.util.*;
 import java.util.stream.IntStream;
 
 @SpringBootTest
 @Log4j2
-public class TimeTests {
+public class QueryMethodTests {
 
     @Autowired
     private DogRepository dogRepository;
@@ -190,5 +192,36 @@ public class TimeTests {
         log.info(dogRepository.findByNameOrderByDnumDesc("흑곰!!"));
         log.info("-----");
     }
+
+
+    ///////////////////////////////////////
+    //QueryMethod With Page
+    @Test
+    public void queryMethodWithPage(){
+        Long startDnum = 10L;
+        Long endDnum   = 50L;
+        Pageable pageable = PageRequest.of(0, 10 , Sort.by("dnum").descending());
+        Page<Dog> result = dogRepository.findByDnumBetween(startDnum, endDnum, pageable);
+
+        log.info("--------------------");
+        log.info(result.getContent());
+        log.info("--------------------");
+
+    }
+
+    //Delete QueryMethod
+    /**
+     * @Description : Error -  No EntityManager with actual transaction available for current thread
+     *                         - cannot reliably process 'remove' call
+     * */
+    @Test
+    @Transactional // 없으면 Error
+    @Commit        // 없으면 Error는 없지만 DB 반영 X
+    public void deleteWithQueryMethodTests(){
+        dogRepository.deleteByDnumLessThan(4); //4 미만 삭제
+    }
+
+
+
 
 }
