@@ -1,21 +1,25 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
+  <head>
+    <meta charset="UTF-8" />
     <title>Title</title>
-</head>
-<body>
-  <h1>ex3</h1>
+  </head>
+  <body>
+    <h1>ex3</h1>
 
-  <h2 th:text="${result}"></h2>
-  <h2 th:text="${dto}"></h2>
+    <h2 th:text="${result}"></h2>
+    <h2 th:text="${dto}"></h2>
 
-  <script th:inline="javascript">
-    let msg = [[${result}]];
-    let dto = [[${dto}]]
-    console.log("msg",msg);
-    console.log("dto",dto);
-  </script>
-
-</body>
+    <script th:inline="javascript">
+      /**
+       * 주의깊게 볼 부분 console.log 확인 시
+       * - 문자열일 경우는 자동으로 ""로 감싸 문자열로
+       * - JSON 형식 데이터일경우 자동으로 JSON.parse() 형태로 JSON으로 포맷해줌
+      */
+      let msg = [[${result}]];
+      let dto = [[${dto}]]
+      console.log("msg",msg);
+      console.log("dto",dto);
+    </script>
+  </body>
 </html>

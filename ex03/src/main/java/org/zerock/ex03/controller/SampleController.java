@@ -67,23 +67,32 @@ public class SampleController {
      *                   사용이 가능하다
      *                   
      *                 🎈 주의사항 : addAttribute() 와 addFlashAttribute() 의 차이점은 
-     *                             해당 redirect 등이로 페이지가 이동 됐을 시 URL 뒤에 데이터 값이 들어가고 안들어가고 차이다
-     *
-     *                             또한 객체 형태는 addAttribute()로 넘기면 Error!
-     *                             Error Msg : Failed to convert value of type 'org.zerock.ex03.DTO.SampleDTO' to required type 'java.lang.String';
-     *                                         nested exception is java.lang.IllegalStateException: Cannot convert value of type 'org.zerock.ex03.DTO.SampleDTO'
-     *                                         to required type 'java.lang.String': no matching editors or conversion strategy found
+     *                             해당 redirect로 페이지가 이동 됐을 시 
+     *                              - addFlashAttribute() 경우 URL 데이터가 남지 않고 redirect를 받은 화면에서 해당
+     *                               전달해준 데이터를 사용 가능 [ 일회성 - URL에 기록이 남지않음 (POST와 흡사함) ]
+     * 
+     *                              - addAttribute()의 경우 데이터 값이 URL에 남으며 해당 값을 Target Contoller에서 
+     *                                다시 받아줘야한다. [ 다회성 가능 새로고침해도 URL은 남아있기 때문임 (GET 방식) ]
+     *                               ❌ 또한 객체 형태를 addAttribute()로 넘기면 Error!
+     *                                  Error Msg : Failed to convert value of type 'org.zerock.ex03.DTO.SampleDTO' to required type 'java.lang.String';
+     *                                              nested exception is java.lang.IllegalStateException: Cannot convert value of type 'org.zerock.ex03.DTO.SampleDTO'
+     *                                              to required type 'java.lang.String': no matching editors or conversion strategy found
      * */
     @GetMapping({"/exInline"})
     public String exInline(RedirectAttributes redirectAttributes){
         log.info("exInline .... This used RedirectAttributes ");
         SampleDTO dto = SampleDTO.builder().sno(100L).first("First 100").last("Last 100").regTime(LocalDateTime.now()).build();
         redirectAttributes.addFlashAttribute("result","success");
-        redirectAttributes.addFlashAttribute("dto",dto);
+        redirectAttributes.addFlashAttribute("dto",dto);        
         // 해당 URL 접근 시 데이터를 포함하여 redirect 시켜버림
         return "redirect:/sample/ex3";
     }
 
+    /**
+     * @Description :  상위 exInline() 와 비교
+     *               - exInline                 : redirectAttributes.addFlashAttribute("Key" , value); [일회성]
+     *               - compareAttrWithFlashAttr : redirectAttributes.addAttribute("Key" , value);     [다회 - 받는쪽에서 다시 Model로 보내줘야함. ]
+     */
     @GetMapping("/compareAttr")
     public String compareAttrWithFlashAttr(RedirectAttributes redirectAttributes){
 
