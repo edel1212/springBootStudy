@@ -17,8 +17,7 @@ import javax.persistence.*;
 public class Guestbook extends  BaseEntity{
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    //기본키 자동생성
+    @GeneratedValue(strategy = GenerationType.IDENTITY) //기본키 자동생성
     private Long gno;
 
     @Column(length = 100,nullable = false)
