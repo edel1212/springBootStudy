@@ -2,6 +2,7 @@ package com.yoo.toy.repository;
 
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.dsl.BooleanExpression;
+import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.yoo.toy.entity.GuestBook;
 import com.yoo.toy.entity.QGuestBook;
 import lombok.extern.log4j.Log4j2;
@@ -13,6 +14,10 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 
+import javax.persistence.EntityManager;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
 import java.util.stream.IntStream;
 
 @SpringBootTest
@@ -22,6 +27,8 @@ public class GuestBookRepositoryTests {
     @Autowired
     private GuestBookRepository guestBookRepository;
 
+    @Autowired
+    private GuestBookRepositorySupport guestBookRepositorySupport;
 
     @Test
     public void dummyDateInsertTest(){
@@ -85,6 +92,25 @@ public class GuestBookRepositoryTests {
 
         result.getContent().forEach(log::info);
 
+    }
+
+    @Test
+    public void testQuery3(){
+        QGuestBook quQGuestBook = QGuestBook.guestBook;
+
+        BooleanBuilder builder = new BooleanBuilder();
+
+        BooleanExpression booleanExpression = quQGuestBook.gnum.eq(105L);
+
+        Optional<GuestBook> result = guestBookRepository.findOne(builder.and(booleanExpression ));
+        log.info(result.get().getContent());
+
+    }
+
+    @Test
+    public void jpaFactoryUse(){
+        List<GuestBook> r = guestBookRepositorySupport.findByName(100L);
+        log.info("Result :: {}", Arrays.toString(r.toArray()));
     }
 
     //__Eof__
