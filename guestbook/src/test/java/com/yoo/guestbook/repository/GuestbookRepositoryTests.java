@@ -64,25 +64,27 @@ public class GuestbookRepositoryTests {
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     /**
-     * @Description : 해당 테스트 목적 -> 제목(title)에 '1'이 들어가 있는 엔티티들을 검색하는것
-     *
-     *                ✔ 1 ) 동적으로 처리하기 위해 Q도메인 Class를 얻어온다, Q도메인 Class를 이용하면
+     * @Description :  ✔ 1 ) 동적으로 처리하기 위해 Q도메인 Class를 얻어온다, Q도메인 Class를 이용하면
      *                      엔티티 클래스에 선언된 title, content 같은 필드 변수 활용이 가능해짐!
      *                      ---  쉽게 설명하면 객체 변수를 만들어 각각의 엔티티 변수에 접근하여
-     *                           contains() 같은 메서드가 사용이 가능해짐!
-     *                
+     *                           contains() 같은 조건에 맞는 메서드 사용이 가능
+     *
      *                ✔ 2 ) BooleanBuilder는 Where문에 들어가는 조건을 넣어주는 컨테이너로 생각하면 된다.
      *                      --- 쉽게 설명하면 Where 문의 조건을 넣을 객체
-     *                
+     *
      *                ✔ 3) 원하는 조건을 만들어준다
-     *                     해당 만들어준 조건의 Type은 BooleanExpression 이어야한다
-     *                     이유는 --> 2번에서 만든 builder에 넣어줘야하기 때문임!
+     *                     해당 만들어준 조건의 객체 Type은 BooleanExpression 이어야한다
+     *                      --- 2번에서 만든 builder에 넣어줘야는 객체
      *
      *                ✔ 4) 만들어진 조건은 where 문에 and 또는 or 등으로 합쳐준다.
      *                     --- 체이닝 가능함! 뒤에 계속 이어붙여서 조건을 만들어줄 수 있음
+     *                      ✅ 중요 포인트는 해당 객체의 파라미터로는 Q도메인의 Predicate가 들어가는것이다
+     *                          Java의 predicate 람다식이 아님!
      *
-     *                ✔ 5) BooleanBuilder 는 GuestBookRepository 에 추가된 QuerydslPredicateExcutor 인터페이스의
-     *                     findAll()을 사용할 수있다.
+     *                ✔ 5) BooleanBuilder 는 GuestBookRepository 에 추가된
+     *                     QuerydslPredicateExcutor 인터페이스에 의해 findAll()을 사용할 수있다.
+     *
+     *  - 결과값 : title에 "1"이 들어가있는 0페이지 ~ 10개 gnum으로 정렬 된 데이터
      * */
     @Test
     public void testQuery1(){
