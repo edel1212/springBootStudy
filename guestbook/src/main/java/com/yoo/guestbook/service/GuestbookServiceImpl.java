@@ -1,5 +1,13 @@
 package com.yoo.guestbook.service;
 
+import java.util.Optional;
+import java.util.function.Function;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.stereotype.Service;
+
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.yoo.guestbook.dto.GuestbookDTO;
@@ -8,14 +16,9 @@ import com.yoo.guestbook.dto.PageResultDTO;
 import com.yoo.guestbook.entitiy.Guestbook;
 import com.yoo.guestbook.entitiy.QGuestbook;
 import com.yoo.guestbook.repository.GuestbookRepository;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.stereotype.Service;
-
-import java.util.Optional;
-import java.util.function.Function;
 
 @Service
 @Log4j2
