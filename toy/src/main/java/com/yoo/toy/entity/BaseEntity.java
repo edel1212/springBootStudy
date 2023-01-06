@@ -26,6 +26,7 @@ import java.time.LocalDateTime;
  */
 @MappedSuperclass // 테이블 생성 Class가 아님
 @EntityListeners(AuditingEntityListener.class) //엔티티가 이벤트가 발생할때마다 감지
+@Getter
 abstract class BaseEntity {
 
     @CreatedDate
