@@ -15,24 +15,21 @@ import org.springframework.data.domain.Sort;
 @Data
 public class PageRequestDTO {
 
-    private int page;
-    private int size;
+    private int page; //현재 페이지
+    private int size; //목록의 개수
     
     //검색조건
     private String type;
     private String keyword;
 
-    /**
-     * @Description : 기본 생성자로 기본 페이지 1과 size 를 10으로 지정함
-     * */
+    //NoArgsConstructor
+    //- 값이 없을 경우 default 값 지정
     public PageRequestDTO(){
         this.page = 1;
         this.size = 10;
     }
 
-    /**
-     * @Description : 페이징에 사용될 Method
-     * */
+    //Pageable 객체를 생성하는 매개변수로 Sort 값을 받는다.
     public Pageable getPageable(Sort sort){
         return PageRequest.of(page -1, size , sort);
     }

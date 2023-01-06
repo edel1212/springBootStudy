@@ -19,22 +19,26 @@ import java.util.stream.IntStream;
 @Data
 public class PageResultDTO<DTO, EN> {
 
-    //DTO list
+    //DTO list       - 데이티 목록
     private List<DTO> dtoList;
 
-    //Total Page Num
+    //Total Page Num  - 총 페이지번호 개수
     private int totalPage;
 
-    //Now page Num
-    private int page;
-    //List size
+    //Now page Num    - 현재 페이지번호
+    private int page; 
+    //List size       - 한번에 보여줄 목록개수
     private int size;
 
-    //start, end Page Num
-    private int start,end;
+    //start Page Num  - 시작페이지 번호
+    private int start;
+    //end Page Num    - 종료페이지 번호
+    private int end;
 
-    //next, prev flag
-    boolean prev,next;
+    //next flag       - 이전페이지 버튼 유,무
+    boolean prev;
+    //prev flag       - 다음페이지 버튼 유,무
+    boolean next;
 
     //page Num List
     private List<Integer> pageList;
@@ -48,19 +52,21 @@ public class PageResultDTO<DTO, EN> {
     }
 
     private void makePageList(Pageable pageable){
-        this.page = pageable.getPageNumber() + 1 ; // 0부터 시작하므로 1을 더해 줌
-        this.size = pageable.getPageSize();// 현재 페이지 Size 세팅
+        this.page = pageable.getPageNumber() + 1 ;  // 0부터 시작하므로 1을 더해 줌 [View에서 봐야 하므로]
+        this.size = pageable.getPageSize();         // 현재 페이지 Size 세팅
 
-        //temp end page
-        //현재 page 에서 10.0을 나눈 후 그값을 올림처리 한 후에 * 내가 보여줄 Size 를 곱해줌
-        // 1 페이지 경우  MathCeil(0.1) * 10 = 10
-        // 10 페이지 경우  MathCeil(1) * 10 = 10
-        // 100 페이지 경우  MathCeil(10) * 10 = 100
+        //temp end page [ End Page 값을 구한다. ] 
+        //현재 page / 10.0 -> 그 값을 올림  ->  목록Size을 곱해 준다.
+        // 1   페이지 경우  MathCeil(0.1) * 10 = 10
+        // 10  페이지 경우  MathCeil(1)   * 10 = 10
+        // 100 페이지 경우  MathCeil(10)  * 10 = 100
         int tempEnd = (int) Math.ceil(this.page/ 10.0) * this.size;
 
-        start = tempEnd - (this.size-1) ; // 시작 페이지는 end page 에서 (size-1) 값임
+        // 시작 페이지 번호는 마지막페이지 번호에서 (목록사이즈 - 1)를 뺀 값임
+        start = tempEnd - (this.size - 1) ; 
 
-        prev = start > 1; //이전 버턴은 1보다 클경우 true
+        //이전 버튼 : 페이지시작 번호가 1보다 클 경우 True
+        prev = start > 1; 
         
         //마지막 번호는  total Page 와 tempEnd 를 비교하여 작은 수로 지정 이유는 
         // 진짜 totalNum 은 350이여서 " 35" 가  totalPage 가 되야하지만

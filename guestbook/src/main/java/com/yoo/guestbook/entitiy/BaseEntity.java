@@ -35,7 +35,7 @@ import java.time.LocalDateTime;
  * */
 @MappedSuperclass
 @EntityListeners(value = {AuditingEntityListener.class})
-@Getter
+@Getter //Getter가 없으면 Entity -> DTO 변환 시 아래값에 접근을 못함 꼭 추가해주자.
 abstract class BaseEntity {
 
     @CreatedDate
