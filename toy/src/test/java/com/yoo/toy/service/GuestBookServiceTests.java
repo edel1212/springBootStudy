@@ -32,12 +32,19 @@ public class GuestBookServiceTests {
     @Test
     public void testList(){
         PageRequestDTO pageRequestDTO = PageRequestDTO.builder()
-                .page(1).size(10).build();
+                .page(2).size(5).build();
 
         PageResultDTO<GuestBookDTO, GuestBook> resultDTO =
                 guestbookService.getList(pageRequestDTO);
 
-        log.info(resultDTO.getDtoList());
+        log.info("Start :: {}",resultDTO.getStart());
+        log.info("End :: {}",resultDTO.getEnd());
+        log.info("Prev :: {}",resultDTO.isPrev());
+        log.info("Next :: {}",resultDTO.isNext());
+        log.info("Total :: {}",resultDTO.getTotalPage());
+        log.info("PageNumList :: {}", resultDTO.getPageList());
+
+        log.info("List :: {}",resultDTO.getDtoList());
     }
 
 }
