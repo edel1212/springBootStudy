@@ -26,13 +26,13 @@ public class BoardRepositoryTests {
     @Test
     public void insertBoard(){
         IntStream.rangeClosed(1,100).forEach(i->{
-            // ID가 맞는 Member 객체변수를 만들어줌
+            // Member ID가 존재하는 Member 객체변수를 만들어야한다.
             Member member = Member.builder().email("user"+i+"@naver.com").build();
             
             Board board = Board.builder()
                     .title("Title.."+i)
                     .content("Content..."+i)
-                    .writer(member) //상단에서 만들어줌 객체 변수를 넣어줌
+                    .writer(member) //상단에서 만들어준 Member객체를 넣어줌
                     .build();
 
             boardRepository.save(board);//완성된 Board 객체변수를 argument로 넣어줌
