@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import javax.transaction.Transactional;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.IntStream;
@@ -37,9 +38,16 @@ public class BoardRepositoryTests {
 
 
     @Test
+    @Transactional
     public void readTest1(){
         Optional<Board> result = boardRepository.findById(100L);
-        result.ifPresent(log::info);
+        //result.ifPresent(log::info);
+
+        if(result.isPresent()){
+            log.info(result.get());
+            log.info(result.get().getWriter()); // Transactional 이 없을시 Error
+        }
+
     }
 
 }

@@ -20,7 +20,7 @@ public class Board extends BaseEntity{
 
     private String content;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @ToString.Exclude // 연관관계는  ToString 에서 항상 제외해 줘야함!
     private Member writer; //연관관계 지정
 
