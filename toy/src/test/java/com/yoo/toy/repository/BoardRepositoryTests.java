@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import javax.transaction.Transactional;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.IntStream;
@@ -50,4 +51,34 @@ public class BoardRepositoryTests {
 
     }
 
+
+    /////////////////////////////////////////////
+    // JPQL [ JOIN Test]
+    @Test
+    public void testReadWithWriter(){
+        Object result = boardRepository.getBoardWithWriter(100L);
+        log.info(result);
+        log.info("-----------------------------------------");
+        Object[] arr = (Object[])result;
+        log.info(Arrays.toString(arr));
+    }
+
+    @Test
+    public void testGetBoardWithReply(){
+        log.info("with Reply Test ! ::: Use join on!!");
+
+        /*
+         * 자료 형태
+         * [ [Board(bno=100, title=Title..100, content=Content...100), Reply(rno=55, text=ReplyText...55, replyer=guest55)]
+         *    , [Board(bno=100, title=Title..100, content=Content...100), Reply(rno=71, text=ReplyText...71, replyer=guest71)]
+         *    , [Board(bno=100, title=Title..100, content=Content...100), Reply(rno=211, text=ReplyText...211, replyer=guest211)]
+         *    , [Board(bno=100, title=Title..100, content=Content...100), Reply(rno=248, text=ReplyText...248, replyer=guest248)] ]
+         * */
+        List<Object[]> result = boardRepository.getBoardWithReply(100L); // 100번의 번호를 갖는 Board + Reply
+
+        result.stream()
+                .map(Arrays::toString)
+                .forEach(log::info);
+
+    }
 }
