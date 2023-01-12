@@ -82,28 +82,17 @@ public class BoardRepositoryTests {
 
     }
 
-
-    /**
-     * @Descripciton  : 중요 ! 연관관계에서 헷갈리면 안되는것은
-     *                 바로 타겟이 되는 Entity 기준으로 봐야한다는것이다
-     *
-     *                 ✔ 내가 햇거렸던것은 Member Class 를보면 연관관계가 없고
-     *                   Reply Class 를 보면 오히려 Board 타입의 변수로 @ManyToOne 을 사용해주고
-     *                   있는데 왜 Reply 에 Join 시 on 을 쓰지 했는데
-     *
-     *                  🎈 알고보니 해당 Board Class 를 보면 Member 타입의 writer 로
-     *                     오히려 그렇게 pk를 잡고 있었다
-     *
-     *
-     * **/
-
     @Test
     public void testReadWithWriter(){
         Object result = boardRepository.getBoardWithWriter(100L);
+        //배열 형식으로 파싱해줘야 사용이 가능하다!
         Object[] arr = (Object[]) result;
 
         log.info("------------------------");
         log.info(Arrays.toString(arr));
+        // JPQL의 장점인 Object 타입으로 반환 받기에
+        // 배열 [0] : Board , [1] Member 형태로 나옴!
+        //[Board(bno=100, title=Title..100, content=Content...100), Member(email=user100@naver.com, password=111, name=Yoo100)]
     }
 
     @Test
@@ -122,7 +111,7 @@ public class BoardRepositoryTests {
         result.stream()
                 .map(Arrays::toString)
                 .forEach(log::info);
-        /*   Result Query
+        /*  - Result Query
          *
          * select
          * board0_.bno as bno1_0_0_,
