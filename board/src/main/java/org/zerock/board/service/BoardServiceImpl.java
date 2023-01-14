@@ -44,10 +44,12 @@ public class BoardServiceImpl implements BoardService{
 
         log.info(pageRequestDTO);
 
-        //Object 에서 넘어온 값들인 배열순으로 { Board 객체 , Member 객체 , Long 댓글 수 } 이다.
-        Function<Object[],BoardDTO> fn = (en-> entityToDTO( (Board)en[0]
-                                                            ,(Member)en[1]
-                                                            ,(Long)en[2]));
+        // DTO로 변환 함수 인데 여기서 Object[]  Index 순서는
+        // 내가 JPQL에 작성한 쿼리의 순서이다 @See : boardRepository.java
+        // ex) SELECT b, w, count(r) ...
+        Function<Object[],BoardDTO> fn 
+                        = (en-> this.entityToDTO( (Board)en[0], (Member)en[1], (Long)en[2]));
+
 //페이징이랑 연결되어있지 않은 repository Method
 //        Page<Object[]> result = repository.getBoardWithReplyCount(
 //                                                pageRequestDTO.getPageable(Sort.by("bno").descending())

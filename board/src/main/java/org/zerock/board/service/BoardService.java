@@ -36,7 +36,9 @@ public interface BoardService {
                 .build();
     }
     
-    // Entity 객체들을 --> DTO 객체로 변경 [ 페이징시 Page<E> 의 제네릭에 사용하기 위해 DTO 변환이 필요 ]
+    // DTO 변환 시
+    // 각각해당하는 부분에 데이터를 주입하기위해서
+    // 3개의 파라미터가 필요하다[ Board, Member, Long ]
     default BoardDTO entityToDTO(Board board, Member member, Long replyCount){
         return BoardDTO.builder()
                 .bno(board.getBno())
