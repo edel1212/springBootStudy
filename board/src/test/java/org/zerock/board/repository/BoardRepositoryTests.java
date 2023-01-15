@@ -111,7 +111,7 @@ public class BoardRepositoryTests {
         result.stream()
                 .map(Arrays::toString)
                 .forEach(log::info);
-        /*  - Result Query
+        /*  result Query
          *
          * select
          * board0_.bno as bno1_0_0_,

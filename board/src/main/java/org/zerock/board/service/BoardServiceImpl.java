@@ -73,28 +73,47 @@ public class BoardServiceImpl implements BoardService{
         return entityToDTO((Board) arr[0],(Member) arr[1],(Long) arr[2]);
     }
 
-    @Transactional //Reply 에서 먼저 삭제 로직이 돌아야 하기떄문에 Transactional 이 필수이다!
+    /***
+     * 한번에 실행되어야 하는 트랜잭션이기에
+     * @Transactional 어노테이션은 필수이다
+     * 
+     */
+    @Transactional //필수
     @Override
     public void removeWithReplies(Long bno) {
-        //댓글을 먼저 삭제 해준다  -- > Reply Entity 가 Board Entity 를
-        //                          FK 의존 관계이기 때문이다.
+        /**
+         * 댓글을 먼저 삭제 해준다  - 이유❔ ::  Reply Entity[FK] 이기 때문
+         * - 중요 : 해당 deletByBno의 경우 @Modifying 어노테이션이 추가되어있음
+         */
         replyRepository.deleteByBno(bno);
-        //이후 개시글 삭제
+
+        //Reply 삭제 후 Board 삭제
+        /***
+         * - 상당 Reply의 경우 JPQL을 사용했기에 [해당 Repository에]@Modifying를 추가해줘야했지만
+         * - 아래와 같은 경우 Jpa 내장 Method를 사용하므로 추가해줄 필요가 없었다!
+         */
         repository.deleteById(bno);
 
     }
 
+    /**
+     * @Modifying을 사용하지 않아도 되는 이유는
+     * save()의 경우 jpa 기본 메서드이기 떄문이다
+     * ✅ 간단 설명 :: JPQL을 사용하지 않기 때문임!
+     */
     @Override
     public void modify(BoardDTO boardDTO) {
         Optional<Board> board = repository.findById(boardDTO.getBno());
 
+        // 해당 Board의 존재 유무를 확인
+        // save()의 경우 Insert, Update 기능을 한번에 하기 떄문이다.
         if(board.isPresent()){
             Board result = board.get();
+            // Board Entity Class에서 만들어준 값 변경 
+            // Method 사용
             result.changeTitle(boardDTO.getTitle());
             result.changeContent(boardDTO.getContent());
             repository.save(result);
         }
-
-
     }
 }
