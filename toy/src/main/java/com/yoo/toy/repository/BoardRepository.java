@@ -1,6 +1,7 @@
 package com.yoo.toy.repository;
 
 import com.yoo.toy.entity.Board;
+import com.yoo.toy.repository.search.SearchBoardRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -9,7 +10,8 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 
-public interface BoardRepository extends JpaRepository<Board,Long> {
+// SearchBoardRepository [ QuerydslSupport Interface 상속 추가 ]
+public interface BoardRepository extends JpaRepository<Board,Long> , SearchBoardRepository {
 
     // b.writer를 사용 가능한것 Board 에서 해당 Member wrtier로 변수를 사용중이기 떄문이다.
     @Query("SELECT b, w FROM Board b LEFT JOIN b.writer w WHERE b.bno =:bno")

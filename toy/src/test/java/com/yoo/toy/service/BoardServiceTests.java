@@ -18,10 +18,11 @@ public class BoardServiceTests {
 
     @Test
     public void getListTest(){
+        // new PageRequestDTO() 기본 생성자를 넘기면
+        // 생성자 매서드에서 ...of(0,1) 생성자 생성
         PageResultDTO<BoardDTO, Object[]> result = boardService.getList(new PageRequestDTO());
 
         result.getDtoList().forEach(log::info);
     }
-
 
 }
