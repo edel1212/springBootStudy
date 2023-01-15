@@ -5,6 +5,8 @@ import com.yoo.toy.entity.Board;
 import com.yoo.toy.entity.QBoard;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.data.jpa.repository.support.QuerydslRepositorySupport;
+import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
@@ -15,6 +17,7 @@ import java.util.List;
  * 3. 구현하고자 하는 interface를 impl 시킨 후 구현해준다.
 * */
 @Log4j2
+@Component
 public class SearchBoardRepositoryImpl extends QuerydslRepositorySupport implements SearchBoardRepository {
 
     public SearchBoardRepositoryImpl() {
