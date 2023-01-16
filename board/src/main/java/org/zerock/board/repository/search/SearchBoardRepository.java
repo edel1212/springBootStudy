@@ -4,6 +4,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.zerock.board.entity.Board;
 
+// 해당  Interface는 구현체가 필요하다!
 public interface SearchBoardRepository {
     Board search1();
 
