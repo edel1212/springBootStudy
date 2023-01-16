@@ -13,8 +13,15 @@ public class BoardRepositoryWithQuerydslSupportTest {
     @Autowired
     private BoardRepository boardRepository;
 
-    @Autowired
-    private SearchBoardRepository searchBoardRepository;
+    /**
+     * 아래와 같이 사용하면 Error 발생 단독으로 사용 불가능함.
+     * Bean을 따로  추가해줘 Error 발생함 상속을 통해 사용하거나
+     * 대상 JpaRepository에 따로 설정을 하는 방식으로 사용 필요
+     * Error Msg : Error creating bean with name .........
+     *              Unsatisfied dependency expressed through field
+     */
+    //@Autowired
+    //private SearchBoardRepository searchBoardRepository;
 
     @Test
     public void getListWithSupportImpl() {
@@ -23,8 +30,7 @@ public class BoardRepositoryWithQuerydslSupportTest {
 
     @Test
     public void getListWithSupportImpl2() {
-        searchBoardRepository.search1();
-
+        boardRepository.search1();
     }
 }
 

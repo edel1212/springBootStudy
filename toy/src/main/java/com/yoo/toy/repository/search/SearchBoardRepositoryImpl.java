@@ -3,7 +3,10 @@ package com.yoo.toy.repository.search;
 import com.querydsl.jpa.JPQLQuery;
 import com.yoo.toy.entity.Board;
 import com.yoo.toy.entity.QBoard;
+import com.yoo.toy.entity.QMember;
+import com.yoo.toy.entity.QReply;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.context.annotation.Description;
 import org.springframework.data.jpa.repository.support.QuerydslRepositorySupport;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Repository;
@@ -17,7 +20,6 @@ import java.util.List;
  * 3. 구현하고자 하는 interface를 impl 시킨 후 구현해준다.
 * */
 @Log4j2
-@Component
 public class SearchBoardRepositoryImpl extends QuerydslRepositorySupport implements SearchBoardRepository {
 
     public SearchBoardRepositoryImpl() {
@@ -41,6 +43,37 @@ public class SearchBoardRepositoryImpl extends QuerydslRepositorySupport impleme
         //fetch()를 통해 데이터 빈환
         List<Board> result = jpqlQuery.fetch();
         
+        return null;
+    }
+
+
+    //JPQL Query LeftJoin
+    @Override
+    public Board search2WithJoin() {
+
+        log.info("-------------------------");
+
+        //1 . Q도메인 생성
+        QBoard board = QBoard.board;
+        QReply reply = QReply.reply;
+        QMember member = QMember.member;
+        
+        //2. JPQLQuery 객체 생성
+        JPQLQuery<Board> jpqlQuery = from(board);
+        // 🎈 중요 : JPQL과 다른 점은 join에  연관관계가 있을 경우에도 on 으로 조건이 필요하다.
+        jpqlQuery.leftJoin(member).on(board.writer.eq(member));
+        jpqlQuery.leftJoin(reply).on(reply.board.eq(board));
+
+        jpqlQuery.select(board, member.email, reply.count()).groupBy(board);
+
+        log.info("----------------------------------------");
+        log.info(jpqlQuery);
+        log.info("----------------------------------------");
+
+        List<Board> result = jpqlQuery.fetch();
+
+        log.info("result :: {}", result);
+
         return null;
     }
 }
