@@ -1,5 +1,6 @@
 package com.yoo.toy.repository.search;
 
+import com.querydsl.core.Tuple;
 import com.querydsl.jpa.JPQLQuery;
 import com.yoo.toy.entity.Board;
 import com.yoo.toy.entity.QBoard;
@@ -7,6 +8,8 @@ import com.yoo.toy.entity.QMember;
 import com.yoo.toy.entity.QReply;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.context.annotation.Description;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.support.QuerydslRepositorySupport;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Repository;
@@ -64,16 +67,20 @@ public class SearchBoardRepositoryImpl extends QuerydslRepositorySupport impleme
         jpqlQuery.leftJoin(member).on(board.writer.eq(member));
         jpqlQuery.leftJoin(reply).on(reply.board.eq(board));
 
-        jpqlQuery.select(board, member.email, reply.count()).groupBy(board);
+        JPQLQuery<Tuple> tuple = jpqlQuery.select(board, member,  reply.count()).groupBy(board);
 
-        log.info("----------------------------------------");
-        log.info(jpqlQuery);
-        log.info("----------------------------------------");
-
-        List<Board> result = jpqlQuery.fetch();
+        List<Tuple> result = tuple.fetch(); 
+        
+        //<Tuple>을 사용 시
+        //result.get(0).get(??) 이런식으로 접근이 가능해짐!
 
         log.info("result :: {}", result);
 
+        return null;
+    }
+
+    @Override
+    public Page<Object[]> searchPage(String type, String keyword, Pageable pageable) {
         return null;
     }
 }
