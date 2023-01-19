@@ -81,6 +81,16 @@ public class SearchBoardRepositoryImpl extends QuerydslRepositorySupport impleme
 
     @Override
     public Page<Object[]> searchPage(String type, String keyword, Pageable pageable) {
+        log.info("Search--------------------------");
+
+        //1. Q도메인 객체 생성
+        QBoard board = QBoard.board;
+        QReply reply = QReply.reply;
+        QMember member = QMember.member;
+
+        //2. JQPLQuery 객체 생성
+        JPQLQuery<Board> jpqlQuery = from(board);
+
         return null;
     }
 }
