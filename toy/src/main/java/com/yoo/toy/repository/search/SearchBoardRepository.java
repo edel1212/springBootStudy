@@ -17,4 +17,7 @@ public interface SearchBoardRepository {
     // 객체(Java Beans) 이기에 취지에 적합하지 않기 때문이다.
     Page<Object[]> searchPage(String type, String keyword, Pageable pageable);
 
+
+    Page<Object[]> searchPageWithSort(String type, String keyword, Pageable pageable);
+
 }

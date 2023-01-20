@@ -33,10 +33,12 @@ public class SupportQueryTests {
     @Test
     @Description("Tuple Test")
     public void testSearchPage(){
+        // Pageable 객체 생성
         Pageable pageable = PageRequest.of(0, 10, Sort.by("bno").descending());
 
+        // Parent Interface에서 상속[구현] 받은 Method를 사용!
         //  List가 아니라 Page이다!!
-        Page<Object[]> result = boardRepository.searchPage("t","1",pageable);
+        Page<Object[]> result = boardRepository.searchPage("tw","1",pageable);
     }
 
 }
