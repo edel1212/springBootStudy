@@ -12,6 +12,8 @@ public interface BoardService {
 
     PageResultDTO<BoardDTO, Object[]> getList(PageRequestDTO requestDTO);
 
+    PageResultDTO<BoardDTO, Object[]> getListWithJQPLQuery(PageRequestDTO requestDTO);
+
     //DTO 변환 시
     //각각해당하는 부분에 데이터를 주입하기위해서
     // 3개의 파라미터가 필요하다[ Board, Member, Long ]

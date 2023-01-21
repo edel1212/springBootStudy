@@ -8,6 +8,8 @@ import lombok.extern.log4j.Log4j2;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Description;
+import org.springframework.data.domain.Page;
 
 @SpringBootTest
 @Log4j2
@@ -24,5 +26,25 @@ public class BoardServiceTests {
 
         result.getDtoList().forEach(log::info);
     }
+
+
+    ////////////////////////////////////////
+
+
+    //JPQLQuery With Sort and Search Option Test
+    @Test
+    @Description("JPQLQuery Sort And Search option")
+    public void testSearchWithSortAndKeyword(){
+        // 1. PageRequestDTO 객채생성
+        PageRequestDTO pageRequestDTO = new PageRequestDTO();
+        pageRequestDTO.setType("twc");
+        pageRequestDTO.setKeyword("1");
+
+        PageResultDTO<BoardDTO, Object[]> result = boardService.getListWithJQPLQuery(pageRequestDTO);
+
+        result.getDtoList().forEach(log::info);
+
+    }
+
 
 }

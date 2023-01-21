@@ -41,4 +41,12 @@ public class SupportQueryTests {
         Page<Object[]> result = boardRepository.searchPage("tw","1",pageable);
     }
 
+    @Test
+    @Description("JQPLQuery With Sort Test")
+    public void testSearchPgeWithSort(){
+        Pageable pageable = PageRequest.of(0, 10 , Sort.by("bno").descending());
+        Page<Object[]> result = boardRepository.searchPageWithSort("tw","1", pageable);
+        result.getContent().stream().map(Arrays::toString).forEach(log::info);
+    }
+
 }

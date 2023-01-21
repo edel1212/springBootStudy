@@ -14,6 +14,7 @@ import com.yoo.toy.entity.QReply;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.context.annotation.Description;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.support.QuerydslRepositorySupport;
@@ -21,6 +22,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
 *  1 . QuerydslRepositorySupport를 상속 받는다.
@@ -30,7 +32,8 @@ import java.util.List;
 * */
 @Log4j2
 public class SearchBoardRepositoryImpl extends QuerydslRepositorySupport implements SearchBoardRepository {
-
+    
+    //생성자 추가 [필수]
     public SearchBoardRepositoryImpl() {
         //내가 사용할 Entity Class
         super(Board.class);
@@ -199,11 +202,26 @@ public class SearchBoardRepositoryImpl extends QuerydslRepositorySupport impleme
         //6. count를 사용했으니 board에 groupBy 시켜줌
         tuple.groupBy(board);
 
-        //7. 타입을 List<Tuple>로 변경
+        //7. Paging을 위한 offset값 과 limit 추가
+        tuple.offset(pageable.getOffset());
+        tuple.limit(pageable.getPageSize());
+        
+        
+        //8. 타입을 List<Tuple>로 변경
         List<Tuple> result = tuple.fetch();
-
         log.info("result :: {}", result);
 
-        return null;
+        //9. count 변수 추가 및 값 주입 [Paging을 위함] - 해당값을 구핼때 따로 count를
+        //   구하는 Query가 돌아감!
+        long count = tuple.fetchCount();
+        log.info("count :: {}",count);
+
+        //10.반환 타입은 PageImpl<Object[]> 형식으로 반환하며 
+        //   위에서 얻은 fetch 데이터와 pageable, count를 인자값으로 넘겨주자
+        //주의 사항 : PageImpl 객체 생성 시 List<Tuple>로 전달하는데
+        //          이것을 Array로 변환해서 넘겨줘야한다!
+        //          그래야 한곳에서 조작해서 넘기기에 다음 단계에서 또다시 변환 해줄
+        //          필요가 없어서 편함!
+        return new PageImpl(result.stream().map(Tuple::toArray).collect(Collectors.toList()),pageable,count);
     }
 }

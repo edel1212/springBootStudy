@@ -31,4 +31,22 @@ public class BoardServiceImpl implements BoardService{
                 );
         return new PageResultDTO<>(result,fn);
     }
+
+    @Override
+    public PageResultDTO<BoardDTO, Object[]> getListWithJQPLQuery(PageRequestDTO requestDTO) {
+
+        log.info("requestDTO ::: {}",requestDTO);
+    
+        // 1. Functional 변수 생성 - 해당 entity-> DTO 메서는 service에 정의되어 있음
+        Function<Object[], BoardDTO> fn = en -> this.entityToDTO( (Board) en[0]
+                                                                , (Member)en[1]
+                                                                , (Long) en[2]);
+
+        // 2 . JPQLQuery를 적용한 Method 호출
+        Page<Object[]> result = boardRepository.searchPageWithSort(requestDTO.getType()
+                , requestDTO.getKeyword()
+                ,requestDTO.getPageable(Sort.by("bno").descending()) );
+
+        return new PageResultDTO<>(result, fn);
+    }
 }
