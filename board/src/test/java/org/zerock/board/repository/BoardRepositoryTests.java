@@ -31,7 +31,7 @@ public class BoardRepositoryTests {
             
             Board board = Board.builder()
                     .title("Title.."+i)
-                    .content("Content..."+i)
+                    .content("Content..."+i+"입니다.")
                     .writer(member) //상단에서 만들어준 Member객체를 넣어줌
                     .build();
 

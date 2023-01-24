@@ -22,7 +22,7 @@ public class MemberRepositoryTests {
             Member member = Member.builder()
                     .email("user"+i+"@naver.com")
                     .password("111")
-                    .name("Yoo"+i)
+                    .name("Yoo"+i+"입니다.")
                     .build();
             memberRepository.save(member);
         });

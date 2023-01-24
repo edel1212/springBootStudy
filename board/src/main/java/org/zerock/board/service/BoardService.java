@@ -44,7 +44,7 @@ public interface BoardService {
                 .bno(board.getBno())
                 .title(board.getTitle())
                 .content(board.getContent())
-                .regDate(board.getRegeDate())
+                .regDate(board.getRegDate())
                 .modDate(board.getModDate())
                 .writerEmail(member.getEmail()) // Member 객체에서 받아옴
                 .writerName(member.getName())  // Member 객체에서 받아옴
