@@ -72,3 +72,15 @@
 - - 7 . URI 경로에는 파일확장자를 포함하면 안된다. [ 💬 필요한다면 Accept Header에 추가해서 사용 ]
 - - - Ex) https://blackgom.com/cities/townships/photo/336/yoo.jpg  👎
 - - - Ex) https://blackgom.com/cities/townships/photo/336   ____ Accept:image/jpg  👍
+
+
+<br/>
+<hr/>
+
+<h3>2 ) @RestController 란❔</h3>
+
+- @RestController의 경우 모든 메서드의 리턴 타입은 기본으로 JSON을 사용한다.
+- 해당 어노테이션을 사용하면 메서드 마다 @ResponseBody를 사용하지 않아도 된다.
+- @RestController 와 @Controller 차이점 [ 간단설명 ]  
+- - @Controller : Model 또는 @ResponseBody를 사용하여 데이터를 전달할 수 있지만 주된 기능은 View를 반환하기 위해 사용
+- - @RestController : @Controller에 + @ResponseBody로 생각하면 된다, 주된 용도는 Json 형태로 객체 데이터를 반환하는 것이다.
