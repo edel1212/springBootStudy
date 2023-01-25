@@ -24,7 +24,7 @@ public class ReplyRepositoryTests {
 
         IntStream.rangeClosed(1,300).forEach(i->{
             //Board의 존재하는 bno [ 1 ~ 100]으로 만들었음
-            long bno = 1L;//(long) ( Math.random() * 100 + 1 );
+            long bno = (long) ( Math.random() * 100 + 1 );
 
             //Board 객체 생성
             Board board = Board.builder().bno(bno).build();
