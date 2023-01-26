@@ -84,3 +84,46 @@
 - @RestController 와 @Controller 차이점 [ 간단설명 ]  
 - - @Controller : Model 또는 @ResponseBody를 사용하여 데이터를 전달할 수 있지만 주된 기능은 View를 반환하기 위해 사용
 - - @RestController : @Controller에 + @ResponseBody로 생각하면 된다, 주된 용도는 Json 형태로 객체 데이터를 반환하는 것이다.
+
+\- Controller - GET 방식🔽
+```java
+// java - Controller
+
+@Log4j2
+@RequiredArgsConstructor
+@RestController
+@RequestMapping("/replies/")
+public class ReplyController {
+
+    private final ReplyService replyService;
+
+    @GetMapping(value = "/board/{bno}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<List<ReplyDTO>> getListByBoard(@PathVariable Long bno){
+        log.info("bno ::: {}" , bno);
+        return ResponseEntity.ok().body(replyService.getList(bno));
+    }
+
+
+}
+```
+
+\- View [ javascript ] - GET 방식🔽
+```javascript
+// javascript - use fetchAPI
+
+fetch("/replies/board/90") // bno : 90번을 찾음
+      .then((response) => response.json())
+      .then((data) => {
+        console.log(data);
+      })
+      .catch((error) => console.log(error));
+
+```
+
+<br/>
+<hr/>
+
+<h3>3 ) @RequestMapping의 Consumes 와  Produces 란❔</h3>
+
+- Consumes : 소비 가능한 미디어 타입을 지정하는 것이며 주요한 매핑을 제한 할수있다.
+- - HTTP 통신 대상의 Content-Type 요청 헤더가 Consumes에 지정한 미디어 타입과 일치할 때만 요청이 성공한다.
