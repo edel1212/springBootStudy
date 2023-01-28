@@ -127,3 +127,266 @@ fetch("/replies/board/90") // bno : 90번을 찾음
 
 - Consumes : 소비 가능한 미디어 타입을 지정하는 것이며 주요한 매핑을 제한 할수있다.
 - - HTTP 통신 대상의 Content-Type 요청 헤더가 Consumes에 지정한 미디어 타입과 일치할 때만 요청이 성공한다.
+- - Get 방식일 경우에는 Consumes가 불필요하다 [ Get방식의 데이터 전달 방식은 URI형태로 받기에 Body가 없기 때문이다. ]
+- - 💬 간단설명 : <strong>consumes는 클라이언트가 서버에게 보내는 데이터 타입을 명시한다.</strong>
+
+\- Consumes Test Controller [ ☠️ Error Case ]🔽
+```java
+//java - Controller
+
+@Description("Error Case Get방식은 Body가 없으므로 consumes가 불필요함")
+@Deprecated
+@GetMapping(value = "/consumesErrorCase1", consumes = MediaType.APPLICATION_JSON_VALUE)
+public ResponseEntity<String> errorCase1(@RequestBody Map<String, String> testValue){
+
+        log.info("testValue :: {}", testValue);
+        
+        return ResponseEntity.ok().body("ErrorCase");
+}
+```
+
+\- Consumes Test Client [ ☠️ Error Case ]🔽
+```javascript
+//javascript - Client
+
+/*
+    GetMethod 방식에는 Body가 들어갈수가 없음!!
+    1 ) 헤더의 내용중 BODY 데이터를 설명하는 Content-Type이라는 헤더필드는 들어가지 않는다.
+    2 ) TypeError: Failed to execute 'fetch' on 'Window': Request with GET/HEAD method cannot have body.
+ */
+function errorCase(){
+    fetch("/replies/consumesErrorCase1"
+        ,{
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                testValue: 123
+                })
+          })
+      .then((response) => response.json())
+      .then((data) => {
+        console.log(data);
+      })
+      .catch((error) => console.log(error));
+}
+```
+
+\- Consumes Test Controller [ 👍 Success Case ]🔽
+```java
+//java - Controller
+
+@PostMapping(value = "/consumesSuccess", consumes = MediaType.APPLICATION_JSON_VALUE)
+public ResponseEntity<Map<String, String>> errorCase2(@RequestBody Map<String, String> testValue){
+
+        log.info("testValue :: {}", testValue);
+
+        Map<String , String > result = new HashMap<>();
+        result.put("result","SUCCESS");
+
+        return ResponseEntity.ok().body(result);
+}
+```
+\- Consumes Test Client [ 👍 Success Case ]🔽
+```javascript
+function consumesSuccess(){
+    fetch("/replies/consumesSuccess"
+        ,{
+            method: "POST" ,
+            headers: {
+                "Content-Type": "application/json", // consumes 와 맞춰줘야한다!
+            },
+            body: JSON.stringify({
+                testValue: 123
+                })
+          })
+      .then((response) => response.json())
+      .then((data) => {
+        console.log(data);
+      })
+      .catch((error) => console.log(error));
+}
+```
+
+- Produces : Server단에서 보내주는 데이터 타입을 정의한다.
+- - client에서 받는 데이터 형식을 정하는 Header는 Accept이다.
+- - 💬 간단설명 : <strong>produces는 서버가 클라이언트에게 반환하는 데이터 타입을 명시한다</strong>
+
+\- Produces Test Controller [ ☠️ Error Case ]🔽
+```java
+//java - Controller
+
+/*
+ * 반환 타입과 produces 설정 또한 맞지 않음
+ * */
+@Description("반환 타입과 produces가 맞지 않기에 500Error 반환")
+@Deprecated
+@GetMapping(value = "/errorCase/{bno}", produces = MediaType.TEXT_PLAIN_VALUE)
+public ResponseEntity<List<ReplyDTO>> producesErrorCase(@PathVariable Long bno){
+        log.info("bno ::: {}" , bno);
+        return ResponseEntity.ok().body(replyService.getList(bno));
+}
+
+/*
+ * Server단에서는 문제가 없지만 Cleint단 에서  모순되는 문제가 있음
+ * */
+@Description("Error는 없지만 Client단에서의 모순이 있음")
+@Deprecated
+@GetMapping(value = "/errorCase2/{bno}", produces = MediaType.TEXT_PLAIN_VALUE)
+public ResponseEntity<String> producesErrorCase2(@PathVariable Long bno){
+        log.info("bno ::: {}" , bno);
+        return ResponseEntity.ok().body("Yoo");
+}
+```
+
+\- Produces Test Client [ ☠️ Error Case ]🔽
+```javascript
+//javascript - Cleint
+
+/**
+ 이유 : Server에서 반환 타입은 [{}]형식의 JSON 형식이지만
+       produces = MediaType.TEXT_PLAIN_VALUE 로 설정하였기에
+       에러를 반환함
+ Error Code :500
+*/
+function  producesErrorCase (){
+    fetch("/replies/errorCase/90")
+      .then((response) => response.json())
+      .then((data) => {
+        console.log(data);
+      })
+      .catch((error) => console.log(error));
+}
+
+/**
+ 이유 : 해당 테스트는 에러는 없지만 Client 의 Accept 와 Server단의 produces, return 타입이 다른
+      문제가 있고 사실상 해당 fetchAPI 사용에서도 모순되는 점이 있다
+      - header -> Accept 를 json으로 설정했으면서도
+      - 받아오는 타입의 데이터는  response.text()를 사용 [ String을 반환하기 때문 ]
+        한다. .json()은 Error가 나기 때문이다.
+ Error Code : 없음
+*/
+function  producesErrorCase2 (){
+    fetch("/replies/errorCase2/90"
+        ,{
+            method : "GET" ,
+            header : {Accept : "application/json"}
+        })
+      .then((response) => response.text())
+      //.then((response) => response.json())
+      .then((data) => {
+        console.log(data);
+      })
+      .catch((error) => console.log(error));
+}
+```
+
+\- Produces Test Controller [ 👍 Success Case ]🔽
+```java
+//java - Controller
+
+@GetMapping(value = "/board/{bno}", produces = MediaType.APPLICATION_JSON_VALUE)
+public ResponseEntity<List<ReplyDTO>> getListByBoard(@PathVariable Long bno){
+        log.info("bno ::: {}" , bno);
+        return ResponseEntity.ok().body(replyService.getList(bno));
+}
+```
+\- Produces Test Client [ 👍 Success Case ]🔽
+```javascript
+//javascript - Client
+
+//성공
+function getReplies(){
+    fetch("/replies/board/90")
+      .then((response) => response.json())
+      .then((data) => {
+        console.log(data);
+      })
+      .catch((error) => console.log(error));
+}
+```
+
+<br/>
+<hr/>
+
+<h3>5 ) Content-Type의 application/json 과 application/x-www-from-urlencoded 차이점❔</h3>
+
+- 대부분의 HTTP Request에 대한 Content-Type은 application/json이 대부분이다.[ REST API 대중화 때문 ]
+<br/> 단 ! application/x-www-form-urlencoded는 html form의 기본 전송 시 Content-Type 이므로
+자주 사용되지는 않지만 가끔씩 사용된다.
+- 차이점 ?
+- - application/json : {key: value}의 JSON형태로  Server에 전송된다.
+- - application/x-www-form-urlencoded : key=value&key=value의 형태로 전달된다는 점입니다.
+- 👉 applcation/x-www-form-urlencoded 사용 시 주의점
+- -  application logic에서 applcation/x-www-form-urlencoded를 사용할 경우 body 인코딩이 
+<br/>해당 framework 혹은 library에서 자동으로 되는지 확인 후 안되면 해줘야한다.
+<br/> Ex) body : stringify(form).toString('utf8')
+\- Test Code [ Client ]🔽
+```html
+<!-- html -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+    
+    <!--  
+      http://localhost:8081/replies/formVer?testValue=95 
+      위와 같이 값이 전달된다.
+      -->
+    <form action="/replies/formVer">
+        <input name="testValue" value="95">
+        <button>전송</button>
+    </form>
+
+    <hr/>
+    
+    <!--  Server단 파라미터 타입 다르게 테스트   -->
+    <form action="/replies/formVer2">
+        <input name="bno" value="95">
+        <button>전송</button>
+    </form>
+
+    <hr/>
+    
+    <!--  Post 방식  -->
+    <form action="/replies/formAndPostVer" method="post">
+        <input name="bno" value="95">
+        <button>전송</button>
+    </form>
+
+</body>
+</html>
+```
+
+\- Test Code [ Server ]🔽
+```java
+//java - Controller
+
+@Description("URL에 값이 담겨나옴")
+@GetMapping(value = "/formVer")
+public ResponseEntity<List<ReplyDTO>> applicationFormVerTest(Long testValue){
+        log.info("bno ::: {}" , testValue);
+        return ResponseEntity.ok().body(replyService.getList(testValue));
+}
+
+@Description("DTO에 값이 담기는지 확인")
+@GetMapping(value = "/formVer2")
+public ResponseEntity<List<ReplyDTO>> applicationFormVerTest(ReplyDTO replyDTO){
+        log.info("bno ::: {}" , replyDTO);
+        return ResponseEntity.ok().body(replyService.getList(replyDTO.getBno()));
+}
+
+/**
+ * Parameter를 (Long testValue) 받았을 시 이상없음 확인 완료
+ * */
+@PostMapping(value = "/formAndPostVer")
+public ResponseEntity<List<ReplyDTO>> applicationFormAndPostVerTest(ReplyDTO replyDTO){
+        log.info("bno ::: {}" , replyDTO);
+        return ResponseEntity.ok().body(replyService.getList(replyDTO.getBno()));
+}
+```
+
