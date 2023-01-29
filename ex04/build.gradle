@@ -31,6 +31,13 @@ dependencies {
 	//test 환경 lombok 사용 가능하끔 설정
 	testCompileOnly 'org.projectlombok:lombok'
 	testAnnotationProcessor 'org.projectlombok:lombok'
+
+	//Swagger 추가
+	// https://mvnrepository.com/artifact/io.springfox/springfox-swagger2
+	implementation 'io.springfox:springfox-boot-starter:3.0.0'
+	// UI 를 추가 안할시 404 WithPage가 나옴
+	implementation 'io.springfox:springfox-swagger-ui:3.0.0'
+
 }
 
 tasks.named('test') {
