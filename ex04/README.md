@@ -468,3 +468,153 @@ public class SwaggerConfiguration {
 <br/>
 <hr/>
 
+<h3>7) RestTemplate 이란 ?</h3>
+- Spring에서 제공하는 HTTP통신 기능을 쉽게 사용할 수 있게 설계 되어 있는 템플릿이다.
+- Spring-Boot-Start에는 자동 내장읻 되어있기에 따로 설정이 필요없다.
+- HTTP 서버와의 통신을 단순화하고 RESTful 원칙을 지킴
+- 동기 방식으로 처리되며, 비동기 방식으로는 ( AsyncRstTemplate )가 있다.
+- 대표적으로 사용되는 RestTemplate의 메서드 🔽
+  - Server단에서 다른 서버에 요청하여 데이터를 처리할때 사용됨 [ client단에서의 요청이 아님! ]
+
+<table style="width:100%">
+    <tableHead>
+        <td>Method</td>
+        <td>HTTP</td>
+        <td>설명</td>
+    </tableHead>
+    <tr>
+        <td>getForObject</td>
+        <td>GET</td>
+        <td>GET형식으로 요청하여 갹체로 결과를 반환 받음</td>
+    </tr>
+    <tr>
+        <td>getForEntity</td>
+        <td>GET</td>
+        <td>GET형식으로 요청하여 ResponseEntity로 결과를 반환 받음</td>
+    </tr>
+    <tr>
+        <td>postForObject</td>
+        <td>POST</td>
+        <td>POST형식으로 요청하여 갹체로 결과를 반환 받음</td>
+    </tr>
+    <tr>
+        <td>postForEntity</td>
+        <td>POST</td>
+        <td>POST형식으로 요청하여 ResponseEntity로 결과를 반환 받음</td>
+    </tr>
+    <tr>
+        <td>delete</td>
+        <td>DELETE</td>
+        <td>DELETE형식으로 요청</td>
+    </tr>
+    <tr>
+        <td>put</td>
+        <td>PUT</td>
+        <td>PUT형식으로 요청</td>
+    </tr>
+    <tr>
+        <td>patchForObject</td>
+        <td>PATCH</td>
+        <td>PATCH형식으로 요청</td>
+    </tr>
+    <tr>
+        <td>exchange</td>
+        <td>any</td>
+        <td>HTTP 해더를 생성하여 추가할 수 있고 어떤 형식의 Method 방식에서도 사용할 수 있음</td>
+    </tr>
+</table>
+
+\- RestTemplate GET방식 [ 요청 Server ]🔽
+
+- 💬 간단설명 : getForEntity, getForObject  차이점 ?
+- - getForEntity : 반환타입을 ResponseEntity로 받기에 ResponseEntity 객체에 
+<br/> responseEntity.getBody() 메서드를 사용해서 데이터를 끄내줘야한다.
+- - getForObject : 반환타입을 Object로 받기에 따로 한번 더 데이터를 추출해줄 필요가 없다.
+
+
+<br/>
+
+- Parameter가 없는 방식 ↓
+```java
+// java - RestTemplate - Parameter ❌
+
+// RestTemplate 요청 ServiceImpl
+@Service
+@Log4j2
+public class RestTemplateServiceImpl implements RestTemplateService {
+
+  private final String TARGET_URI = "http://localhost:8080";
+
+  /**
+   * @Desription : 요청 시 parameter 를 사용하지 않는 형식
+   * */
+  @Override
+  public String getHelloWorld() {
+
+    URI uri = UriComponentsBuilder
+            .fromUriString(TARGET_URI) // 1. URI를 넣어준다
+            .path("/replies/restTest") // 2. URL Path를 추가
+            .encode()                  // 3. encode 해준다
+            .build()                   // 4. build
+            .toUri();                  // 5. 만들어진 객체를 URI로 변환
+    
+    // 6. RestTempate 객체 생성
+    RestTemplate restTemplate = new RestTemplate();
+
+    // 7. RestTemplate의 getForEntity()를 사용 했으므로 반환 타입은
+    //    ResponseEntity로 맞춰준다.
+    //    - Parameter로는( URI , 해당 요청의 반환 타입으로 맞춰준다 )
+    //    - 💬 여기서 문제가 발생하는데 응답해주는 서버에서 Collection을 보내든
+    //         int 타입을 보내든 전부 String으로 받을수 있다
+    //         받은 후 파싱 처리가 핋요함.
+    //    - 해당 케이스들은 아래 예제에서 확인하자
+    ResponseEntity<String> responseEntity = restTemplate.getForEntity(uri, String.class);
+
+    log.info("status code :: {}", responseEntity.getStatusCode());
+    log.info("body :: {}", responseEntity.getBody());
+
+    return responseEntity.getBody();
+  }
+}
+
+
+////////////////////////////////////////////////////////////////////////////
+
+
+// RestTemplate 응답 Controller
+@Log4j2
+@RestController
+@RequestMapping("/replies/")
+@RequiredArgsConstructor
+public class ReplyController {
+  /**
+   * 알게된 새로운 사실 파리미터인 name을 받을 때
+   * @ReqeustParam을 사용할시 해당 name 파라미터가 강제됨 값이 없을 경우 에러를 반환함.
+   * -> 기본 설정이 필수값으로 설정 되어 있기  때문임.
+   *
+   * ex) (@RequestParam String name)
+   *     -> http://localhost:8080/replies/restTest?name=yoo  :: 이상없음
+   *     -> http://localhost:8080/replies/restTest           :: 에러 발생☠️
+   *      Error Code : 400 [bad Request]
+   *      Error Msg  : Required request parameter 'name' for method
+   *                   parameter type String is not present
+   * 해결방안 : 1) required = boolean  옵션을 사용하여 필수 요소를 지정이 가능하다.
+   *             - (@RequestParam(required = false) String name )
+   *         2) defaultValue = "??"  지정이 가능하다.
+   *             - (@RequestParam(required = false
+   *                            , defaultValue = "흑곰" ) String name )
+   * */
+  @GetMapping("/restTest")
+  public String getStringWithRestTempTest(@RequestParam(required = false) String name ){
+
+    log.info("name ::: {} ", name);
+
+    String result =
+            name != null ? "Hello " + name + " World" : "Hello World";
+
+    return result;
+  }    
+}
+```
+
+//TODO a
