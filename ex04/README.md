@@ -390,3 +390,81 @@ public ResponseEntity<List<ReplyDTO>> applicationFormAndPostVerTest(ReplyDTO rep
 }
 ```
 
+<br/>
+<hr/>
+
+<h3>6 ) Swagger Setting </h3>
+
+- 1. build.gradle에 Swagger dependencies 추가
+```properties
+# build.gradle
+
+code...
+
+dependencies {
+        code...
+
+        //Swagger 추가
+        // https://mvnrepository.com/artifact/io.springfox/springfox-swagger2
+        implementation 'io.springfox:springfox-boot-starter:3.0.0'
+        // UI 를 추가 안할시 404 WithPage가 나옴
+        implementation 'io.springfox:springfox-swagger-ui:3.0.0'
+
+}
+
+code...
+
+```
+
+- 2. application.properties 설정 추가
+<br/> 💬 Spring boot 2.6버전 이후에 spring.mvc.pathmatch.matching-strategy 값이 
+<br/>ant_apth_matcher에서 path_pattern_parser로 변경되면서 몇몇 라이브러리에서 오류가 발생
+```properties
+#application.properties
+
+#Swagger Setting 
+spring.mvc.pathmatch.matching-strategy=ant_path_matcher
+```
+
+
+- 3. 추가한 Swagger Config 설정 class 추가 및 설정
+```java
+//java - src -> main -> projectDir -> config -> 설정 class
+@Configuration  // scan 대상에 추가
+public class SwaggerConfiguration {
+
+    private static final String API_NAME = "Programmers Spring Boot Application - yoo";
+    private static final String API_VERSION = "1.0.0";
+    private static final String API_DESCRIPTION = "Swagger!";
+
+    @Bean // Bean 등록
+    public Docket api(){
+        return new Docket(DocumentationType.SWAGGER_2)
+                .apiInfo(this.apiInfo())  // 설정정보를 Parameter로 추가[ ApiInfo Type ]
+                .select()
+                .apis(RequestHandlerSelectors.basePackage("com.yoo.ex04")) // Swagger API를 생성할 BasePackage 범위 지정
+                .paths(PathSelectors.any()) // apis 에 위치하는 API 중 특정 path 를 선택
+                .build();
+    }
+
+    /***
+     * @Description : Swagger Setting info
+     *
+     * @return ApiInfo
+     */
+    private ApiInfo apiInfo(){
+        return new ApiInfoBuilder()
+                .title("Rest API Swagger - yoo")
+                .description("Swagger!!!")
+                .version("1.0")
+                .build();
+    }
+
+}
+```
+
+- 4. 사용 URL : http://localhost:9999/swagger-ui/#/ - port는 자신의 prot에 맞춰주자!
+
+<br/>
+<hr/>
+
