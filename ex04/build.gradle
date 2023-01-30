@@ -38,6 +38,11 @@ dependencies {
 	// UI 를 추가 안할시 404 WithPage가 나옴
 	implementation 'io.springfox:springfox-swagger-ui:3.0.0'
 
+
+	//WebClient 추가
+	implementation 'org.springframework.boot:spring-boot-starter-webflux'
+
+
 }
 
 tasks.named('test') {
