@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Description;
+import org.springframework.http.ResponseEntity;
 
 import java.util.List;
 
@@ -44,4 +45,14 @@ public class RestTemplateSendTest {
         List<ReplyDTO> result = restTemplateService.getListByBoardVerLst();
         result.forEach(log::info);
     }
+
+    ///////////////////// POST Request //////////////////////
+    @Test
+    public void registerRequestTest(){
+        ResponseEntity<Long> result = restTemplateService.replyRegister();
+        log.info("Header :: {}", result.getHeaders());
+        log.info("rno :: {}", result.getBody().longValue());
+
+    }
+
 }
