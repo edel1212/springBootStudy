@@ -3,7 +3,7 @@ package com.yoo.ex04.service;
 import com.yoo.ex04.dto.ReplyDTO;
 import com.yoo.ex04.entity.Board;
 import lombok.extern.log4j.Log4j2;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -129,11 +129,15 @@ public class RestTemplateServiceImpl implements RestTemplateService{
         return lst;
     }
 
+
+    ///////////////// POST 방식 /////////////////
+
     /**
      * POST 방식 [Insert]
      * */
     @Override
     public ResponseEntity<Long> replyRegister() {
+
 
         // 1. URI 객체 생성
         URI uri = UriComponentsBuilder
@@ -161,10 +165,46 @@ public class RestTemplateServiceImpl implements RestTemplateService{
         return result;
     }
 
-    ///////////////// POST 방식 /////////////////
-
 
     ///////////////// PUT 방식 /////////////////
+    @Override
+    public ResponseEntity<String> updateReply() {
+
+        URI uri = UriComponentsBuilder
+                .fromUriString(TARGET_URI)
+                .path("/replies/{rno}")
+                .encode()
+                .build()
+                .expand(100L)
+                .toUri();
+
+        ReplyDTO replyDTO = ReplyDTO.builder()
+                .text("RestTemplateUpdateTest")
+                .bno(71L)
+                .replyer("흑곰!!")
+                .build();
+
+        RestTemplate restTemplate = new RestTemplate();
+
+        // 방법 1
+        //restTemplate.put(uri, replyDTO);
+
+        // 방법 2
+        // 1) 해더 객체 생성
+        HttpHeaders headers = new HttpHeaders();
+        // 2) Content-Type  추가
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        // 3) Parameter를 던져줄 HttpEntity 객체 생성 ( parameter, HttpHeader )이다
+        HttpEntity<ReplyDTO> entity = new HttpEntity<>(replyDTO, headers);
+
+        ResponseEntity<String> result = restTemplate.exchange(uri,HttpMethod.PUT,entity,String.class);
+
+        log.info("result :: {}", result.getBody() );
+
+        return null;
+    }
+
+
 
     ///////////////// DELETE 방식 /////////////////
 

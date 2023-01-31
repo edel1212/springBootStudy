@@ -18,6 +18,10 @@ public interface RestTemplateService {
     //GET 방식 요청 Mehtod - forObject
     public List<ReplyDTO> getListByBoardVerLstAndObject();
 
+    //POST 방식 요청
     public ResponseEntity<Long> replyRegister();
+
+    //PUT 방식 요청
+    public ResponseEntity<String> updateReply();
 
 }

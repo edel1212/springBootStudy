@@ -55,4 +55,10 @@ public class RestTemplateSendTest {
 
     }
 
+    ///////////////////// PUT Request //////////////////////
+    @Test
+    public void updateRequestTest(){
+        restTemplateService.updateReply();
+    }
+
 }
