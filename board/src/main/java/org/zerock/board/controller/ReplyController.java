@@ -44,9 +44,9 @@ public class ReplyController {
     }
 
     @PutMapping("/{rno}")
-    public ResponseEntity<String> modify(@RequestBody ReplyDTO replyDTO){
+    public ResponseEntity<String> modify(@PathVariable Long rno,@RequestBody ReplyDTO replyDTO){
+        replyDTO.setRno(rno);
         log.info(replyDTO);
-
         replyService.modify(replyDTO);
 
         return new ResponseEntity<>("success", HttpStatus.OK);
