@@ -854,4 +854,90 @@ public ResponseEntity<Long> register(@RequestBody ReplyDTO replyDTO){
         return new ResponseEntity<>(newRno,HttpStatus.OK);
 }
 ```
+
+- <strong>PUT 방식</strong>을 사용하여 데이터를 Update ↓
+  - restTemplate에서 제공하는 put(); 방식은 간단하나 반환 타입이 void 이기에 응답 값을 확인이 힘들기에 
+  - exchange()를 사용하는 방법이 좋다
+
+```java
+// java - RestTemplate - PUT 요청  
+
+// RestTemplate 요청 ServiceImpl
+
+//[ put() 사용 :: void 반환이라 비추천 👎 ]
+@Override
+public ResponseEntity<String> updateReplyBad() {
+
+        URI uri = UriComponentsBuilder
+        .fromUriString(TARGET_URI)
+        .path("/replies/{rno}")
+        .encode()
+        .build()
+        .expand(100L)
+        .toUri();
+
+        ReplyDTO replyDTO = ReplyDTO.builder()
+        .text("RestTemplateUpdateTest")
+        .bno(71L)
+        .replyer("흑곰!!")
+        .build();
+
+        RestTemplate restTemplate = new RestTemplate();
+
+        // put() 사용
+        restTemplate.put(uri, replyDTO);
+        return null;
+}
+
+
+//[ put() 사용 :: ResponseEntity<> 반환 추천👍  ]
+@Override
+public ResponseEntity<String> updateReplyGood() {
+
+        URI uri = UriComponentsBuilder
+        .fromUriString(TARGET_URI)
+        .path("/replies/{rno}")
+        .encode()
+        .build()
+        .expand(100L)
+        .toUri();
+
+        ReplyDTO replyDTO = ReplyDTO.builder()
+        .text("RestTemplateUpdateTest")
+        .bno(71L)
+        .replyer("흑곰!!")
+        .build();
+
+        RestTemplate restTemplate = new RestTemplate();
+
+        // exchange() 사용
+        // 1) 해더 객체 생성
+        HttpHeaders headers = new HttpHeaders();
+        // 2) Content-Type  추가
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        // 3) Parameter를 던져줄 HttpEntity 객체 생성 ( parameter, HttpHeader )이다
+        HttpEntity<ReplyDTO> entity = new HttpEntity<>(replyDTO, headers);
+
+        ResponseEntity<String> result = restTemplate.exchange(uri,HttpMethod.PUT,entity,String.class);
+
+        log.info("result :: {}", result.getBody() );
+        
+        return result.getBody() ;
+  }
+        
+        
+////////////////////////////////////////////////////////////////////////////
+
+
+// RestTemplate 응답 Controller
+@PutMapping("/{rno}")
+public ResponseEntity<String> modify(@PathVariable Long rno,@RequestBody ReplyDTO replyDTO){
+        replyDTO.setRno(rno);
+        log.info(replyDTO);
+        replyService.modify(replyDTO);
+
+        return new ResponseEntity<>("success", HttpStatus.OK);
+
+}
+```
 //TODO : DELETE Type Test Code
