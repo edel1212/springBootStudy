@@ -855,6 +855,8 @@ public ResponseEntity<Long> register(@RequestBody ReplyDTO replyDTO){
 }
 ```
 
+<br/>
+
 - <strong>PUT 방식</strong>을 사용하여 데이터를 Update ↓
   - restTemplate에서 제공하는 put(); 방식은 간단하나 반환 타입이 void 이기에 응답 값을 확인이 힘들기에 
   - exchange()를 사용하는 방법이 좋다
@@ -940,4 +942,44 @@ public ResponseEntity<String> modify(@PathVariable Long rno,@RequestBody ReplyDT
 
 }
 ```
-//TODO : DELETE Type Test Code
+
+<br/>
+
+- <strong>DELETE 방식</strong>을 사용하여 데이터를 Delete ↓
+  - put() 방식과 마찬가지로 delete();도 마찬가지로 void를 반환하므로 exchange()를 사용함
+```java
+// java - RestTemplate - DELETE 요청  
+
+// RestTemplate 요청 ServiceImpl
+@Override
+public ResponseEntity<String> removeReply() {
+
+        URI uri = UriComponentsBuilder
+        .fromUriString(TARGET_URI)
+        .path("/replies/{rno}")
+        .encode()
+        .build()
+        .expand(151L)
+        .toUri();
+
+        RestTemplate restTemplate = new RestTemplate();
+        // 포인트는 3번째 파라미타로 null을 보내줌 이유는 응답부분에서 PathVariable로 값을 처리하기 떄문에 따로 파라미터가 필요없기 때문임
+        ResponseEntity<String> result = restTemplate.exchange(uri,HttpMethod.DELETE,null,String.class);
+        return result;
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+
+
+@DeleteMapping("/{rno}")
+public ResponseEntity<String> remove(@PathVariable("rno")Long rno){
+        log.info("rno :: " + rno);
+
+        replyService.remove(rno);
+
+        return new ResponseEntity<>("success",HttpStatus.OK);
+
+}
+
+```
