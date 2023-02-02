@@ -61,4 +61,10 @@ public class RestTemplateSendTest {
         restTemplateService.updateReply();
     }
 
+    ///////////////////// DELETE Request //////////////////////
+    @Test
+    public void deleteRequestTest(){
+        ResponseEntity<String> response = restTemplateService.removeReply();
+        log.info("result ::: {}" ,response.getBody() );
+    }
 }

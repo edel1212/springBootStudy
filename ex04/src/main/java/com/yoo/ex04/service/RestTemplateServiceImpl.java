@@ -204,8 +204,24 @@ public class RestTemplateServiceImpl implements RestTemplateService{
         return null;
     }
 
-
-
     ///////////////// DELETE 방식 /////////////////
+    @Override
+    public ResponseEntity<String> removeReply() {
+
+        URI uri = UriComponentsBuilder
+                .fromUriString(TARGET_URI)
+                .path("/replies/{rno}")
+                .encode()
+                .build()
+                .expand(151L)
+                .toUri();
+
+        RestTemplate restTemplate = new RestTemplate();
+        ResponseEntity<String> result = restTemplate.exchange(uri,HttpMethod.DELETE,null,String.class);
+        return result;
+    }
+
+
+
 
 }

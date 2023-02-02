@@ -24,4 +24,7 @@ public interface RestTemplateService {
     //PUT 방식 요청
     public ResponseEntity<String> updateReply();
 
+    //DELETE 방식 요청
+    public ResponseEntity<String> removeReply();
+
 }
