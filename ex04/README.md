@@ -1,4 +1,4 @@
-<h1>REST API, RestTemplate, Swagger, GraphQL</h1>
+<h1>REST API, Swagger, RestTemplate, WebClient, GraphQL</h1>
 
 <h3>1 ) REST API 란❔</h3>
 
@@ -982,4 +982,40 @@ public ResponseEntity<String> remove(@PathVariable("rno")Long rno){
 
 }
 
+```
+
+
+<br/>
+<hr/>
+
+<h3>7 ) WebClient 란❔</h3>
+
+- WebClient는 RestTemplate를 <strong>대체하는</strong> HTTP 클라이언트이다
+- 외부 API로 요청할 경우 리액티브 타입의 전송과 수신을 한다(Mono,Flux)
+- Non-Blocking 사용한다 [ 제어권한 ]
+  - Blocking : Application이 작동할때 해당 요청이에 대한 응답을 받을때까지 대기하며
+  <br/> 해당 작업이 끝날 때까지 백그라운드에서 지속적으로 확인한다.
+  - Non-Blocking : Application이 요청을 하고 바로 제어권을 받아 다른 로직을 실행할수 있다.
+  <br/> 쉽게 설명하여 작업 요청 시 다른작업을 하여할때 Blocking 당하지 않으니 Non-Blocking 이다!
+- 비동기 방식이다. 
+
+<br/>
+
+<h4>설정 및 사용 방법</h4>
+
+1. build.gradle dependencies 추가
+```gradle
+//build.gradle
+
+...code...
+
+dependencies {
+    
+    ...code...
+    
+	//WebClient 추가
+	implementation 'org.springframework.boot:spring-boot-starter-webflux'
+}
+
+...code...
 ```
