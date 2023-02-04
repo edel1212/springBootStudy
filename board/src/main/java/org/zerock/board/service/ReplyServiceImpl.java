@@ -48,4 +48,9 @@ public class ReplyServiceImpl implements ReplyService{
     public void remove(Long rno) {
         replyRepository.deleteById(rno);
     }
+
+    @Override
+    public ReplyDTO getReply(Long rno) {
+        return this.entityToDTO(replyRepository.findById(rno).get());
+    }
 }

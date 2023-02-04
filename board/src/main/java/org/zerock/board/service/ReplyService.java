@@ -20,6 +20,8 @@ public interface ReplyService {
     //삭제
     void remove(Long rno);
 
+    ReplyDTO getReply(Long rno);
+
     // DTO 객체 --> Entity 객체 변환 Default Method
     default Reply dtoToEntity(ReplyDTO replyDTO){
         // Parameter로 받아온 ReplyDTO 내 bno를 기준으로 Board 객체 생성
