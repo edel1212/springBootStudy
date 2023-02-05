@@ -204,10 +204,8 @@ public class RestTemplateServiceImpl implements RestTemplateService{
         return null;
     }
 
-    ///////////////// DELETE 방식 /////////////////
     @Override
     public ResponseEntity<String> removeReply() {
-
         URI uri = UriComponentsBuilder
                 .fromUriString(TARGET_URI)
                 .path("/replies/{rno}")
@@ -217,9 +215,13 @@ public class RestTemplateServiceImpl implements RestTemplateService{
                 .toUri();
 
         RestTemplate restTemplate = new RestTemplate();
+        // 포인트는 3번째 파라미타로 null을 보내줌 이유는 응답부분에서 PathVariable로 값을 처리하기 떄문에 따로 파라미터가 필요없기 때문임
         ResponseEntity<String> result = restTemplate.exchange(uri,HttpMethod.DELETE,null,String.class);
         return result;
     }
+
+    ///////////////// DELETE 방식 /////////////////
+
 
 
 
