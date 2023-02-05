@@ -1290,4 +1290,118 @@ public ResponseEntity<String> remove(@PathVariable("rno")Long rno){
 
 ```
 
+<br/>
 
+\- 사용 예제 추가 [4xx And 5xx Error 처리]🔽
+```java
+// java - WebClient - Get 요청 
+
+// 요청 부분  : 8082 Port
+@Description("Error 핸들링")
+@Test
+public void exceptionHandlingTest(){
+
+        WebClient webClient = WebClient.builder()
+        .baseUrl(TARGET_URI)
+        .build();
+
+        Flux<ReplyDTO> fluxResult = webClient.get()
+        .uri("/replies123/board/{bno}", 11L)
+        .retrieve()
+        // 👉 1 . onStatus를 통해 애러 컨트롤이 가능하다
+        .onStatus(httpStatus    // 👉 2 . 에러가 있을시 케치
+        -> httpStatus.is4xxClientError() || httpStatus.is5xxServerError()
+        , clientResponse // 👉 3 . 케치된 에러를 핸들링함 [ Function Type을 파라미터로 받음 ]
+        -> clientResponse.bodyToMono(String.class).map(body-> new RuntimeException(body)))
+        .bodyToFlux(ReplyDTO.class);
+
+        fluxResult.subscribe(log::info);
+}
+```
+
+<br/>
+
+\- 사용 예제 추가 [Flux , Mono -> Collection Type 변환]🔽
+```java
+// java - WebClient - Get 요청 
+
+// 요청 부분  : 8082 Port
+@Description("Flux or Mono를 변환")
+@Test
+public void changeType(){
+        WebClient webClient = WebClient.builder()
+        .baseUrl(TARGET_URI)
+        .build();
+
+        // List 경우 [다건]
+        List<ReplyDTO> response = webClient.get()
+        .uri("/replies/board/{bno}", 11L)
+        .retrieve()
+        .bodyToFlux(ReplyDTO.class)
+        .toStream() // 👉 stream으로 변환
+        .collect(Collectors.toList()); // 👉 List로 변환
+
+        log.info("result :: {}",response);
+
+
+        //////////////////////////////////////////////////////////////////
+
+        // Map 경우 [단건]
+        ReplyDTO response2 = webClient.get()
+        .uri("/replies/testReplyOne/{rno}", 140L)
+        .retrieve()
+        .bodyToMono(ReplyDTO.class)     // 👉 단건이므로 Mono Type
+        .flux()                         // 👉 toStream()사용을 위해 flux로 변환
+        .toStream()                     // 👉 stream으로 변환
+        .findFirst()                    // 👉 첫번째 요소만 가져온다 -- Optional 타입임!
+        .orElse(ReplyDTO.builder().build()); //  👉  없을경우 default Value 설정
+
+        log.info("result :: {}",response2);
+
+}
+```
+
+<br/>
+
+\- 사용 예제 추가 [Synchronous(동기식)으로 처리 방법]🔽
+- 기본적으로 WebClient는 Async(비동기) 방식이다. [Default]
+
+```java
+// java - WebClient - Get 요청 
+
+// 요청 부분  : 8082 Port
+@Description("동기식으로 처리하는 방법")
+@Test
+public void syncTest(){
+        WebClient webClient = WebClient.builder()
+        .baseUrl(TARGET_URI)
+        .build();
+
+        // List 경우 [다건]
+        List<ReplyDTO> response = webClient.get()
+        .uri("/replies/board/{bno}", 11L)
+        .retrieve()
+        .bodyToFlux(ReplyDTO.class)
+        .collectList()
+        .block();               // 👉 block()을 사용해주기만 해도 동기식으로 변경된다.
+        /**
+         * 여기서 주의깊게 봐야하는것은 collectList() 사용해서
+         * 바로 List로 변경했다는 것이다!
+         * 💬 block()을 사용해야지만 사용이 가능하다!!
+         * */
+
+        log.info("result :: {}",response);
+
+
+        //////////////////////////////////////////////////////////////////
+
+        // Map 경우 [단건]
+        ReplyDTO response2 = webClient.get()
+        .uri("/replies/testReplyOne/{rno}", 140L)
+        .retrieve()
+        .bodyToMono(ReplyDTO.class)
+        .block();            // 👉 block()을 사용해주기만 해도 동기식으로 변경된다.
+
+        log.info("result :: {}",response2);
+}
+```
