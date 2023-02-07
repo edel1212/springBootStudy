@@ -1,6 +1,6 @@
 package com.yoo.exGraphQL.service;
 
-import com.yoo.exGraphQL.Repository.MemberRepository;
+import com.yoo.exGraphQL.repository.MemberRepository;
 import com.yoo.exGraphQL.entity.Member;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
