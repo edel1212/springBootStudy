@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<script>
+
+const endpoint = "/graphql"
+const query = `query{
+                      allFindMembers{
+                        email
+                        password
+                      }
+                    }`
+fetch(endpoint ,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ query })
+        }
+      ).then(res => res.json())
+       .then(json => console.log(json))
+       .catch(err => console.log(err));
+</script>
+
+
+</body>
+</html>
