@@ -4,25 +4,30 @@ schema {
 }
 
 type Mutation {
-    registerMember(email: String!, password: String!, name: String! ): Member
+    registerMember(memberEntity : MemberEntity): String
+    updateMember(memberEntity : MemberEntity) : Boolean;
     deleteMember(email: String!): Boolean
 }
 
 type Query{
-	findMembers(email: String!): Member!
-	allFindMembers: [Member]
+	findMembers(email: String!): MemberDTO!
+	allFindMembers: [MemberDTO]
 }
 
 
 # 응답 : member
-type Member{
+type MemberDTO{
 	email: String
 	password: String
 	name : String
+	regDate : String
+	modDate : String
 }
 
 input MemberEntity{
 	email: String
 	password: String
 	name : String
+	regDate : String
+   	modDate : String
 }
