@@ -4,7 +4,7 @@ schema {
 }
 
 type Mutation {
-    registerMember(memberEntity : MemberEntity): Member
+    registerMember(memberEntity : MemberEntity): String
     updateMember(memberEntity : MemberEntity): Boolean
     deleteMember(email: String!): Boolean
 }
@@ -28,4 +28,6 @@ input MemberEntity{
 	email: String
 	password: String
 	name : String
+	regDate : String
+   	modDate : String
 }
