@@ -88,6 +88,13 @@ public class GraphQLController {
         return memberService.updateMember(memberDTO);
     }
 
+    /**
+    * mutation{
+     *   deleteMember(
+     *      email: "edel1212@naver.com4"
+     *   )
+     * }
+    * */
     @MutationMapping
     public Boolean deleteMember(@Argument String email){
         log.info("----- graphQL MutationType -----");
