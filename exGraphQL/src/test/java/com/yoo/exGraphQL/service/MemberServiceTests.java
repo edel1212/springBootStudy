@@ -1,5 +1,6 @@
 package com.yoo.exGraphQL.service;
 
+import com.yoo.exGraphQL.dto.MemberDTO;
 import com.yoo.exGraphQL.entity.Member;
 import lombok.extern.log4j.Log4j2;
 import org.junit.jupiter.api.Test;
@@ -20,7 +21,7 @@ public class MemberServiceTests {
     @Test
     public void getListTest(){
         log.info("get List!!");
-        List<Member> result = memberService.getList();
+        List<MemberDTO> result = memberService.allFindMembers();
         result.forEach(log::info);
     }
 
