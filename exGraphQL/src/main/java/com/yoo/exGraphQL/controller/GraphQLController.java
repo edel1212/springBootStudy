@@ -65,7 +65,7 @@ public class GraphQLController {
      *             Please, refer to the documentation for the full list of supported parameters.
      * */
     @MutationMapping
-    //public String registerMember(@Argument MemberDTO memberDTO){
+    //public String registerMember(@Argument MemberDTO memberDTO){ //인식을 못함 Client에서 보내는 Key 이름이 다름
     public String registerMember(@Argument("memberEntity") MemberDTO memberDTO){
         log.info("----- graphQL MutationType -----");
         return memberService.registerMember(memberDTO);

@@ -6,17 +6,17 @@
 </head>
 <body>
 <script>
-
-const endpoint = "/graphql"
 const query = `query{
                       allFindMembers{
                         email
                         password
                       }
                     }`
-fetch(endpoint ,
+fetch( "/graphql" ,
         {
+          // POST 방식은 고정이다
           method: 'POST',
+          // Content-Type 또한 json 고정
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ query })
         }

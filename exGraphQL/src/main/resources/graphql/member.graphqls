@@ -3,12 +3,14 @@ schema {
     mutation: Mutation,
 }
 
+# 요청 타입 및 요청 메서드명
 type Mutation {
     registerMember(memberEntity : MemberEntity): String
     updateMember(memberEntity : MemberEntity): Boolean
     deleteMember(email: String!): Boolean
 }
 
+# 요청 타입 및 요청 메서드명
 type Query{
 	findMember(email: String!): Member
 	allFindMembers: [Member]
@@ -24,6 +26,7 @@ type Member{
 	modDate : String
 }
 
+# parameter 구조를 만들줌
 input MemberEntity{
 	email: String
 	password: String
