@@ -54,4 +54,91 @@
 
 <h3>3 ) M : N(다 대 다) 연관관계 해결방안 [ Row를 사용 수직으로 확장하면 된다! ] </h3>
 
-//TODO : 내일 이어서 작성하자!
+- Table은 Row라는 개념을 이용하여서 수직으로 확장이 가능하다.
+- 실제 설계에서는 M:N(다대다)를 해결하기 위해 매핑(Mapping) 테이블을 이용하여 해결하고  
+흔히 이것을 연결 테이블이라고도 부른다
+- 💬 쉽게 설명해서 (다>----<다)로 연결하기 어려우니 중간에 테이블을 두는것이다 **(다>---연결테이블---<다)**
+
+<br/>
+<hr/>
+
+<h3>4 ) 매핑 테이블의 특징 ? </h3>
+
+- 매핑 테이블은 연결하려는 테이블 보다 먼저 존재햐아한다. 
+- 매핑 테이블은 주로 "명사가 아닌 "동사" 혹은 "히스토리"에 대한데이터를 보관하는 용도이다.
+- 매핑 테이블은 연결하려는 테이블들의 중간에서 양쪽의 PK를 참조하는 형태로 사용한다.
+  
+<br/>
+<hr/>
+
+<h3>5 ) JPA에서 M:N(다대다) 처리 방법 </h3>
+- 첫번째 방법 : @ManyToMany를 사용하는 방식 👎
+  - 해당 방법은 Entity와 매핑 테이블을 자동으로 생성되는 방식으로 처리되기에 주의가 필요하다.
+  - JPA의 실행헤서 가장 중요한 것은 현재 컨텍스트의 엔티티 객체들의 상태와 데이터베이스의 상태를 일치 시키는것이 중요한데  
+  자동으로 생성되는 매핑테이블은 일치 시키기에도 굉장히 어렵고 컬럼 추가 및 관리가 굉장히 어렵다
+  - 💬 그렇기에 실무에서도 가능하다면 단방향 참조를 위주로 진행하거나 매핑 테이블 자체를 아예 Entity Class로 작성하여  
+  각각의 연결 부분을 @ManyToOne로 연결 하여 수면위로 올려서 관리하는 방법을 사용한ㄷ.
+- 두번째 방법 : 별도의 엔티티를 설계하고, @ManyToOne을 사용하여 처리하는 방식 👍 
+
+<br/>
+
+\- 사용될 Entity Classes 🔽  
+💬 class 상단 어노테이션은 생략함
+```java
+//java - Entity Class
+
+// Movie Class
+public class Movie extends BaseEntity{
+
+  @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+  private Long mno;
+
+  private String title;
+
+}
+
+
+////////////////////////////////////////////////////////////////////////////
+
+
+//MovieImage Class
+public class MovieImage {
+  @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+  private Long inum;
+
+  private String uuid;
+
+  private String imgName;
+
+  private String path;
+
+  @ManyToOne(fetch = FetchType.LAZY) //lazy Type 로변경
+  @ToString.Exclude //toString()에서 제외
+  private Movie movie;
+}
+
+
+////////////////////////////////////////////////////////////////////////////
+
+
+//Member Class
+@Table(name = "m_member") // 이전 예저 프로젝트의 member 와 테이블명 중복으로 TableName 지정
+public class Member extends  BaseEntity{
+  @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+  private Long mid;
+
+  private String email;
+
+  private String pw;
+
+  private String nickname;
+}
+```
+
+<br/>
+
+\- 매핑 테이블인 Review Class 🔽    
+👉 Review Class는 Movie와 Member를 ***양쪽으로 참조하는 매핑테이블 구조이므로 @ManyToOne으로*** 설계된다.  
+👉 @ManyToOne으로 연결된 객체는 모두 ***fetch = FetchType.LAZY*** 로 설정해 줘야햔다.  
+👉 연결된 객체들은 toString()으로 호출되지않게 exclude 시켜줘야한다.  
+//TODO Review Table
