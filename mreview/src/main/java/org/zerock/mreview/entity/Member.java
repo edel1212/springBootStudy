@@ -10,7 +10,7 @@ import javax.persistence.*;
 @Builder
 @Getter
 @ToString
-@Table(name = "m_member") // 이전 프로젝트의 member 와 겹치므로 TableName 지정
+@Table(name = "m_member") // 이전 예저 프로젝트의 member 와 테이블명 중복으로 TableName 지정
 public class Member extends  BaseEntity{
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long mid;
