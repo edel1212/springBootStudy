@@ -71,7 +71,7 @@
 <br/>
 <hr/>
 
-<h3>5 ) JPA에서 M:N(다대다) 처리 방법 </h3>
+<h3>5 ) JPA에서 M:N(다대다) 처리 방법 - 사전 준비 </h3>
 - 첫번째 방법 : @ManyToMany를 사용하는 방식 👎
   - 해당 방법은 Entity와 매핑 테이블을 자동으로 생성되는 방식으로 처리되기에 주의가 필요하다.
   - JPA의 실행헤서 가장 중요한 것은 현재 컨텍스트의 엔티티 객체들의 상태와 데이터베이스의 상태를 일치 시키는것이 중요한데  
@@ -141,4 +141,103 @@ public class Member extends  BaseEntity{
 👉 Review Class는 Movie와 Member를 ***양쪽으로 참조하는 매핑테이블 구조이므로 @ManyToOne으로*** 설계된다.  
 👉 @ManyToOne으로 연결된 객체는 모두 ***fetch = FetchType.LAZY*** 로 설정해 줘야햔다.  
 👉 연결된 객체들은 toString()으로 호출되지않게 exclude 시켜줘야한다.  
-//TODO Review Table
+```java
+//java - EntityClass [ Mapping Table Entity ]
+
+/**
+ * @Description : 해당 클래스는 @ManyToMany 대신에 사용하는 방법으로
+ *                해당 Class는 중간 다리 역할을 하며 동시에 정보 기록까지 같이 할수있다.
+ *
+ *                해당 테이블은 매핑 테이블이라 하며 주로 동사나 히스토리를 의미하는 테이블이다
+ *                 - 해당 예제에서는 회원이 영화에 대한 평점을 준다를 구성할때 여기서서 <b>평점을 준다</b>
+ *                   부분이 해당 Class의 역할이라 볼수있다.
+ *
+ *                 - 해당 Entity 구조를 보면  Movie -< Review >- m_member
+ *                   로 Review 테이블을 중간에 두고 서로를 연결하고 있는 구조이다.
+ *
+ *                 ✔ 여기서 잊으면 안되는 Tip
+ *                    - FK 기준은 항상 외래키를 가지고 있는 테이블을 기준으로 작성하자!!
+ * */
+public class Review extends BaseEntity{
+  @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+  private Long reviewnum;
+
+  @ToString.Exclude
+  @ManyToOne(fetch = FetchType.LAZY)
+  private Movie movie;
+
+  @ToString.Exclude
+  @ManyToOne(fetch = FetchType.LAZY)
+  private Member member;
+
+  private int grade;
+
+  private String text;
+
+  public void changeGrade(int grade){
+    this.grade = grade;
+  }
+
+  public void changeText(String text){
+    this.text = text;
+  }
+
+}
+```
+
+<br/>
+
+- 💬 다대다 테스트에 앞서 준비된 데이터
+  - Movie : 100개의 영화 목록 ***[ PK : mno ]***
+  - MovieImage : Movie의 목록에 맞는 랜덤하게 매칭한 100개의 이미지 목록 ***[ FK : movie_mno ]***
+  - Member : 100명의 회원 ***[ PK : mid ]***
+  - Review : 200개의 영화 리뷰 (매핑 테이블) ***[ FK : member_mid, movie_mno ]***
+- 💬 테스트 목록 - <b>JQPL을 사용하며 @EntityGraph, 서브 쿼리를 활용</b>
+  - 1. **[ 목록 ]** 영화의 제목 + 영화 이미지 한개 + 영화 리뷰 개수, 평점 
+  - 2. **[ 상세 ]** 영화 이미지들 + 리뷰 평점, 리뷰 개수
+  - 3. **[ 상세 ]** 해당 리뷰에 대한 회원의 정보
+
+<br/>
+<hr/>
+
+<h3>6 ) 상단에 명시된 테스트 목록</h3>
+
+- 테스트의 이유 ? :: N + 1 상황과 @EntityGraph 사용 예시를 보기위함
+1. 영화의 제목 + 영화 이미지 한개 + 영화 리뷰 개수, 평점 🔽 
+```java
+//java - Repository
+
+//💬 N + 1 의 문제가 발생함 !
+public interface MovieRepository extends JpaRepository<Movie, Long> {
+  /**
+   * ☠️ 아래의 JPQL Query에는 N+1문제가 있다.
+   * 문제의 원인은 MAX(mi)에 있다.
+   * - 이유 : 목룩울 가져오는 쿼리는 문제가 없지만 max()를 이용하는 부분에 들어가면 해당 영화의
+   *          모든 이미지를 가져오는 쿼리가 실행되기 떄문이다.
+   *
+   * ✔ N+1 문제란 ?
+   *  - 한번의 쿼리로 N개의 데이터를 가져왔는데 N개의 데이터를 처리하기 위해서 필요한 추가적인 쿼리가
+   *    각각 N개의 대하서 수행되는 것임
+   *
+   *    쉽게 말하면
+   *    - 해당 예제에서는 1페이지에 해당되는 10개의 데이터를 가여오는 쿼리 1번 실행 후
+   *      각 영화의 모든 이미지를 가져오기 위한<b>Max()</b> 10번의 추가적인 쿼리가 실행되는것임
+   *
+   * 👍 해결 방법은 간단하게 Max() 집계함수를 사용하지 않는 것이다.
+   *
+   * - Movie m
+   * - MovieImage mi
+   * - Review r
+   * */
+  @Query("SELECT m" +                    //Movie 목록
+          ", MAX(mi)" +                  //MovieImage
+          ", AVG(coalesce(r.grade,0))" + // Review r 의 grade 값의 평균을 구함 coalesce -> Nvl 의 좀더 확작된 Oracle 함수
+          ", COUNT(DISTINCT r) " +       // Review r 의 중복 제거 개수
+          "FROM Movie m" +
+          " LEFT OUTER JOIN MovieImage mi ON mi.movie = m" +
+          " LEFT OUTER JOIN Review r ON r.movie = m group by m")
+  Page<Object[]> getListPage(Pageable pageable);
+}
+
+
+```
