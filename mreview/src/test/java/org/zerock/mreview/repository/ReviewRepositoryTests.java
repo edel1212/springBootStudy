@@ -33,10 +33,10 @@ public class ReviewRepositoryTests {
         IntStream.rangeClosed(1, 200).forEach(i ->{
             
             //영화번호 - DB상에 존재해야함
-            Long mno =  (long) (Math.random() * 99) + 100;
+            Long mno =  (long) (Math.random() * 100) + 1;
             
             //리뷰어 번호 --DB상에 존재해야함
-            Long mid =  (long) (Math.random() * 99) + 1;
+            Long mid =  (long) (Math.random() * 100) + 1;
             Member member = Member.builder().mid(mid).build();
 
             Review review = Review.builder()
