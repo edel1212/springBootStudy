@@ -237,7 +237,141 @@ public interface MovieRepository extends JpaRepository<Movie, Long> {
           " LEFT OUTER JOIN MovieImage mi ON mi.movie = m" +
           " LEFT OUTER JOIN Review r ON r.movie = m group by m")
   Page<Object[]> getListPage(Pageable pageable);
+
+  /*********************************************************************************************/  
+  
+  //👍 N + 1 의 문제가 해결 - 단 가장 최근것이 아닌 문제가있다. 😅
+  /**
+   * 👍 getListPage(Pageable pageable)에서 N+1 문제를 해결
+   *
+   * 👉 해결방법 Max()를 사용하지 않음
+   * 
+   * 💬 다만 간단하게 해결되긴 했지만 선택된 MovieImage는 inum가 가장 높은것이 아닌
+   *    가장 나중(처음)에 들어온 기준으로 나오는 문제가있다.
+   * */
+  @Query("SELECT m" +                    //Movie 목록
+          ", mi" +                       //MovieImage
+          ", AVG(coalesce(r.grade,0))" + // Review r 의 grade 값의 평균을 구함 coalesce -> Nvl 의 좀더 확작된 Oracle 함수
+          ", COUNT(DISTINCT r) " +       // Review r 의 중복 제거 개수
+          "FROM Movie m" +
+          " LEFT OUTER JOIN MovieImage mi ON mi.movie = m" +
+          " LEFT OUTER JOIN Review r ON r.movie = m group by m")
+  Page<Object[]> getListPageFix(Pageable pageable);
+
+  
+  /*********************************************************************************************/
+
+  //TODO - N+1도 없으면서 최근 MoiveImage 가져오기
+  
 }
+
+
+////////////////////////////////////////////////////////////////////////////////////
+
+//java - Repository
+
+@Test
+public void testListPage() {
+
+    PageRequest pageRequest = PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "mno"));
+  
+    /** Result Query
+      Hibernate: 
+         select
+         movie0_.mno as col_0_0_,
+         max(movieimage1_.inum) as col_1_0_,
+         avg(coalesce(review2_.grade,
+         0)) as col_2_0_,
+         count(distinct review2_.reviewnum) as col_3_0_,
+         movie0_.mno as mno1_1_,
+         movie0_.moddate as moddate2_1_,
+         movie0_.regdate as regdate3_1_,
+         movie0_.title as title4_1_ 
+         from
+         movie movie0_ 
+         left outer join
+         movie_image movieimage1_ 
+         on (
+         movieimage1_.movie_mno=movie0_.mno
+         ) 
+         left outer join
+         review review2_ 
+         on (
+         review2_.movie_mno=movie0_.mno
+         ) 
+         group by
+         movie0_.mno 
+         order by
+         movie0_.mno desc limit ?
+     
+     ----------------------------------
+     ☠️ 아래의 쿼리가 N+1 문제 발생 :: 이유 ? Max() 집계함수가 문제다 
+      Hibernate:   👉 [ x10 번 ]
+         select
+         movieimage0_.inum as inum1_2_0_,
+         movieimage0_.img_name as img_name2_2_0_,
+         movieimage0_.movie_mno as movie_mn5_2_0_,
+         movieimage0_.path as path3_2_0_,
+         movieimage0_.uuid as uuid4_2_0_ 
+         from
+         movie_image movieimage0_ 
+         where
+         movieimage0_.inum=?
+     **/
+    
+    Page<Object[]> result = movieRepository.getListPage(pageRequest);
+      
+    for (Object[] obj : result.getContent()) {
+      log.info(Arrays.toString(obj));
+    }
+    
+  }
+
+  /*********************************************************************************************/
+
+  @Description("N+1 문제를 해결 - 하지만 가장 처음 Movie Image를 가져오는 문제가 있음")
+  @Test
+  public void fixTestListPage(){
+    PageRequest pageRequest = PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "mno"));
+    /** Result - Query
+      Hibernate:
+        select
+        movie0_.mno as col_0_0_,
+                movieimage1_.inum as col_1_0_,
+        avg(coalesce(review2_.grade,
+                0)) as col_2_0_,
+        count(distinct review2_.reviewnum) as col_3_0_,
+        movie0_.mno as mno1_1_0_,
+                movieimage1_.inum as inum1_2_1_,
+        movie0_.moddate as moddate2_1_0_,
+                movie0_.regdate as regdate3_1_0_,
+        movie0_.title as title4_1_0_,
+                movieimage1_.img_name as img_name2_2_1_,
+        movieimage1_.movie_mno as movie_mn5_2_1_,
+                movieimage1_.path as path3_2_1_,
+        movieimage1_.uuid as uuid4_2_1_
+                from
+        movie movie0_
+        left outer join
+        movie_image movieimage1_
+        on (
+                movieimage1_.movie_mno=movie0_.mno
+        )
+        left outer join
+        review review2_
+        on (
+                review2_.movie_mno=movie0_.mno
+        )
+        group by
+        movie0_.mno
+        order by
+        movie0_.mno desc limit ?
+    **/
+    Page<Object[]> result = movieRepository.getListPageFix(pageRequest);
+    for(Object[] obj : result.getContent()){
+      log.info(Arrays.toString(obj));
+    }
+  }
 
 
 ```
