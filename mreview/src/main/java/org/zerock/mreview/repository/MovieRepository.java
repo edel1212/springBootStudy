@@ -40,6 +40,21 @@ public interface MovieRepository extends JpaRepository<Movie, Long> {
             " LEFT OUTER JOIN Review r ON r.movie = m group by m")
     Page<Object[]> getListPage(Pageable pageable);
 
+
+    /**
+     * 👍 getListPage(Pageable pageable)에서 N+1 문제를 해결
+     *
+     * 👉 해결방법 Max()를 사용하지 않음
+     * */
+    @Query("SELECT m" +                    //Movie 목록
+            ", mi" +                        //MovieImage
+            ", AVG(coalesce(r.grade,0))" + // Review r 의 grade 값의 평균을 구함 coalesce -> Nvl 의 좀더 확작된 Oracle 함수
+            ", COUNT(DISTINCT r) " +       // Review r 의 중복 제거 개수
+            "FROM Movie m" +
+            " LEFT OUTER JOIN MovieImage mi ON mi.movie = m" +
+            " LEFT OUTER JOIN Review r ON r.movie = m group by m")
+    Page<Object[]> getListPageFix(Pageable pageable);
+
     ///// 번외//////
     //getListPage() 에서 MovieImage 의 inum 이 높은 것을 가져온방식 - 위보다는 성능이 좋지 못함 서브쿼리가 들어감
     @Query("select m , i , count(r) from Movie m " +

@@ -4,6 +4,7 @@ import lombok.extern.log4j.Log4j2;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Description;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -64,6 +65,16 @@ public class MovieRepositoryTests {
 
         Page<Object[]> result = movieRepository.getListPage(pageRequest);
 
+        for(Object[] obj : result.getContent()){
+            log.info(Arrays.toString(obj));
+        }
+    }
+
+    @Description("N+1 문제를 해결")
+    @Test
+    public void fixTestListPage(){
+        PageRequest pageRequest = PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "mno"));
+        Page<Object[]> result = movieRepository.getListPageFix(pageRequest);
         for(Object[] obj : result.getContent()){
             log.info(Arrays.toString(obj));
         }
