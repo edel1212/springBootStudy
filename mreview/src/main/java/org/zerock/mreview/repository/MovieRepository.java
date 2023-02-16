@@ -55,12 +55,14 @@ public interface MovieRepository extends JpaRepository<Movie, Long> {
             " LEFT OUTER JOIN Review r ON r.movie = m group by m")
     Page<Object[]> getListPageFix(Pageable pageable);
 
-    ///// 번외//////
+
     //getListPage() 에서 MovieImage 의 inum 이 높은 것을 가져온방식 - 위보다는 성능이 좋지 못함 서브쿼리가 들어감
-    @Query("select m , i , count(r) from Movie m " +
-            "LEFT JOIN MovieImage i on i.movie = m " +
-            "and i.inum = (select max(i2.inum) from MovieImage i2 where i2.movie = m) " +
-            "left outer join Review r on r.movie = m group by m")
+    @Query("SELECT m , mi , COUNT(r) FROM Movie m " +
+            "LEFT JOIN MovieImage mi ON mi.movie = m " +
+            // 👍 아래와 같이 LEFT JOIN에 추가적으로 inum에 MAX값을 구하는 서브쿼리를 구한 후
+            //    적용하는 방법으로 처리가 가능하다
+            "AND mi.inum = (SELECT MAX(mi2.inum) FROM MovieImage mi2 WHERE mi2.movie = m) " +
+            "LEFT OUTER JOIN Review r ON r.movie = m GROUP BY m")
     Page<Object[]> getListPageOrdeyByInum(Pageable pageable);
 
 

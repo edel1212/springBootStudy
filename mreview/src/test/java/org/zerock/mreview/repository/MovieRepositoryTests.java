@@ -80,6 +80,7 @@ public class MovieRepositoryTests {
         }
     }
 
+    @Description("N+1 문제를 해결과 최근 MovieImage를 가져옴")
     @Test
     public void testListPageInumDesc(){
         PageRequest pageRequest = PageRequest.of(0,10,Sort.by("mno").descending());
