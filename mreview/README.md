@@ -261,13 +261,23 @@ public interface MovieRepository extends JpaRepository<Movie, Long> {
   
   /*********************************************************************************************/
 
-  //TODO - N+1도 없으면서 최근 MoiveImage 가져오기
+  
+  //👍 N + 1 의 문제가 해결 - 최근 MoiveImage를 가져옴  
+  //💬 서브 쿼리를 사용하하여 성능상에는 조금 문제가 있다.
+  @Query("SELECT m , mi , COUNT(r) FROM Movie m " +
+          "LEFT JOIN MovieImage mi ON mi.movie = m " +
+          // 👍 아래와 같이 LEFT JOIN에 추가적으로 inum에 MAX값을 구하는 서브쿼리를 구한 후
+          //    적용하는 방법으로 처리가 가능하다
+          "AND mi.inum = (SELECT MAX(mi2.inum) FROM MovieImage mi2 WHERE mi2.movie = m) " +
+          "LEFT OUTER JOIN Review r ON r.movie = m GROUP BY m")
+  Page<Object[]> getListPageOrdeyByInum(Pageable pageable);
   
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////////
 
+  
 //java - Repository
 
 @Test
@@ -329,6 +339,7 @@ public void testListPage() {
 
   /*********************************************************************************************/
 
+  
   @Description("N+1 문제를 해결 - 하지만 가장 처음 Movie Image를 가져오는 문제가 있음")
   @Test
   public void fixTestListPage(){
@@ -374,4 +385,57 @@ public void testListPage() {
   }
 
 
+  /*********************************************************************************************/
+
+  
+  @Description("N+1 문제를 해결과 최근 MovieImage를 가져옴")
+  @Test
+  public void testListPageInumDesc(){
+    PageRequest pageRequest = PageRequest.of(0,10,Sort.by("mno").descending());
+    /**
+    Hibernate:
+      select
+      movie0_.mno as col_0_0_,
+              movieimage1_.inum as col_1_0_,
+      count(review3_.reviewnum) as col_2_0_,
+      movie0_.mno as mno1_1_0_,
+              movieimage1_.inum as inum1_2_1_,
+      movie0_.moddate as moddate2_1_0_,
+              movie0_.regdate as regdate3_1_0_,
+      movie0_.title as title4_1_0_,
+              movieimage1_.img_name as img_name2_2_1_,
+      movieimage1_.movie_mno as movie_mn5_2_1_,
+              movieimage1_.path as path3_2_1_,
+      movieimage1_.uuid as uuid4_2_1_
+              from
+      movie movie0_
+      left outer join
+      movie_image movieimage1_
+      on (
+              movieimage1_.movie_mno=movie0_.mno
+              and movieimage1_.inum=(
+                      select
+              max(movieimage2_.inum)
+              from
+              movie_image movieimage2_
+              where
+              movieimage2_.movie_mno=movie0_.mno
+      )
+          )
+      left outer join
+      review review3_
+      on (
+              review3_.movie_mno=movie0_.mno
+      )
+      group by
+      movie0_.mno
+      order by
+      movie0_.mno desc limit ?
+     **/
+    Page<Object[]> result = movieRepository.getListPageOrdeyByInum(pageRequest);
+    result.getContent().stream().map(Arrays::toString).forEach(log::info);
+  }
+
 ```
+
+//TODO Querydls Version
