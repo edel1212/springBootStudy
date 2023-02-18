@@ -5,10 +5,11 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.zerock.mreview.entity.Movie;
+import org.zerock.mreview.repository.support.MovieSupportRepository;
 
 import java.util.List;
 
-public interface MovieRepository extends JpaRepository<Movie, Long> {
+public interface MovieRepository extends JpaRepository<Movie, Long>, MovieSupportRepository {
 
 
     /**
@@ -37,7 +38,7 @@ public interface MovieRepository extends JpaRepository<Movie, Long> {
             ", COUNT(DISTINCT r) " +       // Review r 의 중복 제거 개수
             "FROM Movie m" +
             " LEFT OUTER JOIN MovieImage mi ON mi.movie = m" +
-            " LEFT OUTER JOIN Review r ON r.movie = m group by m")
+            " LEFT OUTER JOIN Review r ON r.movie = m GROUP BY m")
     Page<Object[]> getListPage(Pageable pageable);
 
 
@@ -52,7 +53,7 @@ public interface MovieRepository extends JpaRepository<Movie, Long> {
             ", COUNT(DISTINCT r) " +       // Review r 의 중복 제거 개수
             "FROM Movie m" +
             " LEFT OUTER JOIN MovieImage mi ON mi.movie = m" +
-            " LEFT OUTER JOIN Review r ON r.movie = m group by m")
+            " LEFT OUTER JOIN Review r ON r.movie = m GROUP BY m")
     Page<Object[]> getListPageFix(Pageable pageable);
 
 
@@ -71,7 +72,10 @@ public interface MovieRepository extends JpaRepository<Movie, Long> {
     /*@Query("select m , mi " +
             "from Movie m left outer join MovieImage mi on mi.movie = m where m.mno = :mno")*/
     // 🔽  Movie + MovieImage + Review
-    @Query("Select m, im, avg(coalesce(r.grade,0)), count(r)" +
+    @Query("Select m" +                     // Movie
+            ", im" +                        // MovieImage
+            ", avg(coalesce(r.grade,0))" +  // Review grade
+            ", count(r)" +                  // Review Count
             "from Movie m" +
             " left outer join MovieImage im on im.movie = m" +
             " left outer join Review r on r.movie = m " +
