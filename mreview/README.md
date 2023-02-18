@@ -199,11 +199,11 @@ public class Review extends BaseEntity{
 
 <br/>
 <hr/>
-
+ 
 <h3>6 ) 상단에 명시된 테스트 목록</h3>
 
 - 테스트의 이유 ? :: N + 1 상황과 @EntityGraph 사용 예시를 보기위함
-1. 영화의 제목 + 영화 이미지 한개 + 영화 리뷰 개수, 평점 🔽 
+1. **[ 목록 ]** 영화의 제목 + 영화 이미지 한개 + 영화 리뷰 개수, 평점  🔽 
 ```java
 //java - Repository
 
@@ -438,4 +438,220 @@ public void testListPage() {
 
 ```
 
-//TODO Querydls Version
+👉 번외 : 1번 테스트 Querydls 사용 🔽  
+- 💬  아래  Querydls에서 유의깊게 보아야 하는 부분이 있다.
+  - 1 . MovieImage의 inum을 가져올경우 서브쿼리를 사용할때 :: JPAExpressions를 사용하는것
+  - 2 . tuple.groupBy(movie); 를 해주지 않아서 단건이 나왔던 문제 ,, << -- 해당 문제 때문에 삽질함..☠ ️
+    - 해당 문제는 에러가 나지 않고 단건만 나올것을 예상하지 못했음 .. 
+```java
+// java - SupportImpl [Support Interface 및 Repository 상속 스킵 ]
+
+// SupportImpl
+@Log4j2
+public class MovieSupportRepositoryImpl extends QuerydslRepositorySupport  implements MovieSupportRepository{
+
+  public MovieSupportRepositoryImpl() {
+    super(Movie.class);
+  }
+
+  @Override
+  public Page<Object[]> getListWithQuerydsl(Pageable pageable) {
+
+    // 1. Create QObject
+    QMovie movie = QMovie.movie;
+    QReview review = QReview.review;
+    QMovieImage movieImage = QMovieImage.movieImage;
+
+    // 2 . Create JPQLQuery
+    JPQLQuery<Movie> jpqlQUery = from(movie);
+
+    // 3 . Add Left Join
+    jpqlQUery.leftJoin(movieImage)
+            .on(movieImage.movie.eq(movie)
+                    // 👍 SubQuery를 사용하여 inum의 Max()값을 가져옴
+                    .and(movieImage.inum.eq(
+                                    // 💬 SubQuery는 JPAExpressions을 사용해서 가져와야한다!!
+                                    // 기존에처럼 from(movieImage)를 사용하여 사용할 경우 Error는 없지만
+                                    // 첫 데이터 한줄의 MoiveImage값은 나오고
+                                    // 그 이후 데이터는 null로 박혀서 나옴!!
+                                    JPAExpressions
+                                            .select(movieImage.inum.max())
+                                            .from(movieImage)
+                                            .where(movieImage.movie.eq(movie))
+                            )
+                    )
+            );
+    jpqlQUery.leftJoin(review).on(review.movie.eq(movie));
+
+    // 4 . Create JPQLQuery<Tuple>
+    JPQLQuery<Tuple> tuple = jpqlQUery.select(movie, movieImage, review.grade.avg(), review.countDistinct());
+
+
+
+
+    // 5 . Sorting
+    Sort sort = pageable.getSort();
+    sort.stream().forEach(order ->{
+      // get Sort Key
+      String prop = order.getProperty();
+      // get Sort Type
+      Order direction = order.isAscending() ? Order.ASC : Order.DESC;
+      // crate PathBuilder
+      PathBuilder<Movie> orderByExpression = new PathBuilder<Movie>(Movie.class,"movie");
+      // apply Sort for Tuple
+      tuple.orderBy(new OrderSpecifier(direction, orderByExpression.get(prop)));
+    });
+
+
+    // ☠️ group By를 해주지 않을 경우 단건이 나옴!!! [ 삽질함!! ]
+    tuple.groupBy(movie);
+
+    // 6 . Apply Pageable
+    tuple.offset(pageable.getOffset());
+    tuple.limit(pageable.getPageSize());
+
+    // 7 . Parse List
+    List<Tuple> result = tuple.fetch();
+
+    // 8 . get Count - 💬 Reason : Use PageImpl Parameter
+    long count = tuple.fetchCount();
+
+    //9 . Return PageImpl : needs Three Parameter ( List , Pageable , Long )
+    return new PageImpl( result.stream().map(Tuple::toArray).collect(Collectors.toList())
+            , pageable
+            , count);
+  }
+}
+
+//////////////////////////////////////////////////////
+
+// Result Query
+/**
+Hibernate:
+        select
+          movie0_.mno as col_0_0_,
+          movieimage1_.inum as col_1_0_,
+          avg(review3_.grade) as col_2_0_,
+          count(distinct review3_.reviewnum) as col_3_0_,
+          movie0_.mno as mno1_1_0_,
+          movieimage1_.inum as inum1_2_1_,
+          movie0_.moddate as moddate2_1_0_,
+          movie0_.regdate as regdate3_1_0_,
+          movie0_.title as title4_1_0_,
+          movieimage1_.img_name as img_name2_2_1_,
+          movieimage1_.movie_mno as movie_mn5_2_1_,
+          movieimage1_.path as path3_2_1_,
+          movieimage1_.uuid as uuid4_2_1_
+        from
+          movie movie0_
+        left outer join
+          movie_image movieimage1_
+          on (
+            movieimage1_.movie_mno=movie0_.mno
+            and movieimage1_.inum=(
+              select
+                max(movieimage2_.inum)
+              from
+                movie_image movieimage2_
+              where
+                movieimage2_.movie_mno=movie0_.mno
+              )
+            )
+        left outer join review review3_
+        on (
+            review3_.movie_mno=movie0_.mno
+        )
+        group by
+            movie0_.mno
+            order by
+        movie0_.mno desc limit ?
+**/
+```
+<br/>
+
+2. **[ 상세 ]** 영화 이미지들 + 리뷰 평점, 리뷰 개수 🔽
+
+```java
+//java - Repository
+
+// 🔽  Movie + MovieImage + Review
+@Query("Select m" +                     // Movie
+        ", im" +                        // MovieImage
+        ", avg(coalesce(r.grade,0))" +  // Review grade
+        ", count(r)" +                  // Review Count
+        "from Movie m" +
+        " left outer join MovieImage im on im.movie = m" +
+        " left outer join Review r on r.movie = m " +
+        "where m.mno = :mno  group by im")
+    List<Object[]> getMovieWithAll(Long mno);
+
+
+///////////////////////////////////////////////////////////////////
+
+
+// 👉 Querydsl Version
+public class MovieSupportRepositoryImpl extends QuerydslRepositorySupport  implements MovieSupportRepository{
+    
+    public List<Object[]> testGetMovieWithAllQuerydls(Long mno) {
+      QMovie movie = QMovie.movie;
+      QReview review  = QReview.review;
+      QMovieImage movieImage = QMovieImage.movieImage;
+  
+      JPQLQuery<Movie> jpqlQuery = from(movie);
+  
+      jpqlQuery.where(movie.mno.eq(mno));
+  
+      jpqlQuery.leftJoin(movieImage).on(movieImage.movie.eq(movie));
+      jpqlQuery.leftJoin(review).on(review.movie.eq(movie));
+  
+      //💬 Movie가 아닌 MovieImage로 Group By 해줘야함
+      jpqlQuery.groupBy(movieImage);
+  
+      List<Tuple> result = jpqlQuery.select(movie, movieImage, review.grade.avg(), review.count()).fetch();
+  
+      return result.stream().map(Tuple::toArray).collect(Collectors.toList());
+    }
+    
+}
+
+
+///////////////////////////////////////////////////////////////////
+
+
+/** Result Query 
+      Hibernate:
+        select
+          movie0_.mno as col_0_0_,
+          movieimage1_.inum as col_1_0_,
+          avg(coalesce(review2_.grade,
+          0)) as col_2_0_,
+          count(review2_.reviewnum) as col_3_0_,
+          movie0_.mno as mno1_1_0_,
+          movieimage1_.inum as inum1_2_1_,
+          movie0_.moddate as moddate2_1_0_,
+          movie0_.regdate as regdate3_1_0_,
+          movie0_.title as title4_1_0_,
+          movieimage1_.img_name as img_name2_2_1_,
+          movieimage1_.movie_mno as movie_mn5_2_1_,
+          movieimage1_.path as path3_2_1_,
+          movieimage1_.uuid as uuid4_2_1_
+        from
+            movie movie0_
+        left outer join
+            movie_image movieimage1_
+        on (
+            movieimage1_.movie_mno=movie0_.mno
+            )
+        left outer join
+            review review2_
+        on (
+            review2_.movie_mno=movie0_.mno
+        )
+        where
+            movie0_.mno=?
+        group by
+            movieimage1_.inum
+**/
+```
+<br/>
+
