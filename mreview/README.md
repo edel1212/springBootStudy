@@ -655,3 +655,5 @@ public class MovieSupportRepositoryImpl extends QuerydslRepositorySupport  imple
 ```
 <br/>
 
+3. **[ 상세 ]** 해당 리뷰에 대한 회원의 정보 
+  - 👉 @EntityGraph 이용하여 처리하는 방법 사용
