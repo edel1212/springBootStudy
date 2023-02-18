@@ -7,6 +7,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Description;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.test.annotation.Commit;
 import org.springframework.transaction.annotation.Transactional;
@@ -88,15 +89,31 @@ public class MovieRepositoryTests {
         result.getContent().stream().map(Arrays::toString).forEach(log::info);
     }
 
+    @Description(" testListPageInumDesc를  QueryDsl을 사용하여 처리함 ")
+    @Test
+    public void getListWithQueryDsl(){
+        Pageable pageRequest = PageRequest.of(0, 10, Sort.by("mno").descending());
+        Page<Object[]> result = movieRepository.getListWithQuerydsl(pageRequest);
+        //log.info("-------------------------------------");
+        result.getContent().stream().map(Arrays::toString).forEach(log::info);
+    }
+
 
     @Test
     public void testGetMovieWithAll(){
-        List<Object[]> result = movieRepository.getMovieWithAll(150L);
-
+        List<Object[]> result = movieRepository.getMovieWithAll(100L);
         log.info(result);
-
         result.stream().map(Arrays::toString).forEach(log::info);
-
     }
+
+    @Description("testGetMovieWithAll Querydsl  Version")
+    @Test
+    public void testGetMovieWithAllQuerydls(){
+        List<Object[]> result = movieRepository.testGetMovieWithAllQuerydls(100L);
+        log.info(result);
+        result.stream().map(Arrays::toString).forEach(log::info);
+    }
+
+
 
 }
