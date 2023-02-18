@@ -12,7 +12,7 @@ import java.util.List;
 
 public interface ReviewRepository extends JpaRepository<Review, Long> {
 
-    @EntityGraph(attributePaths ={"member"}, type = EntityGraph.EntityGraphType.FETCH)
+    //@EntityGraph(attributePaths ={"member"}, type = EntityGraph.EntityGraphType.FETCH)
     List<Review> findByMovie(Movie movie);
 
     //메서드 명으로 삭제하지만 Member 의 개수가 여러개일경우 비효율적으로 개수만 큼 delete 를 사용함

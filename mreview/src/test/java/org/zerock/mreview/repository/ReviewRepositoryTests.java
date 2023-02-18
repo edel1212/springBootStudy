@@ -8,6 +8,7 @@ import org.zerock.mreview.entity.Member;
 import org.zerock.mreview.entity.Movie;
 import org.zerock.mreview.entity.Review;
 
+import javax.transaction.Transactional;
 import java.util.List;
 import java.util.stream.IntStream;
 
@@ -53,8 +54,10 @@ public class ReviewRepositoryTests {
     }
 
     @Test
+    //@Transactional  👉  해당 방법을 사용해도 문제는 없으나 Member에 접근할때마다
+    //                     Member객체를 조회하는 문제가 있다.
     public void testGetMovieReviews(){
-        Movie movie = Movie.builder().mno(120L).build();
+        Movie movie = Movie.builder().mno(90L).build();
 
         List<Review> result = reviewRepository.findByMovie(movie);
 
