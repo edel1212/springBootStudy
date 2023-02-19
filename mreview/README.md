@@ -200,7 +200,7 @@ public class Review extends BaseEntity{
 <br/>
 <hr/>
  
-<h3>6 ) 상단에 명시된 테스트 목록</h3>
+<h3>6 ) 상단에 명시된 테스트 목록 테스트</h3>
 
 - 테스트의 이유 ? :: N + 1 상황과 @EntityGraph 사용 예시를 보기위함
 1. **[ 목록 ]** 영화의 제목 + 영화 이미지 한개 + 영화 리뷰 개수, 평점  🔽 
@@ -655,5 +655,150 @@ public class MovieSupportRepositoryImpl extends QuerydslRepositorySupport  imple
 ```
 <br/>
 
-3. **[ 상세 ]** 해당 리뷰에 대한 회원의 정보 
-  - 👉 @EntityGraph 이용하여 처리하는 방법 사용
+3. **[ 상세 ]** 해당 리뷰에 대한 회원의 정보  ***[ 💬 @EntityGraph 사용 예제임  ]***
+
+\- ☠️ Review Entity의 변수 중 Member가 FetchType.LAZY 방식이기에 발생하는 **no Session** Error 🔽
+```java
+//java 
+
+//Review Entity
+@Entity
+public class Review extends BaseEntity{
+  
+  //... code ..  
+  
+  @ToString.Exclude
+  @ManyToOne(fetch = FetchType.LAZY)
+  private Member member;
+  
+  //... code ..
+}
+
+
+///////////////////////////////////////////////////////////////////
+
+
+//ReviewRepository
+public interface ReviewRepository extends JpaRepository<Review, Long> {
+  List<Review> findByMovie(Movie movie);
+}
+
+
+///////////////////////////////////////////////////////////////////
+
+
+//java - JUnit Test
+@Test
+public void testGetMovieReviews(){
+  Movie movie = Movie.builder().mno(90L).build();
+
+  List<Review> result = reviewRepository.findByMovie(movie);
+
+  result.forEach(data -> {
+    // ↓ Review 자체의 Data에 접근시 에는 문제가 없음 
+    log.info(data.getReviewnum());
+    log.info("--------------------");
+    log.info(data.getGrade());
+    log.info("--------------------");
+    log.info(data.getText());
+    log.info("--------------------");
+    
+    // ↓ 아래의 getMember에 접근시 Session Error가 발생한다 . ☠️
+    log.info(data.getMember().getEmail());
+    log.info("--------------------");
+  });
+}
+
+
+///////////////////////////////////////////////////////////////////
+
+
+// 👍 그렇다면 해결방안 ? 
+// @Transactional 어노테이션을 사용한다.
+// 💬 다만 성능상 문제가 있을 수 있다. Lazy 방식이기에
+//    하나의 실행 단위로 묶는 Transaction을 사용하지만
+//    그렇기에 해당 데이터에 ☠접근할때마다 조회하는 문제가 있다. 👎  
+  
+@Test
+@Transactional  // 💬 근본적인 no Session Error를 해결할수 있지만  
+                //    해당 데이터를 찾을 때마다 조회한다는 문제가 있다.
+public void testGetMovieReviews(){
+  Movie movie = Movie.builder().mno(90L).build();
+  List<Review> result = reviewRepository.findByMovie(movie);
+  result.forEach(data -> {
+    // no Session Error 해결
+    log.info(data.getMember().getEmail());
+  });
+}
+
+```
+
+<br/>
+
+\- 👍 @EntityGraph를 사용하여 처리하는 방식
+- @EntityGraph를 사용하는 방식 말고도 JPA내장 NameMethod를 사용하지말고 @Query를 사용하여 처리하는 방법도있다.
+- 하지만 @EntityGraph를 사용하는 것이 더 간편하고 직관적 이므로 해당 방법을 사용한다.
+- 💬 @EntityGrpah란 ?
+  - Entity의 틍정한 속성으 같이 로딩하도록 지정하는 어노테이션이다.
+  - JPA에서 연관 관계를 지정한 속성을 FetchType.LAZY로 지정하는것이 일반적이나 @EntityGraph를 사용하면  
+    특정 기느을 수행할 때만 EAGER Type으로 지정하여 실행을 가능하게 끔해주는 설정이다.
+- 💬 @EntityGrpah 옵션 
+  - attributePath : 로딩 설정을 변경하고 싶은 속성의 이름을 **배열로 명시**
+  - type : 어떠한 방식으로 적용할 것인지 설정
+- ✅ 간단하게 설명하면 @EntityGraph는 Repository에 적용하는 어노테이션이고  
+     원하는 Repository에서 데이러틑 불러올 때 로딩방식(FetchType)을 변경해 주는 것이다.
+  
+```java
+//java 
+
+//Review Repository
+public interface ReviewRepository extends JpaRepository<Review, Long> {
+  // 👍  findByMovie를 사용할 때 member 속성을 Eager로 로딩하게 끔 설정
+  @EntityGraph(attributePaths = {"member"}, type = EntityGraph.EntityGraphType.FETCH)
+  List<Review> findByMovie(Movie movie);
+}  
+
+
+//////////////////////////////////////////////////////
+
+//JUnit Test Code
+@Test
+
+public void testGetMovieReviews(){
+  Movie movie = Movie.builder().mno(90L).build();
+  List<Review> result = reviewRepository.findByMovie(movie);
+  result.forEach(data -> {
+    // no Session Error 해결 및 성능상에도 문제 없음
+    log.info(data.getMember().getEmail());
+  });
+}
+
+
+//////////////////////////////////////////////////////
+
+//Result Query
+/**
+Hibernate:
+      select
+        review0_.reviewnum as reviewnu1_3_0_,
+        member1_.mid as mid1_0_1_,
+        review0_.moddate as moddate2_3_0_,
+        review0_.regdate as regdate3_3_0_,
+        review0_.grade as grade4_3_0_,
+        review0_.member_mid as member_m6_3_0_,
+        review0_.movie_mno as movie_mn7_3_0_,
+        review0_.text as text5_3_0_,
+        member1_.moddate as moddate2_0_1_,
+        member1_.regdate as regdate3_0_1_,
+        member1_.email as email4_0_1_,
+        member1_.nickname as nickname5_0_1_,
+        member1_.pw as pw6_0_1_
+      from
+        review review0_
+            left outer join
+                m_member member1_
+            on review0_.member_mid=member1_.mid
+      where
+        review0_.movie_mno=?
+**/
+```
