@@ -802,3 +802,175 @@ Hibernate:
         review0_.movie_mno=?
 **/
 ```
+
+<br/>
+<hr/>
+
+<h3>7 ) 파일 업로드 처리</h3>
+
+- 파일 업로드를 위한 setting 🔽
+```properties
+## application.properties
+
+#####################
+#File upload Setting#
+#####################
+
+#upload Y/N Set
+spring.servlet.multipart.enabled=true
+
+#upload file tmp dir
+spring.servlet.multipart.location=C:\\upload
+
+# Max Request Size
+spring.servlet.multipart.max-request-size=215MB
+
+# Max file size.
+spring.servlet.multipart.max-file-size=200MB
+
+#Real Upload Dir Path # Used call Java Code  
+org.zerock.upload.path = C:\\upload
+```
+
+<br/>
+
+- Client Upload 🔽
+```html
+<!-- html -->
+<body>
+    <!-- multiple 설정 필수 -->
+    <input name="uploadFiles" type="file" multiple>
+    <button class="uploadBtn">upload</button>   
+</body>
+
+<!-- javascript -->
+<script>
+document.querySelector(".uploadBtn").addEventListener("click",()=>{
+
+            // 1. form 객체 생성
+             let formData = new FormData();
+            // 2. input name="uploadFiles"에 업로드 된 File을 읽음
+             let inputFile = document.querySelector("input[name='uploadFiles']").files;
+
+             // 2 . File을 form에 append 시킴
+             for(let i of inputFile){
+                formData.append("uploadFiles",i);
+             }//for
+
+            //비동기 통신 -ajax
+            $.ajax({
+                url : '/uploadAjax',
+                processData : false,
+                contentType : false,
+                data : formData,
+                type : 'post',
+                dataType : 'json',
+                success : function(result){
+                 console.log(result);                 
+                },
+                error : function(jqXHR, textStatus, errorThrown ){
+                    console.log(textStatus);
+                }
+            })
+
+        });// click    
+</script>
+
+```
+
+<br/>
+
+- Server Upload Logic 🔽
+```java
+//java
+
+@Controller
+@Log4j2
+public class UploadController {
+  /**
+   * 💬 반환 값이 없을 경우
+   * Error 발생 : Error resolving template [uploadAjax], template might not exist or might not be accessible by any of the configured Template Resolvers
+   * */
+  @PostMapping("/uploadAjax")
+  public ResponseEntity<List<UploadResultDTO>> uploadFile(MultipartFile[] uploadFiles){
+
+    // 1 .  결과 값을 반환할 List<> 생성
+    List<UploadResultDTO> resultDTOList = new ArrayList<>();
+
+    log.info("-----------------------");
+    log.info(uploadFiles);
+    log.info("-----------------------");
+
+    // 2 . File의 개수 만큼 Loop
+    for(MultipartFile uploadFile : uploadFiles){
+
+      // 2 - 1 . 👉 MultipartFile.getContentType()를 사용하여 확장자를 체크가 가능함
+      if(!uploadFile.getContentType().startsWith("image")){
+        log.warn("this file is not image type");
+        //이미지가 아닐경우 403 Forbidden Error
+        return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+      }//if
+
+      // 2 - 2 . 👉 IE 나 Edge 에서는 전체 경로가 들어오므로
+      //            MultipartFile.getOriginalFilename()를 사용하여
+      //            파일명을 잘라서 사용
+      String originalFile = uploadFile.getOriginalFilename();
+      String fileName = originalFile.substring(originalFile.lastIndexOf("\\")+1);
+
+      log.info("fileName ::: " + fileName);
+
+      // 2 - 3 . 날짜 폴더 생성 :: 반환값 ? 오늘 날짜의 파일 경로
+      String folderPath = this.makeFolder();
+
+      // 2 - 4 . 파일명 중복방지를 위한 UUID 생성
+      String uuid = UUID.randomUUID().toString();
+
+      // 2 - 5 . 전체 파일 명 -> + UUID + 구분자 _ 사용 하여 👉 FullPath + FileName 생성
+      // 💬 문자열 내용 :: RootPath + Dir 구분자 + 오늘 날짜 폴더 Dir + Dir 구분자
+      String saveName = uploadPath + File.separator + folderPath + File.separator + uuid + "_" + fileName;
+
+      // 2 - 6 . 위에서 만든 FullPath 정보로 Path 객체 생성
+      Path savePath = Paths.get(saveName);
+      try {
+        // 2 - 6 - 1 . 파일정보를 토대로 ==> FullPath로 변환(저장)
+        uploadFile.transferTo(savePath);
+        
+        // 2 - 6 - 2 . 파일 저장 결과를 DTO에 저장 후 List에 Add해줌
+        resultDTOList.add(UploadResultDTO.builder().fileName(fileName).folderPath(folderPath).uuid(uuid).build());
+      }catch (Exception e){
+        e.printStackTrace();
+      }//try -catch
+
+    }//end loop
+
+    return ResponseEntity.ok().body(resultDTOList);
+  }
+
+  
+  /**
+   * @Description : 오늘 날짜로 Directory를 만는 Method
+   *
+   * */
+  private String makeFolder(){
+    // 1 . "yyyy/MM/dd" 패턴으로 현재 날짜를 받아옴
+    String str = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy/MM/dd"));
+
+    // 2 . "/" 를 Replace하여 운영체제에 맞는 파일 경로로 변경함
+    String folderPath = str.replace("/", File.separator);
+
+    // 3 . File 객체 생성 ( RootDir , 오늘 날자경로 )
+    File uploadPathFolder = new File(uploadPath, folderPath);
+
+    // 4 . Server에 uploadPathFolder 객체의 정보에 맞는  Directory가 있는지 확인
+    if(!uploadPathFolder.exists()){
+      // 4 - 1 . 없을 경우 해당 경로에 맞는 Directory 생성
+      boolean success = uploadPathFolder.mkdirs();
+    }//if
+
+    //파일 경로 반환
+    return folderPath;
+  }
+  
+}
+
+```
