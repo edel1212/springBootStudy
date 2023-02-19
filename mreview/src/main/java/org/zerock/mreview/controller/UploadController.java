@@ -28,52 +28,59 @@ import java.util.*;
 @Log4j2
 public class UploadController {
 
-    @Value("${org.zerock.upload.path}") // application.properties 에서 등록한(Bean) 값을 가져와 사용함
-    private String uploadPath;
+    @Value("${org.zerock.upload.path}") // application.properties 에서 등록한 변수 값을 가져와 사용함
+    private String uploadPath;  // 👉 "C:\\upload" 값이 들어가 있음
 
     @GetMapping("/uploadEx")
     public void uploadEx(){log.info("get uploadEx");}
 
     /**
-     * ✔ 반환 값이 없을 경우
+     * 💬 반환 값이 없을 경우
      * Error 발생 : Error resolving template [uploadAjax], template might not exist or might not be accessible by any of the configured Template Resolvers
      * */
     @PostMapping("/uploadAjax")
     public ResponseEntity<List<UploadResultDTO>> uploadFile(MultipartFile[] uploadFiles){
 
+        // 1 .  결과 값을 반환할 List<> 생성
         List<UploadResultDTO> resultDTOList = new ArrayList<>();
 
         log.info("-----------------------");
         log.info(uploadFiles);
         log.info("-----------------------");
 
+        // 2 . File의 개수 만큼 Loop
         for(MultipartFile uploadFile : uploadFiles){
             
-            //.getContentType()를 사용하여 확장자를 체크가 가능함
-            if(!Objects.requireNonNull(uploadFile.getContentType()).startsWith("image")){
+            // 2 - 1 . 👉 MultipartFile.getContentType()를 사용하여 확장자를 체크가 가능함
+            if(!uploadFile.getContentType().startsWith("image")){
                 log.warn("this file is not image type");
                 //이미지가 아닐경우 403 Forbidden Error
                 return new ResponseEntity<>(HttpStatus.FORBIDDEN);
-            }
+            }//if
             
-            //.getOriginalFilename() 에서는 IE 나 Edge 에서는 전체 경로가 들어오므로 잘라줌
+            // 2 - 2 . 👉 IE 나 Edge 에서는 전체 경로가 들어오므로
+            //            MultipartFile.getOriginalFilename()를 사용하여
+            //            파일명을 잘라서 사용
             String originalFile = uploadFile.getOriginalFilename();
-            assert originalFile != null;
             String fileName = originalFile.substring(originalFile.lastIndexOf("\\")+1);
 
             log.info("fileName ::: " + fileName);
 
-            //날짜 폴더 생성
-            String folderPath = makeFolder();
+            // 2 - 3 . 날짜 폴더 생성 :: 반환값 ? 오늘 날짜의 파일 경로
+            String folderPath = this.makeFolder();
 
+            // 2 - 4 . 파일명 중복방지를 위한 UUID 생성
             String uuid = UUID.randomUUID().toString();
             
-            //전체 파일 명 -> + UUID + 구분자 _ 사용
+            // 2 - 5 . 전체 파일 명 -> + UUID + 구분자 _ 사용 하여 👉 FullPath + FileName 생성
+            // 💬 문자열 내용 :: RootPath + Dir 구분자 + 오늘 날짜 폴더 Dir + Dir 구분자
             String saveName = uploadPath + File.separator + folderPath + File.separator + uuid + "_" + fileName;
 
+            // 2 - 6 . 위에서 만든 FullPath 정보로 Path 객체 생성
             Path savePath = Paths.get(saveName);
             try {
-                uploadFile.transferTo(savePath); //실제 데이터를 저장하는 Logic
+                // 2 - 6 - 1 . 파일정보를 토대로 ==> FullPath로 변환(저장)
+                uploadFile.transferTo(savePath);
                 
                 //썸네일 생성 Thumbnailator 사용
                 //1) 파일명 생성 -- ✔ s_ 를 사용하여 구분함
@@ -84,13 +91,15 @@ public class UploadController {
                 // Thumbnailator 를 사용하여 썸네일 생성 (File inFile, File outFile, width, height)
                 Thumbnailator.createThumbnail(savePath.toFile(), thumbnailFile, 100,100);
 
+                // 2 - 6 - 2 . 파일 저장 결과를 DTO에 저장 후 List에 Add해줌
                 resultDTOList.add(UploadResultDTO.builder().fileName(fileName).folderPath(folderPath).uuid(uuid).build());
             }catch (Exception e){
                 e.printStackTrace();
             }//try -catch
 
         }//end loop
-        return new ResponseEntity<>(resultDTOList,HttpStatus.OK);
+
+        return ResponseEntity.ok().body(resultDTOList);
     }
 
     @GetMapping("/display")
@@ -192,20 +201,28 @@ public class UploadController {
         }
     }
     
-    
+
+    /**
+     * @Description : 오늘 날짜로 Directory를 만는 Method
+     *
+     * */
     private String makeFolder(){
+        // 1 . "yyyy/MM/dd" 패턴으로 현재 날짜를 받아옴
         String str = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy/MM/dd"));
 
+        // 2 . "/" 를 Replace하여 운영체제에 맞는 파일 경로로 변경함
         String folderPath = str.replace("/", File.separator);
 
-        //Make folder
+        // 3 . File 객체 생성 ( RootDir , 오늘 날자경로 )
         File uploadPathFolder = new File(uploadPath, folderPath);
 
+        // 4 . Server에 uploadPathFolder 객체의 정보에 맞는  Directory가 있는지 확인
         if(!uploadPathFolder.exists()){
+            // 4 - 1 . 없을 경우 해당 경로에 맞는 Directory 생성
             boolean success = uploadPathFolder.mkdirs();
-            log.info(success);
-        }
+        }//if
 
+        //파일 경로 반환
         return folderPath;
     }
 

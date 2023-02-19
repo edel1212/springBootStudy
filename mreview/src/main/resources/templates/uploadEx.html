@@ -9,7 +9,7 @@
             crossorigin="anonymous"></script>
 </head>
 <body>
-
+    <!-- multiple 설정 필수 -->
     <input name="uploadFiles" type="file" multiple>
     <button class="uploadBtn">upload</button>
 
@@ -22,14 +22,15 @@
 
         document.querySelector(".uploadBtn").addEventListener("click",()=>{
 
+            // 1. form 객체 생성
              let formData = new FormData();
-
+            // 2. input name="uploadFiles"에 업로드 된 File을 읽음
              let inputFile = document.querySelector("input[name='uploadFiles']").files;
 
+             // 2 . File을 form에 append 시킴
              for(let i of inputFile){
-                console.log(i);
                 formData.append("uploadFiles",i);
-             }
+             }//for
 
             //비동기 통신 -ajax
             $.ajax({
@@ -41,7 +42,7 @@
                 dataType : 'json',
                 success : function(result){
                  console.log(result);
-                 showUploadImages(result);
+                 //showUploadImages(result);
                 },
                 error : function(jqXHR, textStatus, errorThrown ){
                     console.log(textStatus);
