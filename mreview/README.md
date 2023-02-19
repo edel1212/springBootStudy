@@ -1,4 +1,4 @@
-<h1>M : N(다 대 다) [@EntityGraph], 파일업로드</h1>
+<h1>M : N(다 대 다) [@EntityGraph] , 파일업로드 불러오기</h1>
 
 <h3>1 ) M : N(다 대 다) 관계의 특징 </h3>
 
@@ -971,6 +971,164 @@ public class UploadController {
     return folderPath;
   }
   
+}
+
+```
+
+<br/>
+<hr/>
+
+<h3>8 ) 저장되어 있는 이미지 불러오기</h3>
+
+<br/>
+- Client - ImageCall 🔽
+
+```html
+<!-- html -->
+<body>
+  <!-- multiple 설정 필수 -->
+  <input name="uploadFiles" type="file" multiple>
+  <button class="uploadBtn">upload</button>
+
+  <!-- 파일 업로드 시 이미지가 나올 Div -->
+  <div class="uploadResult">
+    <!--   script     -->
+  </div>
+</body>
+
+<!-- javascript -->
+<script>
+ function 이미지업로드_이벤트(){
+    //비동기 통신 -ajax
+    $.ajax({
+        url : '/uploadAjax',
+        processData : false,
+        contentType : false,
+        data : formData,
+        type : 'post',
+        dataType : 'json',
+        success : function(result){
+         console.log(result);
+         // 👉 해당 메서드가 이미지 CallBack Function
+         showUploadImages(result);
+        },
+        error : function(jqXHR, textStatus, errorThrown ){
+            console.log(textStatus);
+        }
+    })
+ }
+ 
+ 
+//get Image
+function showUploadImages(arr){
+    console.log("arr",arr);
+    // 1 . 이미지를 넣을 Div 지정
+    const divArea = document.querySelector(".uploadResult");
+    // 2 . 파일 업로드 후 받아온 데이터를 파싱하여 URL에 추가
+    arr.map( (data) => {
+       return "<img src='/display?fileName=" +  data['imageURL'] + "'>" })
+    .forEach( (img) => divArea.insertAdjacentHTML("beforeend",img));
+}
+ 
+</script>
+
+```
+
+<br/>
+- Result DTO Class 🔽
+
+```java
+//java
+public class UploadResultDTO implements Serializable {
+
+  private String fileName;
+  private String uuid;
+  private String folderPath;
+
+
+  /***
+   * 👍 하단 getter Method는
+   *   - ImageURL
+   *   - ThumbnailURL
+   *   라는 2개의 변수가 없지만 해당 class의 객체 생성 시
+   *   자동으로 추가된다.
+   *
+   *  ✔ 단 메서드 명의 get 부분을 바꿀 시 생성 X getter 로 인식하지 못해서임!
+   * **/
+
+  /**
+   * Full Path 를 가져올떄 사용하기 위함
+   * */
+  public String getImageURL() {
+    try {
+      // 💬  URLEncoder.encode() 란 ?
+      //     URL에는 여러가지 규칙이 있고 그 규칙에 사용되는 문자들이 정해져있기 때문에 특정한 값들은 규칙에 맞게 변환되어야 합니다.
+      //     또는 쿠키와 같이 한글을 표현하지 못하는 경우 한글을 ASCII값으로 인코딩해주야 합니다.
+      return URLEncoder.encode(folderPath + File.separator + uuid + "_" + fileName, StandardCharsets.UTF_8);
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+    return "";
+  }
+}    
+```
+
+<br/>
+- 이미지를 가져오는 Business Logic 🔽
+
+```java
+//java - Controller
+
+@Controller
+@Log4j2
+public class UploadController {
+  @GetMapping("/display")
+  public ResponseEntity<byte[]> geFile(String fileName, String size){
+
+    // 1 . return Data
+    ResponseEntity<byte[]> result = null;
+
+    try {
+      // 2 . 받아온 File src 를 decoding : UTF-8
+      String srcFileName = URLDecoder.decode(fileName, StandardCharsets.UTF_8);
+
+      log.info("fileName :: "+ srcFileName);
+
+      /**
+       * File.separator+ srcFileName   :: \2022\11\21/s_7b71fbdc-90dd-44e2-92ba-27a23e3597be_권정열-R10421.jpg
+       * */
+      // 3 . File 객체 생성 ( Root Path + 디코딩된 파일 경로 + 파일명 )
+      File file = new File(uploadPath + File.separator+ srcFileName);
+
+      log.info("file ::" + file);
+      //파일의 Dir + 썸네일 경로
+
+      // 4 . Header 객체 생성
+      HttpHeaders headers = new HttpHeaders();
+
+      /** 5 . Header 값 추가
+       * MIME타입 처리
+       *
+       * 해주는 이유❔
+       *  - 파일의 확장자에따라 브라우저에 전송하는 MIME타입이 달려쟈아 하므로
+       *
+       *  Files.probeContentType(Path)❔
+       *  - 해당 경로의 파일의 확장자를 확인함 단! 확인하지 못하면 null을 반환함
+       * */
+      headers.add("Content-Type", Files.probeContentType(file.toPath()));
+      //파일 데이터 처리
+
+      result = ResponseEntity.ok()                        // 200 oK
+              .headers(headers)                           // Header 추가
+              .body(FileCopyUtils.copyToByteArray(file)); // byte[]로 만들어서 반환
+
+    }catch (Exception e){
+      e.printStackTrace();
+      return new ResponseEntity<byte[]>(HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    return result;
+  }    
 }
 
 ```
