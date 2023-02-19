@@ -105,11 +105,11 @@ public class UploadController {
     @GetMapping("/display")
     public ResponseEntity<byte[]> geFile(String fileName, String size){
 
-        //return Data
+        // 1 . return Data
         ResponseEntity<byte[]> result = null;
 
         try {
-            //받아온 File src 를 decoding
+            // 2 . 받아온 File src 를 decoding : UTF-8
             String srcFileName = URLDecoder.decode(fileName, StandardCharsets.UTF_8);
 
             log.info("fileName :: "+ srcFileName);
@@ -117,6 +117,7 @@ public class UploadController {
             /**
              * File.separator+ srcFileName   :: \2022\11\21/s_7b71fbdc-90dd-44e2-92ba-27a23e3597be_권정열-R10421.jpg
              * */
+            // 3 . File 객체 생성 ( Root Path + 디코딩된 파일 경로 + 파일명 )
             File file = new File(uploadPath + File.separator+ srcFileName);
 
             log.info("file ::" + file);
@@ -142,23 +143,25 @@ public class UploadController {
                 //
             }
 
-            //Header 객체 생성
+            // 4 . Header 객체 생성
             HttpHeaders headers = new HttpHeaders();
             
-            /**
+            /** 5 . Header 값 추가
              * MIME타입 처리
              *
              * 해주는 이유❔
              *  - 파일의 확장자에따라 브라우저에 전송하는 MIME타입이 달려쟈아 하므로
              *
-             *  Files.probeContentType❔
+             *  Files.probeContentType(Path)❔
              *  - 해당 경로의 파일의 확장자를 확인함 단! 확인하지 못하면 null을 반환함
             * */
             headers.add("Content-Type", Files.probeContentType(file.toPath()));
             //파일 데이터 처리
-            result = new ResponseEntity<>(FileCopyUtils.copyToByteArray(file),
-                    headers,
-                    HttpStatus.OK);
+
+            result = ResponseEntity.ok()                        // 200 oK
+                    .headers(headers)                           // Header 추가
+                    .body(FileCopyUtils.copyToByteArray(file)); // byte[]로 만들어서 반환
+
         }catch (Exception e){
             e.printStackTrace();
             return new ResponseEntity<byte[]>(HttpStatus.INTERNAL_SERVER_ERROR);
