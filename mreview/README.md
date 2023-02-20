@@ -1108,15 +1108,36 @@ public class UploadController {
 
       log.info("fileName :: "+ srcFileName);
 
-      /**
+      /** 👉 현재 Default로 썸네일 경로가 들어오고 있음
        * File.separator+ srcFileName   :: \2022\11\21/s_7b71fbdc-90dd-44e2-92ba-27a23e3597be_권정열-R10421.jpg
        * */
       // 3 . File 객체 생성 ( Root Path + 디코딩된 파일 경로 + 파일명 )
       File file = new File(uploadPath + File.separator+ srcFileName);
 
-      log.info("file ::" + file);
       //파일의 Dir + 썸네일 경로
+      log.info("file ::" + file);
+      
+      /**
+       * @Description : 원본이미지를 구하기 위한 로직
+       *               Parameter인 Size의 유무체르로 구분한다
+       * */
+      if(size != null && size.equals("1")){
+        /***
+         * file.getParent(),              :: 파일의 Dir 경로
+         * file.getName().substring(2)    :: 7b71fbdc-90dd-44e2-92ba-27a23e3597be_권정열-R10421.jpg
+         *
+         * @Description : .substring(2) 이유는 받다오는 이미지의 주소값은 썸네일의 주소값으로 항상
+         *                 _s 가붙어 있으므로 해당 앞부분을 제외하면 원본 이미지의 주소임!
+         *
+         */
+        file = new File(file.getParent(), file.getName().substring(2));
+        /*
+         * 파일의 Dir 경로 + 7b71fbdc-90dd-44e2-92ba-27a23e3597be_권정열-R10421.jpg
+         **/
 
+      } 
+      
+      
       // 4 . Header 객체 생성
       HttpHeaders headers = new HttpHeaders();
 
@@ -1171,4 +1192,88 @@ dependencies {
 
 //...code...
 
+```
+
+<br/>
+
+- Thumbnailator 저장 Business Logic  🔽
+
+```java
+//java - Controller 
+
+@Controller
+@Log4j2
+public class UploadController {
+
+  @PostMapping("/uploadAjax")
+  public ResponseEntity<List<UploadResultDTO>> uploadFile(MultipartFile[] uploadFiles) {
+    // 👉 내부코드는 같기에 스킵 추가 부분만 작성함.  
+    //...code ...
+    
+    Path savePath = Paths.get(saveName);
+    try {
+      
+      uploadFile.transferTo(savePath);
+
+      // ✅ 썸네일 생성 Thumbnailator 사용
+      //1) 파일명 생성 -- ✔ s_ 를 사용하여 구분함
+      String thumbnailSaveName = uploadPath + File.separator + folderPath + File.separator
+              + "s_" + uuid + "_" + fileName;
+      //2) File 객체 생성
+      File thumbnailFile = new File(thumbnailSaveName);
+      // Thumbnailator 를 사용하여 썸네일 생성 (File inFile[ Full Path + File 정보 ], File outFile, width, height)
+      Thumbnailator.createThumbnail(savePath.toFile(), thumbnailFile, 100,100);
+
+      // 2 - 6 - 2 . 파일 저장 결과를 DTO에 저장 후 List에 Add해줌
+      resultDTOList.add(UploadResultDTO.builder().fileName(fileName).folderPath(folderPath).uuid(uuid).build());
+    }catch (Exception e){
+      e.printStackTrace();
+    }//try -catch
+    
+    //...code ...
+  }
+    
+}
+
+```
+
+<br/>
+- Thumbnailator 가져오는 Business Logic 🔽
+
+```java
+//java - Controller
+
+@Controller
+@Log4j2
+public class UploadController {
+  @GetMapping("/display")
+  public ResponseEntity<byte[]> geFile(String fileName, String size){
+    // 👉 내부코드는 같기에 스킵 추가 부분만 작성함.  
+    //...code ...
+    
+    //try...
+    
+      // 2 . 받아온 File src 를 decoding : UTF-8
+      String srcFileName = URLDecoder.decode(fileName, StandardCharsets.UTF_8);
+
+      log.info("fileName :: "+ srcFileName);
+
+      /** 👉 현재 Default로 썸네일 경로가 들어오고 있음
+       * File.separator+ srcFileName   :: \2022\11\21/s_7b71fbdc-90dd-44e2-92ba-27a23e3597be_권정열-R10421.jpg
+       * */
+      // 3 . File 객체 생성 ( Root Path + 디코딩된 파일 경로 + 파일명 )
+      File file = new File(uploadPath + File.separator+ srcFileName);
+
+      //파일의 Dir + 썸네일 경로
+      log.info("file ::" + file);
+
+      result = ResponseEntity.ok()                        // 200 oK
+              .headers(headers)                           // Header 추가
+              .body(FileCopyUtils.copyToByteArray(file)); // ✅ byte[]로 만들어서 반환 핵심 로직
+    
+    //try End...
+    
+    //...code ...
+  }
+}
 ```
