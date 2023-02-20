@@ -114,7 +114,7 @@ public class UploadController {
 
             log.info("fileName :: "+ srcFileName);
 
-            /**
+            /** 👉 현재 Default로 썸네일 경로가 들어오고 있음
              * File.separator+ srcFileName   :: \2022\11\21/s_7b71fbdc-90dd-44e2-92ba-27a23e3597be_권정열-R10421.jpg
              * */
             // 3 . File 객체 생성 ( Root Path + 디코딩된 파일 경로 + 파일명 )
@@ -124,7 +124,7 @@ public class UploadController {
             //파일의 Dir + 썸네일 경로
             
             /**
-             * @Description : 원본 사이즈를 구하기 위한 로직
+             * @Description : 원본이미지를 구하기 위한 로직
              *               Parameter인 Size의 유무체르로 구분한다
              * */
             if(size != null && size.equals("1")){
@@ -140,7 +140,7 @@ public class UploadController {
                 /*
                  * 파일의 Dir 경로 + 7b71fbdc-90dd-44e2-92ba-27a23e3597be_권정열-R10421.jpg
                 **/
-                //
+
             }
 
             // 4 . Header 객체 생성
