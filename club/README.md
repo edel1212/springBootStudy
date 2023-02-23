@@ -47,7 +47,25 @@ logging.level.org.springframework.security.web= trace
 
 <br/>
 
-4 . Spring Security 설정 파일 
+4 . Spring Security 흐름 및 설정 방법 **[ Class 사용 ]** 
  - 앞에 테스트 했던거와 같이 스프링 부트에서는 자동 설정 기능이 있기에 Spring과 다르게 따로 web.xml의 별도 설정이 없이도  
 사용이 가능하지만 ***조금 더 세부적인 설정과 프로젝트에 맞는 설정을 하기 위해서는 따로 설정파일을 추가 해줘야한다.***
  - Spring Security 설정은 따로 설정 Class를 구분하여 사용하는것이 일반적이다.
+
+
+- 💬 문제사항 : Spring의 버전 업데이트로 인해 이전 버전에는 WebSecurityConfigurerAdapter를 상속 받아   
+  **@Override 메서드인 configure()** 을 구현하여 설정하였지만 **Deprecated** 되었기에 새롭게 변경된 방식 
+            해당 Class 에 보안문제가 있어어 Deprecated 되어 사용할수 없게 되었다.  
+👉 따라서 ***SecurityFilterChain*** 를 구현하여 Bean에 등록하는 방식을 사용함.
+
+
+- Spring Security의 간단한 흐름
+  -  1단계 : 어떤 기능을 요청 받으면 핵심 역할을 하는 Authentication Manager(인증 매니저)를 통해 이뤄진다.
+  -  2단계 : Authentication Provider는 인증 매니저가 어떻게 해야하는지를 결정하고
+  -  3단계 : 최종적인 인증은 userDetailsService에서 이뤄진다.
+
+\- Security Config Class  🔽
+```java
+//java - Security Config 
+
+```
