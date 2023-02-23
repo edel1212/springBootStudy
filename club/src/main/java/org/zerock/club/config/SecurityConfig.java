@@ -23,7 +23,8 @@ import org.zerock.club.security.util.JWTUtil;
 /**
  * @Description : 해당 Class 는 시큐리티 관련 기능을 쉽게 설정하기 위한 Class 이다
  *
- * 인
+ * 문제 : 현재  이전에 사용했었던 WebSecurityConfigurerAdapter class를 상속 받아 구현하려 했지만
+ *            해당 Class 에 보안문제가 있어어 Deprecated 되어 사용할수 없게 되었다.
  *
  *
  * 필터와 필터 체이닝
