@@ -64,6 +64,10 @@ logging.level.org.springframework.security.web= trace
   -  2단계 : Authentication Provider는 인증 매니저가 어떻게 해야하는지를 결정하고
   -  3단계 : 최종적인 인증은 userDetailsService에서 이뤄진다.
 
+- Spring Security의 필터와 필터 체이닝
+  - Bean과 연동 할 수 있는 구조로 설계되어있다.
+  - 스프링 시큐리티는 내부에 여러 개의 필터가 Filter Chain이라는 구조로 Request를 처리하게 된다. 
+
 \- Security Config Class  🔽
 ```java
 //java - Security Config 
