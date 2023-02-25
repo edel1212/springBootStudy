@@ -292,3 +292,19 @@ public class SecurityConfig {
   // ... code ... 
 }
 ```
+
+<br/>
+<hr/>
+<h3>2 ) Spring Security - DB사용 </h3>
+
+- 회원의 권한 1:1이 정상적인 구조지만 테스트를 위해 한명의 회원이 한가지 이상의 권한을 갖을 수 있도록 구성하여 테스트
+- Entity 구조
+  - ClubMember : 회원의 로그인 정보를 갖는 Entity Class
+  - ClubMemberRole : 프로젝트에서 사용될 회원의 권한들을 갖는 Entity Class
+    - 단 해당 Class는 별로로 Entity Class로 만들기보다는 @ElementCollection을 사용하여 별도의 PK 생성 없이 구성함
+
+
+- @ElementCollection란 ?
+  - 💬 간단하게 설명해서 값 타입을 컬렉션에 담아 사용하는 것이다
+  - RDB에서는 컬렉션과 같은 형태를 처리할경우 **별도의 Table을 생성하여 컬렉션을 관리하는데**  
+  이와 같은 처리를 JPA에서는 @ElementCollection로 지정해주는것이다!
