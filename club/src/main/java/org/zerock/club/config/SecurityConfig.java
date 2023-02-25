@@ -98,15 +98,16 @@ public class SecurityConfig{
          * 1)  login form
          * - formLogin() 추가 시 :: 인가 , 인증에 문제시 자동으로 로그인 화면으로 이동시켜줌
          *
-         * ❌ 단점은 해당 매서드를 이용하는 경우에는 별도의 디자인을 적용 불가능한 Spring Security 에서 제공하는 UI를 사용해야함
-         * ✔ loginPage() 혹은 loginProcessUrl(), defaultSuccessUrl(), failureUrl() 등을 이용하면
+         * ❌ formLogin()의 단점은 해당 매서드를 이용하는 경우에는 별도의 디자인을 적용 불가능한 Spring Security에서
+         *    제공하는 UI를 사용해야함
+         * 👉 loginPage() 혹은 loginProcessUrl(), defaultSuccessUrl(), failureUrl() 등을 이용하면
          *    필요한 설정을 지정할 수있다.
          *    - 대부분의 어플리게이션은 고유의 디자인을 적용하기 떄문에 loginPage()를 이용해 별도의 페이지를 만들어 사용!
          *    
          * 2) logout form
          * - logout() 추가 시 :: 로그아웃 페이지 생성
          * ❌ 단점은 fromLogin 과 같이 별도 디자인 적용 가능
-         * ✔ logoutUrl(), logoutSuccessUrl() 등으로  커스텀 페이지 제작 가능
+         * 👉 logoutUrl(), logoutSuccessUrl() 등으로  커스텀 페이지 제작 가능
          *   , invalidateHttpSession() , deleteCookies() 를 추가해 세션 , 쿠기도 삭제 가능
          * */
         httpSecurity.formLogin();       // 권한이 없는 페이지 -> 로그인 페이지 이동
