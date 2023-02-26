@@ -82,9 +82,9 @@ public class SecurityConfig{
         /***
          * @Description : Spring-boot 의 버전이 올라가면서 authenticationManger() 주입법이 바뀜.
          *               - 이전에는 해당 Class에 상속관계인 WebSecurityConfigurerAdapter 에서
-         *                 구현된 메서드라 접근이 가능했지만 현재는 deprecated 되어서 Class를 불러온후
-         *                 객체로 만들어준 후 구현해함.
-         * @since 2022.12.18
+         *                 구현된 메서드라 따로 수정없이 사용이 가능했지만 현재는 deprecated 되어서
+         *                 👉 따로 ClubUSerDetailsService를 주입 받아 AuthenticationManager 객체를
+         *                    생성해줘야한다.
          * */
         AuthenticationManagerBuilder authenticationManagerBuilder = httpSecurity.getSharedObject(AuthenticationManagerBuilder.class);
         authenticationManagerBuilder.userDetailsService(clubUSerDetailService).passwordEncoder(passwordEncoder());
