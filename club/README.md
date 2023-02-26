@@ -295,7 +295,7 @@ public class SecurityConfig {
 
 <br/>
 <hr/>
-<h3>2 ) Spring Security - DB사용 </h3>
+<h3>2 ) Spring Security - *DB사용* [ 설정 및 설명 ]</h3>
 
 - 회원의 권한 1:1이 정상적인 구조지만 테스트를 위해 한명의 회원이 한가지 이상의 권한을 갖을 수 있도록 구성하여 테스트
 - Entity 구조
@@ -308,3 +308,409 @@ public class SecurityConfig {
   - 💬 간단하게 설명해서 값 타입을 컬렉션에 담아 사용하는 것이다
   - RDB에서는 컬렉션과 같은 형태를 처리할경우 **별도의 Table을 생성하여 컬렉션을 관리하는데**  
   이와 같은 처리를 JPA에서는 @ElementCollection로 지정해주는것이다!
+
+<br/>
+
+\- Insert ClubMember DummyData 🔽
+```java
+//java - JUnit Test : Insert Dummy Data
+
+@SpringBootTest
+public class ClubMemberTests {
+
+  @Autowired
+  private ClubMemberRepository clubMemberRepository;
+
+  @Autowired
+  private PasswordEncoder passwordEncoder;
+
+  @Test
+  @Description("Insert Dummy Member Date")
+  public void insertClubMemberTest(){
+
+    IntStream.rangeClosed(1,100).forEach(i->{
+      ClubMember clubMember = ClubMember.builder()
+              .email("user"+i+"@naver.com")
+              .name("User"+1)
+              .fromSocial(false)
+              .password(passwordEncoder.encode("1111"))
+              .build();
+      //권한 추가 - 기본적으로 USER 권한을 줌
+      clubMember.addMemberRole(ClubMemberRole.USER);
+
+      if(i > 80){
+        clubMember.addMemberRole(ClubMemberRole.MANAGER);
+      }
+      if(i > 90){
+        clubMember.addMemberRole(ClubMemberRole.ADMIN);
+      }
+      //Insert Member
+      clubMemberRepository.save(clubMember);
+    });
+
+  }
+
+}
+```
+
+<br/>
+
+\- Find ClubMember Use Email, Social Flag 🔽
+```java
+//java - Repository
+
+public interface ClubMemberRepository extends JpaRepository<ClubMember,String> {
+
+  /**
+   * ClubMember의 roleSet은 지연로딩으로 설정되어 있는데 해당 컬럼만을 로딩방법을
+   * EAGER로딩으로 바꾸어 Proxy객체가 아닌 같이 SELECT 할수 있게끔 설정함
+   * */
+  @EntityGraph(attributePaths = "roleSet", type = EntityGraph.EntityGraphType.LOAD)
+  @Query("SELECT m FROM ClubMember m WHERE m.fromSocial = :social AND " +
+          "m.email = :email")
+  Optional<ClubMember> findByEmail(String email, boolean social);
+
+  /**** Result Query
+   *  💬 JPQL Query에서 Join을 사용하지 않았지만
+   *        @EntityGraph를 사용하여 LEFT OUTER JOIN이 적용된것을
+   *        확인 할 수있다.
+   * Hibernate: 
+       select
+         clubmember0_.email as email1_1_,
+         clubmember0_.mod_date as mod_date2_1_,
+         clubmember0_.reg_date as reg_date3_1_,
+         clubmember0_.from_social as from_soc4_1_,
+         clubmember0_.name as name5_1_,
+         clubmember0_.password as password6_1_,
+         roleset1_.club_member_email as club_mem1_2_0__,
+         roleset1_.role_set as role_set2_2_0__ 
+       from
+        club_member clubmember0_ 
+        left outer join
+        club_member_role_set roleset1_ 
+       on clubmember0_.email=roleset1_.club_member_email 
+       where
+        clubmember0_.from_social=? 
+        and clubmember0_.email=?
+   */
+}
+
+
+////////////////////////////////////////////////////////////////////
+
+
+//java - JUnit Test
+public class ClubMemberTests {
+  @Description("Email을 사용하여 회원 찾기")
+  @Test
+  public void findByEmailToUserTest() {
+    Optional<ClubMember> result = clubMemberRepository
+            .findByEmail("user96@naver.com", false);
+
+    result.ifPresent(log::info);
+  }
+}  
+```
+
+<br/>
+
+- 💬 Spring Security에서는 기존 로그인과는 다르게 동작하는 것을 확인할 수있다.
+  - 일반적 로그인 구현은 아이디와 패스워드가 일치 시 해당 정보를 세션이나 쿠키에 값을 저장하여 처리하는 형태지만  
+  Spring Security에서는 조금 다르게 동작하며 몇가지 특이한점이 있다.
+    - 1 . 회원이나 계정에 대하여 **User라는 용어를 사용한다.** ☠️ 따라서 User라는 단어를 사용할 떄는 주의가 필요하다.   
+    - 2 . 회원아이디라는 용어 대신 username이라는 단어를 사용한다.  
+      - 👉 간단하게 설명 : 일반적으로 사용하는 ID가  username으로 사용하는 것이다.   
+      단 Security내의 **필터를 수정하여 해당 값에 주입하는 방식으로 변경하여 사용이 가능**하다.
+    - username 과 passwrod를 동시에 사용하지 않는다.
+      - Spring Security의 인증 절차는 UserDetailsService에서 username를 사용하여 회원의 존재를 먼저 가져온다
+        - 이후 가져온 회원의 정보를 password와 비교후 틀리다면 "Bad Credential(잘못된 자격증명)" 값을 반환한다.
+    - 3 . 위의 과정을 거쳐 화원의 인증이 완료돠면 요청된 행위의 권한을 확인하여 결과를 반환해 준다.
+      - 인증이 완료되어도 권한이 없는 곳에 접근 시 "Access Denied"를 반환 하여 접근이 불가능함. 
+
+
+\- UserDetailsService 구현 🔽
+```java
+//java - Service
+
+@Log4j2
+@Service
+public class ClubUserDetailsService implements UserDetailsService {
+    
+    /**
+     * @Service 어노테이션을 통해서 해당 Class를 스캔 하게되면
+     * 구현한 UserDetailsService 또한 Bean에 등록되고 이에 따라서
+     * 👉  자동으로 스프링 시큐리티에서 UserDetailsService를 해당 Class에 적성된
+     *     @Override된 메서드를 실행하게된다.
+     *     
+     * ✅ 현재 상태로 로그인 시 로그인이 정상 기능을 하지 못한다.
+     *    loadUserByUsername() -> null을 반환하기 떄문임
+     *    하지만 log를 확인해보면 내가 로그인하려고 접근했던 ID를 확인할 수 있다.
+     * */
+    @Override
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        log.info("ClubUserDetailsService loadUSerByUserName ::: {}", username);
+        return null;
+    }
+}
+```
+
+
+<br/>
+
+- 💬 UserDetails Interface ?
+  - 위에서 언급한  인증을 해주는 가장 핵심적인 로직은 UserDetailsService 이다.
+  - UserDetailsService는 loadUserByUserName()이라는 단 하나의 메서드를 가지고있다.
+  - loadUserByUserName()는 메서드명에서 확인 할수있듯이 회원의 ID(username)을 사용하여 회원의 정보를 가져온다.
+    - 가져올 수 있는 정보
+      - getAuthorities() - 사용자가 가지는 권한 정보
+      - getPassword() - 인증을 마무리하 귀한 패스워드 정보
+      - getUsername() - 인증에 필요한 아이디와 같은 정보
+
+
+<br/>
+
+- Spring Security를 사용하여 로그인 구현 방법은 크게 2가지 방법이 있다.
+  - 1 . DTO 클래스에 UserDetails 인터페이스를 구현하는 방법
+  - 2 . DTO와 같은 개념으로 별도의 클래스르 구성하고 이를 활용하는 방법
+- 1번 방법이 조금 더 간단하기에 1번을 사용하려한다.
+  - 👉 UserDetails를 구현해 놓은 Class가 여러가지가 있기 때문에 이를 활용함.
+    - InetOrgPerson, LdapUserDetailsIsImpl, Person, User
+- ✅ 그중에 User라는 구현 Class를 사용함  
+
+\- ClubMemberDTO -> User class 상속 🔽
+```java
+//java - DTO Class
+
+@Log4j2
+@Getter
+@Setter
+@ToString
+public class ClubMemberDTO extends User {
+  /**
+   * ClubMemberDTO 생성자 메서드에서 필수로
+   * 부모 클래스 User의 생성 데이터를 요청하므로 [ super(); ]
+   * 반드시 호출된다.
+   * */  
+  public ClubMemberDTO(
+          String username
+          , String password
+          , Collection<? extends GrantedAuthority> authorities) {
+    /**
+     * User 생성자에서 인증에 필요한 정보인 
+     * id, pw, 권한을 필요로한다.  
+     * */  
+    super(username, password, authorities);
+  }
+  
+}
+```
+
+<br/>
+
+\- ClubMemberDTO -> User class 상속  : DTO으로써 기능 추가🔽
+```java
+//java - DTO class
+
+@Log4j2
+@Getter
+@Setter
+@ToString
+public class ClubMemberDTO extends User {
+  
+    /**
+     * DTO에 필요한 정보를 추가해 줌으로써 DTO로써 의 기능도 수행하면서
+     * 
+     * 👉 User를 상속받아 UserDetails로써의 인가, 인증 작업 또한
+     *    가능하게 되었다.
+     * **/
+    
+  private String email;
+  private String password;
+  private boolean fromSocial;
+
+  public ClubMemberDTO(
+          String username
+          , String password
+          , boolean fromSocial
+          , Collection<? extends GrantedAuthority> authorities) {
+    super(username, password, authorities);
+
+    this.email = username;
+    this.fromSocial = fromSocial;
+    
+    ///////////////////////////////////////////////
+    //☠️☠️☠️☠️☠️☠️☠️☠️☠️☠️☠️☠️☠️☠️☠️☠️☠️☠️☠️☠️☠️
+    // 이거 틀린말임 .. 혼자서 판단하지 말자 ..
+    // password를 따로 주입해주지 않는 이유는 인가, 인증의 기능은
+    // 상단의 부모생성자(User)가 처리해주기에 해줄 필요가 없기 때문이다.
+    //☠️☠️☠️☠️☠️☠️☠️☠️☠️☠️☠️☠️☠️☠️☠️☠️☠️☠️☠️☠️☠️
+    ////////////////////////////////////////////////
+    /**
+     * ☠️ password 주입하지 않아 삽질함...
+     * Error Msg : empty encode password error...
+     *
+     * 나의 생각은 DTO를 만들때 UserClass에서 알아서 확인해주므로
+     * password 주입이 필요없다 생각했는데 아니였다 ..
+     * Security Config에서 설정한 AuthenticationManager 부분의 설정중에
+     * Service의 PW를 읽는 부분이 있는데 해당 부분을 먼저 거친다음 가기 떄문에
+     * this.password = password 지정이 필요하다!!
+     * */
+    this.password = password;
+  }
+}
+```
+
+<hr/>
+
+<h3>3 ) Spring Security - DB사용 [ 사용 코드 및 흐름 ]</h3>
+
+\- Security Config 🔽
+
+- 💬 userDetailsService를 구현한 ClubUserDetailsService를 주입하여 사용해줘야한다.
+- 💬 AuthenticationManager 객체를 생성 및 적용 해줘야한다. [ ClubUserDetailsService 주입 해줄 대상 ]
+
+```java
+//java - Security Config
+
+@Configuration 
+public class SecurityConfig {
+    
+  @Bean
+  PasswordEncoder passwordEncoder(){ return new BCryptPasswordEncoder(); }
+
+  /**
+   * ✅ 1. 변경하고싶은 로직을 작성한 Class인 UserDetailsService를 구현한
+   *       ClubUserDetailsService를 주입하여 사용함
+   * */
+  @Autowired
+  private ClubUserDetailsService clubUSerDetailService;
+
+  @Bean
+  protected SecurityFilterChain configure(HttpSecurity httpSecurity) throws Exception{
+
+    /***
+     * @Description : Spring-boot 의 버전이 올라가면서 authenticationManger() 주입법이 바뀜.
+     *               - 이전에는 해당 Class에 상속관계인 WebSecurityConfigurerAdapter 에서
+     *                 구현된 메서드라 따로 수정없이 사용이 가능했지만 현재는 deprecated 되어서
+     *                 👉 따로 ClubUSerDetailsService를 주입 받아 AuthenticationManager 객체를
+     *                    생성해줘야한다.
+     *                    
+     *                ✅ 2. 꼭 지정해줘야한다 ! 안그러면 내가 작성한 UserDetailsService를
+     *                      읽지 못한다!!
+     * */
+    AuthenticationManager authenticationManager = httpSecurity
+            .getSharedObject(AuthenticationManagerBuilder.class)
+            .userDetailsService(clubUSerDetailService)
+            .passwordEncoder(this.passwordEncoder())
+            .and()
+            .build();
+    httpSecurity.authenticationManager(authenticationManager);
+
+    httpSecurity.authorizeRequests()
+            .antMatchers("/sample/all").permitAll()
+            .antMatchers("/sample/member").hasRole("USER")
+            .and()      
+            .formLogin();
+    
+    httpSecurity.csrf().disable();
+    
+    httpSecurity.logout();
+
+    return httpSecurity.build();
+  }
+
+}
+```
+
+<br/>
+
+\- UserDetails를 상속 구현한 DTO 🔽
+
+- 💬 실질석인 인증 과정은 UserDetails를 구현한 Class인 User이다 따라서 해당 클래스를 상속받아   
+    인증과정을 DTO에 합친것이다.
+- 기존 Spring Security에는 이름, 소셜구분 , 그리고 Id가 username으로 되어있는데  
+이 부분을 User 생성자에서 유동적으로 필요한 값에 맞춰서 넣어주고 DTO에 추가적인 정보를 넣을수있다. 
+```java
+//java - DTO
+
+public class ClubAuthMemberDTO extends User {
+
+  private String email;
+  private String password;
+  private String name;
+  private boolean fromSocial;
+
+  public ClubAuthMemberDTO(
+          String username
+          , String password
+          , boolean fromSocial
+          , Collection<? extends GrantedAuthority> authorities) {
+    super(username, password, authorities);
+
+    this.email = username;
+    this.fromSocial = fromSocial;
+    /**
+     * ☠️ password 주입하지 않아 삽질함...
+     * Error Msg : empty encode password error...
+     *
+     * 나의 생각은 DTO를 만들때 UserClass에서 알아서 확인해주므로
+     * password 주입이 필요없다 생각했는데 아니였다 ..
+     * Security Config에서 설정한 AuthenticationManager 부분의 설정중에
+     * Service의 PW를 읽는 부분이 있는데 해당 부분을 먼저 거친다음 가기 떄문에
+     * this.password = password 지정이 필요하다!!
+     * */
+    this.password = password;
+  }
+}
+```
+
+<br/>
+
+\- UserDetailsService를 구현한 Service 🔽
+
+- DB를 사용한 로그인을 가능케 한다.
+- DB에서 해당 계정을 확인하고 계정이 존재한다면 해당 계정의 pw를 받아온 값을 encode 한 값과 비교하는 방식이다.
+```java
+//java - UserDetilasService
+
+
+@Service
+@RequiredArgsConstructor
+public class ClubUserDetailsService implements UserDetailsService {
+
+  private final ClubMemberRepository clubMemberRepository;
+
+  @Override
+  public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+    log.info("ClubUserDetailsService loadUSerByUserName ::: {}", username);
+
+    Optional<ClubMember> result = clubMemberRepository.findByEmail(username,false);
+
+    if(result.isEmpty()){
+      log.info("?????");
+      throw new UsernameNotFoundException("Check User Name");
+    }//if
+
+    ClubMember clubMember = result.get();
+
+    log.info("clubMember Info ::: {}",clubMember );
+
+
+    ClubAuthMemberDTO clubAuthMember = new ClubAuthMemberDTO(
+            clubMember.getEmail(),
+            clubMember.getPassword(),
+            clubMember.isFromSocial(),
+            clubMember.getRoleSet().stream()
+                    .map(role -> new SimpleGrantedAuthority("ROLE_"+role.name()))
+                    .collect(Collectors.toList())
+    );
+
+    clubAuthMember.setName(clubMember.getName());
+    clubAuthMember.setFromSocial(clubMember.isFromSocial());
+
+    return clubAuthMember;
+  }
+}
+```
+
+//TODO :: 흐름 정리 후 로그아웃 커스텀 페이지 설명
