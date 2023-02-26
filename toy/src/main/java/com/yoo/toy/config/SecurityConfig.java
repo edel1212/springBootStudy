@@ -1,8 +1,12 @@
 package com.yoo.toy.config;
 
+import com.yoo.toy.service.securiry.ClubUserDetailsService;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -25,8 +29,31 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
+    /**
+     * 변경하고싶은 로직을 작성한 Class인 UserDetailsService를 구현한
+     * ClubUserDetailsService를 주입하여 사용함
+     * */
+    @Autowired
+    private ClubUserDetailsService clubUSerDetailService;
+
     @Bean
     protected SecurityFilterChain configure(HttpSecurity httpSecurity) throws Exception{
+
+        /***
+         * @Description : Spring-boot 의 버전이 올라가면서 authenticationManger() 주입법이 바뀜.
+         *               - 이전에는 해당 Class에 상속관계인 WebSecurityConfigurerAdapter 에서
+         *                 구현된 메서드라 따로 수정없이 사용이 가능했지만 현재는 deprecated 되어서
+         *                 👉 따로 ClubUSerDetailsService를 주입 받아 AuthenticationManager 객체를
+         *                    생성해줘야한다.
+         * */
+        AuthenticationManager authenticationManager = httpSecurity
+                .getSharedObject(AuthenticationManagerBuilder.class)
+                .userDetailsService(clubUSerDetailService)
+                .passwordEncoder(this.passwordEncoder())
+                .and()
+                .build();
+        httpSecurity.authenticationManager(authenticationManager);
+
 
         /**
          * httpSecurity.authorizeRequests()를 사용하여 인증이 필요한 자원들을 설정할 수 있다.
