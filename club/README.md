@@ -669,10 +669,13 @@ public class ClubAuthMemberDTO extends User {
 \- UserDetailsService를 구현한 Service 🔽
 
 - DB를 사용한 로그인을 가능케 한다.
-- DB에서 해당 계정을 확인하고 계정이 존재한다면 해당 계정의 pw를 받아온 값을 encode 한 값과 비교하는 방식이다.
+- 로그인 과정 [ 간단 요약 ]
+  - 1 .로그인 시 form의 정보를 토대로 UsernamePasswordAuthenticationFilter.java의 attemptAuthentication()로 접근
+  - 2 . 받은 username과 password를 사용하여 UsernamePasswordAuthenticationToken 객체 생성
+  - 3 . DB에서 해당 계정을 확인하고 계정이 존재하는지 확인
+  - 4 . 존재한다면 해당 정보를 사용하요 UserDetails를 사용하여 계정의 정보와 2번에서 생성한 UsernamePasswordAuthenticationToken 비교
 ```java
-//java - UserDetilasService
-
+//java - UserDetailsService
 
 @Service
 @RequiredArgsConstructor
@@ -711,6 +714,99 @@ public class ClubUserDetailsService implements UserDetailsService {
     return clubAuthMember;
   }
 }
+
+
+/////////////////////////////////////////////////////////////////////////////////////////
+
+//java - Security Filter
+public class UsernamePasswordAuthenticationFilter extends AbstractAuthenticationProcessingFilter {
+    // ...code ...
+    @Override
+    public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response)
+            throws AuthenticationException {
+      if (this.postOnly && !request.getMethod().equals("POST")) {
+        throw new AuthenticationServiceException("Authentication method not supported: " + request.getMethod());
+      }
+      String username = obtainUsername(request);
+      username = (username != null) ? username.trim() : "";
+      String password = obtainPassword(request);
+      password = (password != null) ? password : "";
+      UsernamePasswordAuthenticationToken authRequest = UsernamePasswordAuthenticationToken.unauthenticated(username,
+              password);
+      // Allow subclasses to set the "details" property
+      setDetails(request, authRequest);
+      return this.getAuthenticationManager().authenticate(authRequest);
+    }
+    // ...code ...
+}
+
+
 ```
 
-//TODO :: 흐름 정리 후 로그아웃 커스텀 페이지 설명
+<br/>
+<hr/>
+
+<h3>4 ) Security 정보 확인 Client , Server</h3>
+
+\- Client단 에서 확인하기 위해서는 build.gradle에 설정이 필요하다. 🔽
+```groovy
+//build.gradle
+
+// ..code..
+
+dependencies {
+
+  // .. code ..
+  
+  /*현재  springsecurity6 버전에는 문제가 있어서 5버전으로 버전을 낮춘 후 개발 진행 - 화면에서 security 컨트롤 가능*/
+  implementation 'org.thymeleaf.extras:thymeleaf-extras-springsecurity5'
+    
+  // .. code ..
+}
+
+// .. code..
+```
+
+<br/>
+
+\- Client단에서의 사용 🔽
+```html
+<!-- html -->
+
+<body>
+<h1>For Member</h1>
+
+<!-- 권한에 따라 보이고 안보이고 -->
+<div sec:authorize="hasRole('USER')"> Has USER ROLE</div>
+<div sec:authorize="hasRole('MANAGER')"> Has MAMAGER ROLE</div>
+<div sec:authorize="hasRole('ADMIN')"> Has ADMIN ROLE</div>
+
+<hr/>
+
+<!-- 인증이 되었다면 보이게한다. -->
+<div sec:authorize="isAuthenticated()">
+  Only Authenticated user can see this Text
+</div>
+
+<hr/>
+
+<!-- 가지고 있는 권한 목록 -->
+principal  :
+<div sec:authentication="principal"></div>
+
+<hr/>
+
+<!-- User Id-->
+Authenticated username :
+<div sec:authentication="name"></div>
+
+<p></p>
+<hr/>
+<p></p>
+
+Authenticated user roles :
+<div sec:authentication="principal.authorities"></div>
+
+</body>
+</html>
+```
