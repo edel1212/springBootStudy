@@ -58,4 +58,24 @@ public class ClubMemberTests {
         result.ifPresent(log::info);
     }
 
+
+    @Description("Database Pw와 Encode Password Match Test")
+    @Test
+    public void matchTest(){
+        Optional<ClubMember> result = clubMemberRepository
+                .findByEmail("user100@naver.com",false);
+
+        ClubMember clubMember = result.get();
+
+        String pw = "1111";
+
+        String encodePW = passwordEncoder.encode(pw);
+
+
+        //boolean match = passwordEncoder.matches()
+
+
+
+    }
+
 }
