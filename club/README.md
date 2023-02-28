@@ -810,3 +810,130 @@ Authenticated user roles :
 </body>
 </html>
 ```
+
+<br/>
+
+\- Server단에서의 사용 🔽
+```java
+//java - Controller
+
+@Controller
+@Log4j2
+@RequestMapping("/sample/")
+public class SampleController {
+    //... code ...
+    
+    /**
+     * 👉 @AuthenticationPrincipal 어노테이션을 통해서 인증에 성공된 사용자의 정보를 받아 올 수 있다.
+     *    - UserDetails를 구현한 객체로 정보를 받을 수 있다.
+     *    - UserDetails 구현체의 정보는 Spring Security Context에 저장된 Authentication 객체가 가져간다고 볼 수 있다.
+     * */
+    @GetMapping("/member")
+    public void exMember(@AuthenticationPrincipal ClubAuthMemberDTO clubAuthMemberDTO){
+    //public void exMember(@AuthenticationPrincipal User user){  // User 자체로 받아서도 사용이 가능하지만 유연하게 사용이 불가능하다.   
+      
+      log.info("exMember....");
+  
+      log.info("로그인 정보 :::" + clubAuthMemberDTO);
+  
+    }
+  
+    //... code ...
+}
+```
+
+<br/>
+<hr/>
+
+<h3>5 ) @PreAuthorize 란 ?</h3>
+- Security Config에서 URL별 접근 권한 설정을 했지만 이 방법은 개수가 많아질수록 보기도 힘들어지고  
+유지보수도 힘들다는 문제가있다.  
+👉 ex) httpSecurity.authorizeRequests().antMatchers("/sample/member").hasRole("USER"); 
+- 위와 같은 문제는 Controller에서 권한을 지정하고 싶은 요청에 @PreAuthorize를 설정 해주면 해결이 가능하다.
+  - 💬 설정 방법
+    - 1 . SecurityConfig에 @EnableGlobalMethodSecurity(조건) 추가
+    - 2 . 권한을 설정하고 싶은 요청에 @PreAuthorize(권한) 추가  
+    
+\- @EnableGlobalMethodSecurity 설정 🔽
+```java
+//java - Security Config
+
+@Configuration
+@Log4j2
+@EnableGlobalMethodSecurity(prePostEnabled = true, securedEnabled = true) 
+public class SecurityConfig {
+    
+    /**
+     * 💬 @EnableGlobalMethodSecurity ?
+     *    - 어노테이션 기반의 접근을 제한을 설정할 수 있도록 하는 설정 어노테이션
+     *    - Security 설정 클래스에 붙여 사용하는것이 일반적이다.
+     *    - 설정 속 설정 의미
+     *      - prePostEnabled = true 란 ?
+     *          : Spring Security의 @PreAuthorize, @PreFilter , @PostFilter어노테이션 사용 하겠다는 의미이다.
+     *          
+     *      - securedEnabled = true 란 ?
+     *          : @Secured 를 이용하겠다는 의미이다.
+     *   
+     *   //////////////////////////////////////////////////////////////
+     *   
+     *   ✅ @Secured, @PreAuthorize 차이는 ????      
+     *   
+     *   @Secured는 표현식 사용할 수 없고,      👎
+     *   
+     *   @PreAuthroize는 표현식 사용 가능하다.  👍
+     *
+     *   ex) 
+     *       @Secured({"ROLE_USER","ROLE_ADMIN"}) => OR 조건, AND 조건 불가능
+     *       @PreAuthorize("hasRole('ROLE_USER') and hasRole('ROLE_ADMIN')") => and 조건, or 조건 모두 가능       
+     * */
+    
+}
+```
+
+\- @PreAuthorize 설정 🔽
+```java
+//java - Controller
+
+@Controller
+@Log4j2
+@RequestMapping("/sample/")
+public class SampleController {
+    
+    // 👉 누구나 접근 가능
+    @PreAuthorize("permitAll()") 
+    @GetMapping("/all")
+    public void exAll(){
+      log.info("exAll.....");
+    }
+
+    // 👉 ADMIN만 접근 가능
+    @PreAuthorize("hasRole('ADMIN')") //Admin 권한
+    @GetMapping("/admin")
+    public void exAdmin(){
+      log.info("exAdmin.....");
+    }
+
+    /***
+     * @Description : 특정 사용자만 사용해서 하고싶을떄
+     *                1) Parameter 로 로그인 Info 를 받는다
+     *                   조건 : 1 . @AuthenticationPrincipal 어노테이션을 사용하여 Parameter를 받야한다.
+     *                         2 . 대상의 타입은 UserDetails를 구현한 객체여야한다.
+     *                2) @PreAuthorize()  표현식을 사용하여 조건을 설정해야한다.
+     *                   - '#'과 같은 특별한 기호와 authentication 같은 내장변수를 이용할 수있다.
+     *                   
+     *                👉 조건 해석
+     *                   - UserDetails의 정보가 null이 아니고  username(id)가 "user95@naver.com"인 사용자
+     * */
+    @PreAuthorize("#clubAuthMemberDTO != null && #clubAuthMemberDTO.username eq \"user95@naver.com\"")
+    @GetMapping("/exOnly")
+    public String onlyTargetUser(@AuthenticationPrincipal ClubAuthMemberDTO clubAuthMemberDTO){
+      log.info("=======================");
+      log.info("onlyTargetMember!!");
+      log.info(clubAuthMemberDTO);
+      log.info("=======================");
+  
+      return "/sample/admin";
+    }
+    
+}
+```
