@@ -1,10 +1,44 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>$Title$</title>
+    <meta charset="UTF-8">
+    <title>Title</title>
 </head>
 <body>
-$END$
+    <h1>logPage!!</h1>
+
+    <form action="/sample/login" method="post" id="loginForm">
+        <input type="text" name="username"/>
+        <input type="passowrd" name="password"/>
+        <button>login</button>
+    </form>
+
+    [[${error}]]
+    <p id="valid" class="alert alert-danger">[[${exception}]]</p>
+
+    <button id="loginBtn">로그인</button>
+
+    <script>
+    /*
+        document.querySelector("#loginBtn").addEventListener("click",(e) => {
+
+            const data = {
+                username : document.querySelector("input[name='username']").value
+                , password : document.querySelector("input[name='password']").value
+            }
+
+            fetch("/customLoginReq"
+                ,{ method: "POST"
+                   , cache : "no-cache"
+                   ,"Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"
+                   , body : data
+                }
+            ).then(result=>console.log(result))
+            .catch(error=>console.log(error))
+        });
+*/
+
+    </script>
+
 </body>
 </html>

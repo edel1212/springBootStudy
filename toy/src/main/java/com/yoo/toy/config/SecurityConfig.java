@@ -12,6 +12,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 
 
 @Configuration //BeanContainer에서 해당 Class를 스캔하도록 지정
@@ -37,6 +38,9 @@ public class SecurityConfig {
      * */
     @Autowired
     private ClubUserDetailsService clubUSerDetailService;
+
+    @Autowired
+    private AuthenticationFailureHandler customAuthFailureHandler;
 
     @Bean
     protected SecurityFilterChain configure(HttpSecurity httpSecurity) throws Exception{
@@ -72,7 +76,12 @@ public class SecurityConfig {
          *     등을 이용하면 필요한 설정을 지정할 수있다.
          *    - 대부분의 어플리게이션은 고유의 디자인을 적용하기 떄문에 loginPage()를 이용해 별도의 페이지를 만들어 사용!
          **/
-        httpSecurity.formLogin();
+        httpSecurity.formLogin()
+                .loginPage("/sample/login")               // Login Page URL
+                //.loginProcessingUrl("/customLoginReq")    // Login 요청 URL
+                .failureHandler(customAuthFailureHandler) // 실패 시 처리 Handler 지정
+                .defaultSuccessUrl("/");                   // 성공 시 Direct 이동
+
 
         // CSRF를 사용하지 않도록 설정
         httpSecurity.csrf().disable();
@@ -98,5 +107,9 @@ public class SecurityConfig {
 
         return httpSecurity.build();
     }
+
+    /***
+     * @Desctiption : Security 관련 예외 Exception Handler
+     */
 
 }
