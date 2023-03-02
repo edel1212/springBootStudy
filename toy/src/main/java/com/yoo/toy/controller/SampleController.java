@@ -2,13 +2,15 @@ package com.yoo.toy.controller;
 
 import com.yoo.toy.dto.security.ClubAuthMemberDTO;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
+
+import javax.servlet.http.HttpServletRequest;
+import java.util.Map;
 
 @Controller
 @Log4j2
@@ -38,9 +40,17 @@ public class SampleController {
 
     @PreAuthorize("permitAll()")
     @GetMapping("/login")
-    public void loginPage(String error, String exception, Model model){
-        model.addAttribute("error",error);
-        model.addAttribute("exception",exception);
+    public void loginPage(HttpServletRequest request, Model model){
+        log.info("@@@@@@@@@@@@@@@@@@@@@@@@@");
+        log.info(request.getAttribute("errorMap"));
+        log.info("@@@@@@@@@@@@@@@@@@@@@@@@@");
+        model.addAttribute("test",request.getAttribute("errorMap"));
+    }
+
+    @ResponseBody
+    @PostMapping("/login")
+    public ResponseEntity<Map<String, String>> login(Map<String, String> errorMap){
+        return ResponseEntity.ok().body(errorMap);
     }
 
 }

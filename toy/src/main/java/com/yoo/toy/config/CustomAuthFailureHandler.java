@@ -1,5 +1,7 @@
 package com.yoo.toy.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.InternalAuthenticationServiceException;
@@ -13,6 +15,9 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @Description : Security Exception 발생시 처리하는
@@ -38,13 +43,16 @@ public class CustomAuthFailureHandler extends SimpleUrlAuthenticationFailureHand
             errorMsg = "알 수 없는 이유로 로그인에 실패하였습니다 관리자에게 문의하세요.";
         }
 
-        //인코딩
-        errorMsg = URLEncoder.encode(errorMsg, "UTF-8");
+        Map<String, Object> errorMap = new HashMap<>();
+        errorMap.put("status"   , "401");
+        errorMap.put("errorMap" , errorMsg.getBytes(StandardCharsets.UTF_8));
 
-        super.setDefaultFailureUrl("/sample/login?error=true&exception=" + errorMsg);
+        ObjectMapper objectMapper = new ObjectMapper();
+        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+        response.setCharacterEncoding("UTF-8");
+        response.getWriter().println(objectMapper.writeValueAsString(errorMap));
 
-        super.onAuthenticationFailure(request, response, exception);
-        //TODO :: https://minah-workmemory.tistory.com/29 확인 후 적용해보자
+        //TODO : 현재 비동기로 통신은 되지만 한글이 꺠지는 문제가있음 ..확인필요
     }
 
 }
