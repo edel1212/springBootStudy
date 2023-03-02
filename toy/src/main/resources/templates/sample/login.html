@@ -7,19 +7,19 @@
 <body>
     <h1>logPage!!</h1>
 
-    <form action="/sample/login" method="post" id="loginForm">
+    <!--<form action="/sample/login" method="post" id="loginForm">-->
         <input type="text" name="username"/>
         <input type="passowrd" name="password"/>
-        <button>login</button>
-    </form>
+    <!--    <button>login</button>-->
+    <!--</form>-->
 
-    [[${error}]]
-    <p id="valid" class="alert alert-danger">[[${exception}]]</p>
+
+    <p id="valid" class="alert alert-danger">[[${test}]]</p>
 
     <button id="loginBtn">로그인</button>
 
     <script>
-    /*
+
         document.querySelector("#loginBtn").addEventListener("click",(e) => {
 
             const data = {
@@ -27,16 +27,21 @@
                 , password : document.querySelector("input[name='password']").value
             }
 
-            fetch("/customLoginReq"
+            fetch("/sample/login"
                 ,{ method: "POST"
                    , cache : "no-cache"
+                   , Accept: "application/json;"
                    ,"Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"
                    , body : data
                 }
-            ).then(result=>console.log(result))
-            .catch(error=>console.log(error))
+            ).then((data) => data.json())
+            .then((result) => console.log(result))
+            .catch((error) => {
+                console.log(error)
+            })
+
         });
-*/
+
 
     </script>
 
