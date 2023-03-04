@@ -47,10 +47,4 @@ public class SampleController {
         model.addAttribute("test",request.getAttribute("errorMap"));
     }
 
-    @ResponseBody
-    @PostMapping("/login")
-    public ResponseEntity<Map<String, String>> login(Map<String, String> errorMap){
-        return ResponseEntity.ok().body(errorMap);
-    }
-
 }
