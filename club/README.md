@@ -937,3 +937,57 @@ public class SampleController {
     
 }
 ```
+
+<br/>
+<hr/>
+
+<h3>6 ) 로그인 실패 시 설정 </h3>
+
+- 로그인 실패시 Handler 설정이 필요하다.
+- 해당 설정 방법
+  - 1 . 설정된 Class를 Bean Container에서 Scan할 수 있도록 @Component 지정이 필요하다.
+  - 2 . SimpleUrlAuthenticationFailureHandler를 상속이 필요하다.
+  - 3 . onAuthenticationFailure() 를  @Override구현이 필요하다.
+  - 
+\- 로그인 실패 Handler Class 설정 🔽
+```java
+//java - extends SimpleUrlAuthenticationFailureHandler Class
+
+/**
+ * @Description : Security Exception 발생시 처리하는
+ *                Handler class
+ * */
+@Component
+public class CustomAuthFailureHandler extends SimpleUrlAuthenticationFailureHandler {
+
+  @Override
+  public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response,
+                                      AuthenticationException exception) throws IOException, ServletException {
+    String errorMsg;
+    if (exception instanceof BadCredentialsException) {
+      errorMsg = "아이디 또는 비밀번호가 맞지 않습니다. 다시 확인해 주세요.";
+    } else if (exception instanceof InternalAuthenticationServiceException) {
+      errorMsg = "내부적으로 발생한 시스템 문제로 인해 요청을 처리할 수 없습니다. 관리자에게 문의하세요.";
+    } else if (exception instanceof UsernameNotFoundException) {
+      errorMsg = "계정이 존재하지 않습니다. 회원가입 진행 후 로그인 해주세요.";
+    } else if (exception instanceof AuthenticationCredentialsNotFoundException) {
+      errorMsg = "인증 요청이 거부되었습니다. 관리자에게 문의하세요.";
+    } else {
+      errorMsg = "알 수 없는 이유로 로그인에 실패하였습니다 관리자에게 문의하세요.";
+    }
+
+    Map<String, Object> errorMap = new HashMap<>();
+    errorMap.put("status"   , "401");
+    errorMap.put("errorMsg" , errorMsg);
+    
+    /**
+     * 실패 시 JSON형식의 데이터를 만들어 반환 시키는 로직
+     * */
+    ObjectMapper objectMapper = new ObjectMapper();
+    // errorMsg가 한글이기에 설정이 필요하다.
+    response.setCharacterEncoding("UTF-8");
+    response.getWriter().println(objectMapper.writeValueAsString(errorMap));
+
+  }
+}
+```
