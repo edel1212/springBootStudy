@@ -45,14 +45,12 @@ public class CustomAuthFailureHandler extends SimpleUrlAuthenticationFailureHand
 
         Map<String, Object> errorMap = new HashMap<>();
         errorMap.put("status"   , "401");
-        errorMap.put("errorMap" , errorMsg.getBytes(StandardCharsets.UTF_8));
+        errorMap.put("errorMsg" , errorMsg);
 
         ObjectMapper objectMapper = new ObjectMapper();
-        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         response.setCharacterEncoding("UTF-8");
         response.getWriter().println(objectMapper.writeValueAsString(errorMap));
 
-        //TODO : 현재 비동기로 통신은 되지만 한글이 꺠지는 문제가있음 ..확인필요
     }
 
 }

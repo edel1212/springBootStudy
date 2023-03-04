@@ -7,12 +7,11 @@
 <body>
     <h1>logPage!!</h1>
 
-    <!--<form action="/sample/login" method="post" id="loginForm">-->
+    <form action="/sample/loginProcess" method="post" id="loginForm">
         <input type="text" name="username"/>
         <input type="passowrd" name="password"/>
-    <!--    <button>login</button>-->
-    <!--</form>-->
-
+     <button>login</button>
+    </form>
 
     <p id="valid" class="alert alert-danger">[[${test}]]</p>
 
@@ -21,21 +20,30 @@
     <script>
 
         document.querySelector("#loginBtn").addEventListener("click",(e) => {
-
-            const data = {
+            /**
+             * URLSearchParams 객체는 키/밸류로 쌍으로 구성된 데이터들을 관리하기 위해 제공되는 객체입니다.
+             * JSON 데이터를 표현하는 것과 같은 방법으로 서술한 키/밸류 데이터를 URLSearchParams 객체 생성자 인수로 넘겨서 객체를 생성합니다.
+             * 그리고 이 URLSearchParams 객체는 비동기 통신을 할 때 객체 그 자체를 폼 데이터로 넘겨서 전송할 수 있습니다.
+             *
+             *  👉 인코딩까지 자동으로 해주기 때문에 별도로 전송 데이터를 인코딩하는 수고로움을 하지 않아도 됩니다.
+            */
+            const param =new URLSearchParams({
                 username : document.querySelector("input[name='username']").value
                 , password : document.querySelector("input[name='password']").value
-            }
+            })
 
-            fetch("/sample/login"
+            console.log(param);
+            fetch("/sample/loginProcess"
                 ,{ method: "POST"
                    , cache : "no-cache"
-                   , Accept: "application/json;"
-                   ,"Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"
-                   , body : data
+                   ,"Content-Type": "application/x-www-form-urlencoded"
+                   //,"Content-Type": "application/json; charset=UTF-8"
+                   , body : param
                 }
             ).then((data) => data.json())
-            .then((result) => console.log(result))
+            .then((result) => {
+                console.log(result);
+            })
             .catch((error) => {
                 console.log(error)
             })
