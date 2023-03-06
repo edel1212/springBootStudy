@@ -948,7 +948,7 @@ public class SampleController {
   - 1 . 설정된 Class를 Bean Container에서 Scan할 수 있도록 @Component 지정이 필요하다.
   - 2 . SimpleUrlAuthenticationFailureHandler를 상속이 필요하다.
   - 3 . onAuthenticationFailure() 를  @Override구현이 필요하다.
-  - 
+  
 \- 로그인 실패 Handler Class 설정 🔽
 ```java
 //java - extends SimpleUrlAuthenticationFailureHandler Class
@@ -990,4 +990,146 @@ public class CustomAuthFailureHandler extends SimpleUrlAuthenticationFailureHand
 
   }
 }
+```
+
+<br/>
+
+\- 로그인 실패 Handler Config 설정 🔽
+```java
+// java - Security Config
+
+@Configuration //BeanContainer에서 해당 Class를 스캔하도록 지정
+@Log4j2
+@EnableGlobalMethodSecurity(securedEnabled = true, prePostEnabled = true)
+public class SecurityConfig {
+    
+    //...code...
+    
+    //Login Fail Handler
+    @Autowired
+    private AuthenticationFailureHandler customAuthFailureHandler;
+  
+    @Bean
+    protected SecurityFilterChain configure(HttpSecurity httpSecurity) throws Exception{
+      //...code...
+
+      httpSecurity.formLogin()
+              .loginPage("/sample/login")                 // Login Page URL  [GET]
+              .loginProcessingUrl("/sample/loginProcess") // 로그인 Request URL [POST]
+              .failureHandler(customAuthFailureHandler);   // 실패 시 처리 Handler 지정
+               
+      /**
+       * 로그인 인증에 실패시 URL을 지정해서 이동이 가능하나 현재 
+       * 비동이 식으로 진행하기 때문에 Error Msg 및 상태 코드르 전달 하여 
+       * 적용할 예정이기에 사용하지 않음
+       * 
+       * 👉 위의 방법 말고도 FailureHander에서도 지정이 가능하다.
+       * 
+       * .failureUrl("/")                            //실피 시 Direct 이동
+       * */
+
+      //...code...
+
+      return httpSecurity.build();
+      
+    }
+    
+  
+  
+    
+}
+
+```
+
+
+<br/>
+
+\- FailureHandler 설정 🔽
+```java
+//java - onAuthenticationFailure() @Override 구현
+
+/**
+ * @Description : Security Exception 발생시 처리하는
+ *                Handler class
+ * */
+@Component // Scan 대상 지정
+public class CustomAuthFailureHandler extends SimpleUrlAuthenticationFailureHandler {
+
+  @Override
+  public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response,
+                                      AuthenticationException exception) throws IOException, ServletException {
+
+    String errorMsg;
+    if (exception instanceof BadCredentialsException) {
+      errorMsg = "아이디 또는 비밀번호가 맞지 않습니다. 다시 확인해 주세요.";
+    } else if (exception instanceof InternalAuthenticationServiceException) {
+      errorMsg = "내부적으로 발생한 시스템 문제로 인해 요청을 처리할 수 없습니다. 관리자에게 문의하세요.";
+    } else if (exception instanceof UsernameNotFoundException) {
+      errorMsg = "계정이 존재하지 않습니다. 회원가입 진행 후 로그인 해주세요.";
+    } else if (exception instanceof AuthenticationCredentialsNotFoundException) {
+      errorMsg = "인증 요청이 거부되었습니다. 관리자에게 문의하세요.";
+    } else {
+      errorMsg = "알 수 없는 이유로 로그인에 실패하였습니다 관리자에게 문의하세요.";
+    }
+
+    Map<String, Object> errorMap = new HashMap<>();
+    errorMap.put("status"   , "401");
+    errorMap.put("errorMsg" , errorMsg);
+
+    ObjectMapper objectMapper = new ObjectMapper();
+    //해당 설정을 해주지 않으면 요청받은 Message가 꺠져 나오는 문제가 있음
+    response.setCharacterEncoding("UTF-8");
+    response.getWriter().println(objectMapper.writeValueAsString(errorMap));
+
+  }
+
+}
+```
+
+<br/>
+
+\- Client Login요청 및 처리 🔽
+```html
+<!-- html -->
+<body>
+    <input type="text" name="username"/>
+    <input type="passowrd" name="password"/>
+    <button id="loginBtn">로그인</button>
+</body>
+
+<script>
+  
+  document.querySelector("#loginBtn").addEventListener("click",(e) => {
+            /**
+             * URLSearchParams 객체는 키/밸류로 쌍으로 구성된 데이터들을 관리하기 위해 제공되는 객체입니다.
+             * JSON 데이터를 표현하는 것과 같은 방법으로 서술한 키/밸류 데이터를 URLSearchParams 객체 생성자 인수로 넘겨서 객체를 생성합니다.
+             * 그리고 이 URLSearchParams 객체는 비동기 통신을 할 때 객체 그 자체를 폼 데이터로 넘겨서 전송할 수 있습니다.
+             *
+             *  👉 인코딩까지 자동으로 해주기 때문에 별도로 전송 데이터를 인코딩하는 수고로움을 하지 않아도 됩니다.
+            */
+            const param = new URLSearchParams({
+                username : document.querySelector("input[name='username']").value
+                , password : document.querySelector("input[name='password']").value
+            })
+
+            console.log(param);
+            fetch("/sample/loginProcess"
+                ,{ method: "POST"
+                   , cache : "no-cache"
+                   ,"Content-Type": "application/x-www-form-urlencoded"
+                   //,"Content-Type": "application/json; charset=UTF-8" ❌ 해당 방법은 인식을 하지못함
+                   , body : param
+                }
+            ).then((data) => data.json())
+            .then((result) => {
+                console.log(result);
+            })
+            .catch((error) => {
+                console.log(error)
+            })
+
+        });
+  
+</script>
+
 ```
