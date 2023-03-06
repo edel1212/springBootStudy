@@ -13,6 +13,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
+import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 
 
 @Configuration //BeanContainer에서 해당 Class를 스캔하도록 지정
@@ -42,6 +43,10 @@ public class SecurityConfig {
     //Login Fail Handler
     @Autowired
     private AuthenticationFailureHandler customAuthFailureHandler;
+
+    //Login Success Handler
+    @Autowired
+    private AuthenticationSuccessHandler customAuthSuccessHandler;
 
     @Bean
     protected SecurityFilterChain configure(HttpSecurity httpSecurity) throws Exception{
@@ -81,7 +86,7 @@ public class SecurityConfig {
                 .loginPage("/sample/login")                 // Login Page URL  [GET]
                 .loginProcessingUrl("/sample/loginProcess") // 로그인 Request URL [POST]
                 .failureHandler(customAuthFailureHandler)   // 실패 시 처리 Handler 지정
-                .defaultSuccessUrl("/");                     // 성공 시 Direct 이동
+                .successHandler(customAuthSuccessHandler);  // 로그인 성공 시 처리 Handler 지정
 
 
 
