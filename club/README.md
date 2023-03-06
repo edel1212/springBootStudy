@@ -941,7 +941,7 @@ public class SampleController {
 <br/>
 <hr/>
 
-<h3>6 ) 로그인 실패 시 설정 </h3>
+<h3>6 ) 로그인 실패 시 설정 [ FailureHandler ] </h3>
 
 - 로그인 실패시 Handler 설정이 필요하다.
 - 해당 설정 방법
@@ -994,7 +994,7 @@ public class CustomAuthFailureHandler extends SimpleUrlAuthenticationFailureHand
 
 <br/>
 
-\- 로그인 실패 Handler Config 설정 🔽
+\- 로그인 실패 Handler Security Config 설정 🔽
 ```java
 // java - Security Config
 
@@ -1034,11 +1034,7 @@ public class SecurityConfig {
       
     }
     
-  
-  
-    
 }
-
 ```
 
 
@@ -1132,4 +1128,92 @@ public class CustomAuthFailureHandler extends SimpleUrlAuthenticationFailureHand
   
 </script>
 
+```
+
+<br/>
+<hr/>
+
+<h3>7 ) 로그인 성공 시 설정 [ SuccessHandler ] </h3>
+
+
+\- 로그인 성공 Handler Security Config 설정 🔽
+```java
+//java - Security Config
+
+@Configuration //BeanContainer에서 해당 Class를 스캔하도록 지정
+@Log4j2
+@EnableGlobalMethodSecurity(securedEnabled = true, prePostEnabled = true)
+public class SecurityConfig {
+
+  //...code...
+
+  //Login Fail Handler
+  @Autowired
+  private AuthenticationFailureHandler customAuthFailureHandler;
+
+  //Login Success Handler
+  @Autowired
+  private AuthenticationSuccessHandler customAuthSuccessHandler;
+  
+  @Bean
+  protected SecurityFilterChain configure(HttpSecurity httpSecurity) throws Exception{
+    //...code...
+
+    httpSecurity.formLogin()
+            .loginPage("/sample/login")                  // Login Page URL  [GET]
+            .loginProcessingUrl("/sample/loginProcess")  // 로그인 Request URL [POST]
+            .failureHandler(customAuthFailureHandler)    // 실패 시 처리 Handler 지정
+            .successHandler(customAuthSuccessHandler);   // 로그인 성공 시 처리 Handler 지정
+
+    //...code...
+
+    return httpSecurity.build();
+
+  }
+
+}
+```
+
+<br/>
+
+\- SuccessHandler 설정 🔽
+```java
+//java - onAuthenticationSuccess() - @Override 구현 Class
+
+/**
+ * @Description : Security Success 시 처리하는
+ *                Handler class
+ *
+ *                👉 Failure Handler 와 다르게 SuccessHandler는 Interface이다!
+ * */
+@Component
+@Log4j2
+public class CustomAuthSuccessHandler implements AuthenticationSuccessHandler {
+  @Override
+  public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response
+          , Authentication authentication) throws IOException, ServletException {
+
+    log.info("Success!!");
+
+    //TODO Business logic [ 비밀번호 오류 횟수 초기화등 여러가지 로직이 처리 가능하다. ]
+
+    log.info("login user authentication :: " + authentication.getAuthorities());
+
+    Map<String, String> result = new HashMap<>();
+    result.put("status","200");
+    result.put("Msg","Success");
+
+    ObjectMapper objectMapper = new ObjectMapper();
+    response.setCharacterEncoding("UTF-8");
+    response.getWriter().println(objectMapper.writeValueAsString(result));
+
+    /**
+     * 해당 방법으로 리다이렉트 이동이 불가능하다.
+     * 💬 Login 로직을 비동기 방식으로 진행했기에
+     * 404 에러가 떨어짐 URL 이동은 스크립트로 처리가 필요하다
+     * */
+    //response.sendRedirect("/sample/member");
+
+  }
+}
 ```
