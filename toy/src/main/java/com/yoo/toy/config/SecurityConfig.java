@@ -39,6 +39,7 @@ public class SecurityConfig {
     @Autowired
     private ClubUserDetailsService clubUSerDetailService;
 
+    //Login Fail Handler
     @Autowired
     private AuthenticationFailureHandler customAuthFailureHandler;
 
@@ -79,9 +80,10 @@ public class SecurityConfig {
         httpSecurity.formLogin()
                 .loginPage("/sample/login")                 // Login Page URL  [GET]
                 .loginProcessingUrl("/sample/loginProcess") // 로그인 Request URL [POST]
-                .failureHandler(customAuthFailureHandler);   // 실패 시 처리 Handler 지정
-                //.defaultSuccessUrl("/")                     // 성공 시 Direct 이동
-                //.failureUrl("/")                            //실피 시 Direct 이동
+                .failureHandler(customAuthFailureHandler)   // 실패 시 처리 Handler 지정
+                .defaultSuccessUrl("/");                     // 성공 시 Direct 이동
+
+
 
 
         // CSRF를 사용하지 않도록 설정
