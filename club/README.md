@@ -1259,7 +1259,20 @@ dependencies {
 2. properties 파일에 OAuth 관련 설정이 필요 단 application.properties 보다는  새로운 properties파일을  
 만들어서 사용하는 것이 더 직관적이며 수정이 간편하므로 OAuth 설정을 위한 properties을 생성하여 작성한다.  
 💬 생성 하려는 properties 네이밍시 application-xxx.properties 로 작성해야한다.  
-**👉 중요  :  중간에 "-"가 아닌 다른 기호를 사용하면 안된다! 인식을 못함**
+**👉 중요  :  중간에 "-"가 아닌 다른 기호를 사용하면 안된다! 인식을 못함**  
+   ☠️☠️☠️☠️☠️☠️☠️☠️☠️☠️☠️☠️☠️☠️☠️☠️☠️☠️☠️☠️☠️☠️☠️☠️☠️☠️☠️☠️☠️☠️☠️☠️☠️☠️☠️☠️  
+   ☠️ 삽질 내용 :  
+   ☠️ 해당 properties 설정 시 삽질을 했었는데 그것은 바로 Scope Type 부분에서 문제 발생   
+   ☠️ - 문제 Code 👎   
+   ☠️ spring.security.oauth2.client.registration.google.client-scope=email ❌ 중간에 client가 들어가 있어서 문제 발생..   
+   ☠️ - 수정 Code 👍    
+   ☠️ spring.security.oauth2.client.registration.google.scope=email          ✅ 정상 작동안됨.  
+   ☠️  
+   ☠️ 💬 해당 문제를 찾는데 오래 걸린 이유는 빌드 및 이용 시에는 문제가 없었지만 커스텀을 위한 Class를 작성하여 작업도 중  
+   ☠️ DefaultOAuth2UserService 를 상속 받아 @Override 구현한 loadUser() 메서드에 접근 조차 하지 않는 문제가 있었다...  
+   ☠️  
+   ☠️ 👉 생각없이 하지말고 흐름을 이해하면서 적용할 필요를 느꼈다 ..  
+   ☠️☠️☠️☠️☠️☠️☠️☠️☠️☠️☠️☠️☠️☠️☠️☠️☠️☠️☠️☠️☠️☠️☠️☠️☠️☠️☠️☠️☠️☠️☠️☠️☠️☠️☠️☠️
 ```properties
 #application-oauth.properties
 
