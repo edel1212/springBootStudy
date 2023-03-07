@@ -1217,3 +1217,58 @@ public class CustomAuthSuccessHandler implements AuthenticationSuccessHandler {
   }
 }
 ```
+
+<br/>
+<hr/>
+
+<h3>8 ) OAuth Login [ 소셜 로그인 ] </h3>
+
+- 서비스를 제공하는 업체들이 각자 다른 방법으로 로그인을 하지 않도록 공통 인증 방식을 제공하는  
+OAuth(Open Authorization)라고 한다.
+- 해당 로그인 서비스를 이용하기 위해서는 선행 되어야하는 것이 있는데 그것은 바로 해당 서비스를 지원해주는 곳에 API에 사용 요청 후  
+  ClientID와 Password를 받아야한다.
+
+### Google OAuth 신청방법 ###
+1. [GoogleCloud](https://console.cloud.google.com/apis) 로 이동하여 프로젝트를 생성해 준다.
+2. 페이지 상단 로고 옆 버튼을 누르면 프로잭트 생성이 있다.
+3. API사용 설정 클릭
+4. 소셜 -> Contacts API 사용하기
+5. OAuth 동의 화면 이동
+6. User Type "외부"로 설정
+7. 필요 정보를 작성 
+8. 동의화면 작서잉 끝났다면 "사용자 인증정보"로 이동한다.
+9. 상단 사용자 인증 정보 만들기
+10. OAuth 클라이언트 ID
+11. 애플리케이션 유형 "웹"
+12. 가장 중요한 승인된 리디렉션 URI를 추가해준다  
+ 👉 구글에서 인증된 정보를 다시 현재 프로젝트로 정보를 반환받을 URI이다.
+13. 생성된 ID와 Pw를  프로젝트에 적용한다.
+
+### Google OAuth 적용방법 ###
+1. build.gralde에 OAuth dependence 추가
+```groovy
+//build.gradle
+
+dependencies {
+  
+  implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'\
+  
+  //..code...
+}
+```
+2. properties 파일에 OAuth 관련 설정이 필요 단 application.properties 보다는  새로운 properties파일을  
+만들어서 사용하는 것이 더 직관적이며 수정이 간편하므로 OAuth 설정을 위한 properties을 생성하여 작성한다.  
+💬 생성 하려는 properties 네이밍시 application-xxx.properties 로 작성해야한다.  
+**👉 중요  :  중간에 "-"가 아닌 다른 기호를 사용하면 안된다! 인식을 못함**
+```properties
+#application-oauth.properties
+
+##Google Client ID
+spring.security.oauth2.client.registration.google.client-id=아이디 입력
+
+##Google Client PW
+spring.security.oauth2.client.registration.google.client-secret=패스워드 입력
+
+##scope Type
+spring.security.oauth2.client.registration.google.scope=email
+```
