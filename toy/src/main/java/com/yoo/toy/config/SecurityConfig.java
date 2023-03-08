@@ -83,12 +83,12 @@ public class SecurityConfig {
          *    - 대부분의 어플리게이션은 고유의 디자인을 적용하기 떄문에 loginPage()를 이용해 별도의 페이지를 만들어 사용!
          **/
         httpSecurity.formLogin()
-                .loginPage("/sample/login")                 // Login Page URL  [GET]
+                //.loginPage("/sample/login")                 // Login Page URL  [GET]
                 .loginProcessingUrl("/sample/loginProcess") // 로그인 Request URL [POST]
                 .failureHandler(customAuthFailureHandler)   // 실패 시 처리 Handler 지정
                 .successHandler(customAuthSuccessHandler);  // 로그인 성공 시 처리 Handler 지정
 
-
+        httpSecurity.oauth2Login();
 
 
         // CSRF를 사용하지 않도록 설정

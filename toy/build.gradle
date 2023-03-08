@@ -43,6 +43,9 @@ dependencies {
 	implementation 'org.thymeleaf.extras:thymeleaf-extras-springsecurity5'
 	testImplementation 'org.springframework.security:spring-security-test'
 
+	// oauth - social login Library
+	// ✔have to make oauth.properties
+	implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
 
 	//test 환경 lombok 사용 가능하끔 설정
 	testCompileOnly 'org.projectlombok:lombok'
