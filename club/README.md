@@ -1285,3 +1285,42 @@ spring.security.oauth2.client.registration.google.client-secret=패스워드 입
 ##scope Type
 spring.security.oauth2.client.registration.google.scope=email
 ```
+
+3. 추가한 application-oauth.properties를 읽을 수 있도록 application.properties에 주입
+```properties
+#application.properties
+
+#...code...
+
+############################
+##include oauth properties
+############################
+spring.profiles.include=oauth
+```
+
+4. SecurityConfig에서 oAuth 로그인을 사용 할 수 있도록 지정  
+👉 커스텀 로그인에서도 가능하지만 현재 스프링에서 지원해주는 것을 사용하여 테스트함
+```java
+//java - SecurityConfig
+
+@Configuration //BeanContainer에서 해당 Class를 스캔하도록 지정
+@Log4j2
+@EnableGlobalMethodSecurity(securedEnabled = true, prePostEnabled = true)
+public class SecurityConfig {
+    //...code..
+    @Bean
+    protected SecurityFilterChain configure(HttpSecurity httpSecurity) throws Exception{
+      //...code..
+
+      httpSecurity.oauth2Login();
+      
+    }
+    
+}
+```
+
+### 현재 OAuth Login 문제점 및 해결 방법 ###
+- 💬 문제점  
+  - 기존 로그은의 경우 ClubAuthMemberDTO 객체를 사용하여 관리하였는데 현재 OAuth의 경우는 그렇지 않아  
+  접근하려는 매핑 Method에서 사용하는 권한을 가져오는 (@AuthenticationPrincipal ClubAuthMemberDTO dto)의 값이  
+  null인것을 확인 할 수 있다.
