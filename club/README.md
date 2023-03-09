@@ -1323,4 +1323,48 @@ public class SecurityConfig {
 - 💬 문제점  
   - 기존 로그은의 경우 ClubAuthMemberDTO 객체를 사용하여 관리하였는데 현재 OAuth의 경우는 그렇지 않아  
   접근하려는 매핑 Method에서 사용하는 권한을 가져오는 (@AuthenticationPrincipal ClubAuthMemberDTO dto)의 값이  
-  null인것을 확인 할 수 있다.
+  null인 것을 확인 할 수 있다.
+- 👉 해결방법
+  - Security에서 사용했었던 UserDetailService의 OAuth버전인 OAuth2UserService를 사용하면 된다.
+  - 해당 Service를 사용하는 방식은 2가지가 있다
+    - 1 . 인터페이스를 직접 구현하는 방법
+    - 2 . OAuth2UserDetails를 구현해 놓은 DefaultOAuthUserService를 상속 받아 사용하는 방법이 있다. <strong>[ 테스트에서는 해당 방법을 사용 ]</strong>
+
+```java
+//java - OAuth2UserDetails 를 구현한 Class [ 구현되어 있는 class를 상속받아 진행 ]
+
+@Service
+@Log4j2
+public class ClubOAuth2UserDetailsService extends DefaultOAuth2UserService {
+
+  /**
+   * @Description : OAuth Login을 커스텀 하는 Method
+   *               간단하게 설명하면 Spring Security의 DetailsService와 같은 기능을 한다
+   *               생각하면 된다.
+   *
+   * @param       : OAuth2UserRequest userRequest - 로그인 요청에 관한 정보를 갖고있다.
+   *
+   * @return      : OAuth2User
+   * */
+  @Override
+  public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
+
+    // OAuth에 사용된 Client Name => 현 테스틑 Goolge Social Login이기에 Goole 출력
+    log.info("clientName :: {}",userRequest.getClientRegistration().getClientName());
+    // id_token 값을 확인 할 수 있다.
+    log.info("additionalParameters ::: {}",userRequest.getAdditionalParameters());
+
+    //반환 객요청 : sub, picture, email, email_verified(이메일 확인) 정보를 갖고 있다.
+    OAuth2User oAuth2User = super.loadUser(userRequest);
+
+    log.info("-----------------------------");
+    oAuth2User.getAttributes().forEach((k,v)->{
+      log.info("Key :: {} ,  Value ::{}",k,v);
+    });
+    log.info("-----------------------------");
+
+    return oAuth2User;
+  }
+
+}
+```
