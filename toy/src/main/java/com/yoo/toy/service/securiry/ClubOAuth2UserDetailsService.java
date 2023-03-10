@@ -96,6 +96,8 @@ public class ClubOAuth2UserDetailsService extends DefaultOAuth2UserService {
 
         // 4 . 저장
         clubMemberRepository.save(clubMember);
+
+        return clubMember;
     }
 
 }
