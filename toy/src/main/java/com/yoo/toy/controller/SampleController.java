@@ -23,7 +23,7 @@ public class SampleController {
         log.info("누구나 접근 가능");
     }
 
-    //@PreAuthorize("hasRole('MANAGER')")
+    @PreAuthorize("hasRole('USER')") //임시 USER
     @GetMapping("/member")
     public void exMember(@AuthenticationPrincipal ClubAuthMemberDTO dto){
 

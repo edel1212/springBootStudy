@@ -1,10 +1,12 @@
 package com.yoo.toy.service.securiry;
 
+import com.yoo.toy.dto.security.ClubAuthMemberDTO;
 import com.yoo.toy.entity.ClubMember;
 import com.yoo.toy.entity.ClubMemberRole;
 import com.yoo.toy.repository.ClubMemberRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
@@ -13,6 +15,7 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @Log4j2
@@ -60,9 +63,23 @@ public class ClubOAuth2UserDetailsService extends DefaultOAuth2UserService {
 
         ClubMember member = this.saveSocialMember(email);
 
-        //TODO OAuth2User 생성 처리
 
-        return oAuth2User;
+        ClubAuthMemberDTO clubAuthMemberDTO = new ClubAuthMemberDTO(
+                // Email (username)
+                member.getEmail()
+                // Password
+                , member.getPassword()
+                // social Flag
+                , true
+                // 권한 - List Type
+                , member.getRoleSet().stream()
+                    .map( role -> new SimpleGrantedAuthority("ROLE_"+role.name()))
+                    .collect(Collectors.toList())
+                // OAuth Login 정보
+                ,  oAuth2User.getAttributes()
+        );
+
+        return clubAuthMemberDTO;
     }
 
     /**
