@@ -682,7 +682,16 @@ public class ClubAuthMemberDTO extends User {
 public class ClubUserDetailsService implements UserDetailsService {
 
   private final ClubMemberRepository clubMemberRepository;
-
+  
+  /**
+   * @Description : 일반 적인 로그인 방법으로 로그인 되었을 시 접근 되는 Service
+   *
+   * @param  : String username (ID - 현 프로젝트에서는 Email)
+   *
+   * @return : UserDetails clubAuthMember
+   *          👉 반환 타입이 UserDetails이지만 ClubAuthMember를 반환할 수 있는 이유는
+   *             User를 상속 받아서 사용하였기 떄문이다.
+   * **/
   @Override
   public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
     log.info("ClubUserDetailsService loadUSerByUserName ::: {}", username);
@@ -1329,7 +1338,11 @@ public class SecurityConfig {
   - 해당 Service를 사용하는 방식은 2가지가 있다
     - 1 . 인터페이스를 직접 구현하는 방법
     - 2 . OAuth2UserDetails를 구현해 놓은 DefaultOAuthUserService를 상속 받아 사용하는 방법이 있다. <strong>[ 테스트에서는 해당 방법을 사용 ]</strong>
-
+  - 반환용 OAuth2User 구현 [ 기존 사용하던 ClubAuthMemberDTO에 impl 시켜 구현함 ]
+    - 기존 Security에서 사용하던 반환 타입인  UserDetails는 구현되어있는 User Class를 상속받아 진행하였으나    
+    ⭐️ OAuth2User의 경우 **Interface로 구성되어 있기에 implements 시켜줘야 한다.** 
+    
+\- DefaultOAuth2UserService 구현 - 기본 값 확인용 Code 🔽    
 ```java
 //java - OAuth2UserDetails 를 구현한 Class [ 구현되어 있는 class를 상속받아 진행 ]
 
@@ -1364,6 +1377,164 @@ public class ClubOAuth2UserDetailsService extends DefaultOAuth2UserService {
     log.info("-----------------------------");
 
     return oAuth2User;
+  }
+
+}
+```
+<br/>
+\- OAuth2User 구현 🔽
+
+```java
+//java ClubAuthMemberDTO
+
+public class ClubAuthMemberDTO extends User implements OAuth2User {
+
+  private String email;
+  private String password;
+  private String name;
+  private boolean fromSocial;
+  // OAuth2User에서 필요로함
+  private Map<String, Object> attrs;
+
+  /**
+   * 일반 로그인
+   * - User를 상속을 받았기에  super(username, password, authorities);
+   *   생성자 메서드를 사용해줘야한다.
+   * */
+  public ClubAuthMemberDTO(
+          String username
+          , String password
+          , boolean fromSocial
+          , Collection<? extends GrantedAuthority> authorities) {
+    super(username, password, authorities);
+    this.email = username;
+    this.fromSocial = fromSocial;
+    this.password = password;
+  }
+
+  /**
+   * 소셜 로그인
+   * - OAuth2User를 implements 했을 경우
+   *   강제하는 메서드인 getAttributes() 를 생성메서드에 추가해줌
+   *
+   * 👉 User 와 OAuth2User 차이점
+   *    - OAuth2User는 Map 타입으로 Key : attributes 에
+   *      모든 인증결과를 갖고 있기에  @Override Method인 getAttributes()를
+   *      사용하여 인증값을 주입해 주어야한다.
+   * */
+  public ClubAuthMemberDTO(
+          String username
+          , String password
+          , boolean fromSocial
+          , Collection<? extends GrantedAuthority> authorities
+          ,Map<String, Object> attrs) {
+    this(username, password, fromSocial, authorities);
+    // 추가된 매게변수
+    this.attrs = attrs;
+  }
+
+  // OAuth2User에서 필요로함
+  @Override
+  public Map<String, Object> getAttributes() {
+    return this.attrs;
+  }
+  
+}
+```
+
+
+\- DefaultOAuth2UserService 구현 - 인증된 사용자 DB 추가 🔽
+```java
+//java - OAuth2USerDetails를 구현 Class
+
+@Service
+@Log4j2
+@RequiredArgsConstructor
+public class ClubOAuth2UserDetailsService extends DefaultOAuth2UserService {
+
+  private final ClubMemberRepository clubMemberRepository;
+
+  private final PasswordEncoder passwordEncoder;
+
+  /**
+   * @Description : OAuth Login을 커스텀 하는 Method
+   *               간단하게 설명하면 Spring Security의 DetailsService와 같은 기능을 한다
+   *               생각하면 된다.
+   *
+   * @param       : OAuth2UserRequest userRequest - 로그인 요청에 관한 정보를 갖고있다.
+   *
+   * @return      : OAuth2User
+   * */
+  @Override
+  public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
+
+    // 1. ✅ 용도가 변경 로그인된 정보를 가지고오기 위해 사용됨 
+    OAuth2User oAuth2User = super.loadUser(userRequest);
+    
+    // 2 . email 변수 생성
+    String email = null;
+    
+    if("Google".equals(userRequest.getClientRegistration().getClientName())){
+      // 2 - 1. 로그인된 정보에서 email 값 추출  
+      email = oAuth2User.getAttribute("email");
+    }
+    
+    // 3 . DB내 이메일 유,무 확인 후 있으면 find 없으면 save 후 반환
+    ClubMember member = this.saveSocialMember(email);
+
+    // 4 . 반환용 객체 생성  
+    ClubAuthMemberDTO clubAuthMemberDTO = new ClubAuthMemberDTO(
+            // Email (username)
+            member.getEmail()
+            // Password
+            , member.getPassword()
+            // social Flag
+            , true
+            // 권한 - List Type
+            , member.getRoleSet().stream()
+                                 .map( role -> new SimpleGrantedAuthority("ROLE_"+role.name()))
+                                 .collect(Collectors.toList())
+            // OAuth Login 정보
+            ,  oAuth2User.getAttributes()
+    );
+    
+    // 5 . clubAuthMemberDTO로 반환 가능한 이유 : OAuth2User를 구현했기에 가능하다.
+    return clubAuthMemberDTO;
+  }
+
+  /**
+   * @Description : Google Api Login 후 인증받은  OAuth2User 객체에서 email값을
+   *                받아와 저장하는 Method
+   *                💬 다만 로그인 방법이 대하여 생각해 볼면하다
+   *                   - Pw값을 받아 올 수 없기 때문에 고정 값으로 해야하기 함.
+   *                   - 따라서 로직을 변경하여 재가입을 유도하는 방법으로 하거나
+   *                   - 소셜 로그인의 경우 form을 사용할수 없도록 하는 방식을 사용해야함.
+   *
+   * @param : String email
+   *
+   * @return ClubMember
+   * */
+  private ClubMember saveSocialMember(String email){
+    // 1 . 전달 받은 email이 가입되어 있는지 확인
+    Optional<ClubMember> result = clubMemberRepository.findByEmail(email, true);
+
+    // 2 . 존재한다면 해당 정보로 return
+    if(result.isPresent()) return result.get();
+
+    // 3 . 없다면 ClubMember 객체 생성
+    ClubMember clubMember = ClubMember.builder()
+            .email(email)
+            .name(email)
+            .password(passwordEncoder.encode("1111"))
+            .fromSocial(true)
+            .build();
+    // 3-1 . 권한 추가
+    clubMember.addMemberRole(ClubMemberRole.USER);
+
+    // 4 . 저장
+    clubMemberRepository.save(clubMember);
+
+    return clubMember;
   }
 
 }
