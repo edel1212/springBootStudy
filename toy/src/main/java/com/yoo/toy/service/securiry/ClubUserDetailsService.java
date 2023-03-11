@@ -21,6 +21,15 @@ public class ClubUserDetailsService implements UserDetailsService {
 
     private final ClubMemberRepository clubMemberRepository;
 
+    /**
+     * @Description : 일반 적인 로그인 방법으로 로그인 되었을 시 접근 되는 Service
+     *
+     * @param  : String username (ID - 현 프로젝트에서는 Email)
+     *
+     * @return : UserDetails clubAuthMember
+     *          👉 반환 타입이 UserDetails이지만 ClubAuthMember를 반환할 수 있는 이유는
+     *             User를 상속 받아서 사용하였기 떄문이다.
+     * **/
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         log.info("ClubUserDetailsService loadUSerByUserName ::: {}", username);
