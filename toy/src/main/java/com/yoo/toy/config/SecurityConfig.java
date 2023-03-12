@@ -34,6 +34,14 @@ public class SecurityConfig {
     }
 
     /**
+     * 성공 시 Handler를 주입해줌
+     * */
+    @Bean
+    public CustomAuthSuccessHandler customAuthSuccessHandler(){
+        return new CustomAuthSuccessHandler(passwordEncoder());
+    }
+
+    /**
      * 변경하고싶은 로직을 작성한 Class인 UserDetailsService를 구현한
      * ClubUserDetailsService를 주입하여 사용함
      * */
@@ -43,10 +51,6 @@ public class SecurityConfig {
     //Login Fail Handler
     @Autowired
     private AuthenticationFailureHandler customAuthFailureHandler;
-
-    //Login Success Handler
-    @Autowired
-    private AuthenticationSuccessHandler customAuthSuccessHandler;
 
     @Bean
     protected SecurityFilterChain configure(HttpSecurity httpSecurity) throws Exception{
@@ -83,10 +87,10 @@ public class SecurityConfig {
          *    - 대부분의 어플리게이션은 고유의 디자인을 적용하기 떄문에 loginPage()를 이용해 별도의 페이지를 만들어 사용!
          **/
         httpSecurity.formLogin()
-                //.loginPage("/sample/login")                 // Login Page URL  [GET]
+                .loginPage("/sample/login")                 // Login Page URL  [GET]
                 .loginProcessingUrl("/sample/loginProcess") // 로그인 Request URL [POST]
                 .failureHandler(customAuthFailureHandler)   // 실패 시 처리 Handler 지정
-                .successHandler(customAuthSuccessHandler);  // 로그인 성공 시 처리 Handler 지정
+                .successHandler(customAuthSuccessHandler());  // 로그인 성공 시 처리 Handler 지정
 
         httpSecurity.oauth2Login();
 
@@ -115,5 +119,7 @@ public class SecurityConfig {
 
         return httpSecurity.build();
     }
+
+
 
 }
