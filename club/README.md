@@ -1539,3 +1539,77 @@ public class ClubOAuth2UserDetailsService extends DefaultOAuth2UserService {
 
 }
 ```
+
+<br/>
+
+### 기존 Form에서도 login 가능 하게 끔 설정 , Remember Me 적용 ###
+- 💬 현재 프로젝트 구성 상 소셜 로그인 시 DB에 사용자가 저장되는데 문제가 있다
+  - 1 . 로그인하는 PW를 알수 없기이 임시 비밀번호인 "1111"를 적용하고 있다는 것 
+    - 해당 문제 덕분에 기존 form 로그인 시 모든 소셜 로그인은 "1111"로 접근이 가능한 문제
+  - 2 . name을 받을 수 없기에 현재 이메일 값을 적용 중
+- 👉 현재 해결 방안 form에서도 로그인을 가능하게 하고 성공 시 수정 화면으로 보내는 방법을 사용 
+
+\- UserDetailsService 구현  Class - 조회 조건 변경  🔽
+```java
+// UserDetailsService 구현 Class
+
+@Log4j2
+@Service
+@RequiredArgsConstructor
+public class ClubUserDetailsService implements UserDetailsService {
+
+  private final ClubMemberRepository clubMemberRepository;
+  
+  @Override
+  @Transactional // 👉 조회 조건을 변경 함으로 써 추가해 줌 없을시 LazyLoading Error 발생
+  public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+      
+    Optional<ClubMember> result = clubMemberRepository.findById(username); // 소셜 구분 없이 👍
+    //clubMemberRepository.findByEmail(username,false);  << 변경 ❌
+
+    if(result.isEmpty()){
+      throw new UsernameNotFoundException("Check User Name");
+    }//if
+
+    ClubMember clubMember = result.get();
+    
+    ClubAuthMemberDTO clubAuthMember = new ClubAuthMemberDTO(
+            clubMember.getEmail(),
+            clubMember.getPassword(),
+            clubMember.isFromSocial(),
+            clubMember.getRoleSet().stream()
+                    .map(role -> new SimpleGrantedAuthority("ROLE_"+role.name()))
+                    .collect(Collectors.toList())
+    );
+
+    clubAuthMember.setName(clubMember.getName());
+    clubAuthMember.setFromSocial(clubMember.isFromSocial());
+
+    return clubAuthMember;
+  }
+}
+```
+<br/>
+
+\- Remember me 설정 🔽
+```java
+//java - Security Config
+
+@Configuration 
+@Log4j2
+@EnableGlobalMethodSecurity(securedEnabled = true, prePostEnabled = true)
+public class SecurityConfig {
+    // ... code...
+  @Bean
+  protected SecurityFilterChain configure(HttpSecurity httpSecurity) throws Exception{
+
+    // ... code ...
+    
+    //Remember me 설정 - 7일간
+    httpSecurity.rememberMe().tokenValiditySeconds(60*60*24*7);
+
+    return httpSecurity.build();
+  }
+  // ... code...
+}
+```
