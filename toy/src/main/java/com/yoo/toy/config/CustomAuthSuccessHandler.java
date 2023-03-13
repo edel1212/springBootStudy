@@ -9,6 +9,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.DefaultRedirectStrategy;
 import org.springframework.security.web.RedirectStrategy;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
+import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
 
 import javax.servlet.ServletException;
@@ -40,7 +41,7 @@ import java.util.Map;
  *
  * */
 @Log4j2
-public class CustomAuthSuccessHandler implements AuthenticationSuccessHandler {
+public class CustomAuthSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
 
     private PasswordEncoder passwordEncoder;
 

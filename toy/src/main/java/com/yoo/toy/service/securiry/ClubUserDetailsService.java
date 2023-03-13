@@ -11,6 +11,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
+import javax.transaction.Transactional;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -31,10 +32,12 @@ public class ClubUserDetailsService implements UserDetailsService {
      *             User를 상속 받아서 사용하였기 떄문이다.
      * **/
     @Override
+    @Transactional // 조회 조건을 변경 함으로 써 추가해줌 없을시 LazyLoading Error 발생
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         log.info("ClubUserDetailsService loadUSerByUserName ::: {}", username);
 
-        Optional<ClubMember> result = clubMemberRepository.findByEmail(username,false);
+        Optional<ClubMember> result = clubMemberRepository.findById(username);
+        //clubMemberRepository.findByEmail(username,false);
 
         if(result.isEmpty()){
             throw new UsernameNotFoundException("Check User Name");

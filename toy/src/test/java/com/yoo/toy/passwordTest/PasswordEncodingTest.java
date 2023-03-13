@@ -50,7 +50,7 @@ public class PasswordEncodingTest {
 
             boolean match = passwordEncoder.matches("1111",pw);
 
-            log.info("match :: {}",match);
+            log.info("match :: {}",m함atch);
 
         }
 
