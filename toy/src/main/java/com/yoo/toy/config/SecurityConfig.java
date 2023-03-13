@@ -94,6 +94,8 @@ public class SecurityConfig {
 
         httpSecurity.oauth2Login();
 
+        //Remember me 설정 - 7일간
+        httpSecurity.rememberMe().tokenValiditySeconds(60*60*24*7);
 
         // CSRF를 사용하지 않도록 설정
         httpSecurity.csrf().disable();
