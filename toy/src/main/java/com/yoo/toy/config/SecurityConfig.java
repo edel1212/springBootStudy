@@ -49,7 +49,8 @@ public class SecurityConfig {
      * */
     //@Bean
     public ApiCheckFilter apiCheckFilter(){
-        return new ApiCheckFilter();
+        //URI 패턴 추가
+        return new ApiCheckFilter("/notes/**/*");
     }
 
     /**
