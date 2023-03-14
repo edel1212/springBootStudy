@@ -1,5 +1,6 @@
 package com.yoo.toy.config;
 
+import com.yoo.toy.security.filter.ApiCheckFilter;
 import com.yoo.toy.service.securiry.ClubUserDetailsService;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +15,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 
 @Configuration //BeanContainer에서 해당 Class를 스캔하도록 지정
@@ -39,6 +41,15 @@ public class SecurityConfig {
     @Bean
     public CustomAuthSuccessHandler customAuthSuccessHandler(){
         return new CustomAuthSuccessHandler(passwordEncoder());
+    }
+
+    /**
+     * 요청단 한번의 생성으로 체크해주는 Filter
+     *  - 순서 설정을 해주지 않으면 Security가 끝난 후 실행
+     * */
+    //@Bean
+    public ApiCheckFilter apiCheckFilter(){
+        return new ApiCheckFilter();
     }
 
     /**
@@ -99,6 +110,9 @@ public class SecurityConfig {
 
         // CSRF를 사용하지 않도록 설정
         httpSecurity.csrf().disable();
+
+        // filter 순서 지정 ( 사용할 Filter, 이전 실행의 기준이 될 Filter Class )
+        httpSecurity.addFilterBefore(apiCheckFilter(), UsernamePasswordAuthenticationFilter.class);
 
         /**
         *   Logout 설정
