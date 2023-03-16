@@ -1613,3 +1613,26 @@ public class SecurityConfig {
   // ... code...
 }
 ```
+
+<br/>
+<hr/>
+
+<h3>9 ) JWT (JSON Web Token) </h3>
+
+- 기존 웹에서는 쿠키, 세션을 사용하여 보안 검사를 하였지만 해당 방법은 동일한 사이트에서만 동작이 가능하다는 문제가 있다.  
+  👉 따라서  외부에서 동작하는 API의 경우 외부의 서버를 이용하기에 이에 "인증 정보나 인증 키"를 같이 전송하여 처리한다.
+- Jwt란?
+  - JSON 포맷을 이용하여 사용자에 대한 속성을 지정하는 Claim 기반의 Web Token이다.  
+    JWT는 토근 자체를 정보로서 사용하는 Self-Contained방식으로 정보를 안전하게 전달한다.
+- Jwt 구조
+  - Header, Payload, Signature의 3부분으로 이루어지며, Json 형태인 각 부분은 Base64Url로 인코딩 되어 표현된다.  
+    또한 Base64Url은 암호화된 문자열이 아니고, 같은 문자열에 대해 항상 강튼 인코딩 문자를 반환한다.
+ 
+<br/>
+
+- ⭐️ API 서버를 위한 필터 ( OncePerRequestFilter )
+  - 추상 클래스로 제공되는 필터로 가장 일반적이며, 매변 동작하는 기본적인 필터로 보면 된다. 
+  - 따라서 이를 사용하기 이를 사용하기 위해서는 **상속**을 통해 doFilterInternal()를 구현 해야한다.
+  - 그 후 BeanContainer에 스캔할 수 있도록 등록 해줘야한다. 
+  - //TODO : https://velog.io/@yyong3519/%EC%8A%A4%ED%94%84%EB%A7%81%ED%94%84%EB%A0%88%EC%9E%84%EC%9B%8C%ED%81%AC-OncePerRequestFilter
+  -  Filter, Interceptior , AOP 차이
