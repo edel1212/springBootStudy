@@ -1632,7 +1632,122 @@ public class SecurityConfig {
 
 - ⭐️ API 서버를 위한 필터 ( OncePerRequestFilter )
   - 추상 클래스로 제공되는 필터로 가장 일반적이며, 매변 동작하는 기본적인 필터로 보면 된다. 
-  - 따라서 이를 사용하기 이를 사용하기 위해서는 **상속**을 통해 doFilterInternal()를 구현 해야한다.
-  - 그 후 BeanContainer에 스캔할 수 있도록 등록 해줘야한다. 
-  - //TODO : https://velog.io/@yyong3519/%EC%8A%A4%ED%94%84%EB%A7%81%ED%94%84%EB%A0%88%EC%9E%84%EC%9B%8C%ED%81%AC-OncePerRequestFilter
-  -  Filter, Interceptior , AOP 차이
+  - 👉 OncePerRequestFilter 사용 방법
+     - 1 . OncePerRequestFilter **상속**을 통해 doFilterInternal()를 구현 해야한다.
+     - 2 . BeanContainer에 추가 가능 하도록 해줘야한다.
+       - 2 - 1 . @Configuration를 설정한 Class에서 객체 생성 메서드 생성
+       - 2 - 2 . 해당 메서드를 @Bean 어노테이션을 지정하여 스캔을 가능하도록 함
+  - 👉 패턴 및 순서 지정 방법
+    - 순서 및 사용될 패턴을 지정해주지 않으면 모든 Servlet 요청마다 실행됨 **( 원하는 URL에만 실행 되도록 위함 )**
+      - 1 . OncePerRequestFilter 구현한 Class에 URL을 매칭해주는 Class인 AntPathMatcher를 변수를 선언 해준다.
+      - 2 . 패턴에 넣을 URL을 받을 변수를 선언해준다.
+      - 3 . Bean에서 관리 될 객체이기에 생성자 메서드를 통해 주입해준다 단! **String pattern**의 경우 매개변수로 해준다.
+
+\- OncePerRequestFilter 상속 구현 🔽
+```java
+// java - OncePerRequestFilter를 상속한 Class
+
+/**
+* @Description : 현재 필터의 Bean 등록은 Security Config에서 해주고 있다.
+*
+*                - 별도의 필터 순서 설정 없다면 현재 필터는 Spring Security 의 필터가 끝난 후
+*                  log가 찍히는 것을 확인 할 수 있다.
+*                  👉 순서 설정이 없을 경우 순서 : Security -> OncePerRequestFilter -> Controller
+* */
+@Log4j2
+//@Component  <- 구조를 생각하면 해당 방법을 사용할수 없음 해당 CLass는
+//               Interface도 없으며 객체 생성시 요구하는 매개변수가 존재한다.
+public class ApiCheckFilter extends OncePerRequestFilter {
+
+  // Ant Pattern으로 URL을 매칭용 객체 변수
+  private AntPathMatcher antPathMatcher;
+  // 넘어올 URL을 받을 변수
+  private String pattern;
+
+  // 생성자 메서드를 사용
+  public ApiCheckFilter(String pattern){
+    this.antPathMatcher = new AntPathMatcher();
+    this.pattern = pattern;
+  }
+
+  @Override
+  protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response
+          , FilterChain filterChain) throws ServletException, IOException {
+
+    log.info("RequestURI :: {}", request.getRequestURI());
+
+    log.info("March Pattern to URI :: ,", antPathMatcher.match(pattern, request.getRequestURI()));
+
+    // 내가 원하는 패턴일 경우 Log 실행
+    if(antPathMatcher.match(pattern, request.getRequestURI())){
+      log.info("ApiCheckFilter ........... doFilterInternal()");
+      log.info("ApiCheckFilter ........... doFilterInternal()");
+      log.info("ApiCheckFilter ........... doFilterInternal()");
+    }
+
+    filterChain.doFilter(request,response);
+  }
+}
+```
+
+\- OncePerRequestFilter 사용 지정 ( SecurityConfig.java ) 🔽
+```java
+// java - SecurityConfig
+
+@Configuration 
+@Log4j2
+@EnableGlobalMethodSecurity(securedEnabled = true, prePostEnabled = true)
+public class SecurityConfig {
+    
+    //..code..
+
+    /**
+     * 요청단 한번의 생성으로 체크해주는 Filter
+     *  - 순서 설정을 해주지 않으면 Security가 끝난 후 실행
+     * */
+    //@Bean
+    public ApiCheckFilter apiCheckFilter(){
+      //URI 패턴 추가
+      return new ApiCheckFilter("/notes/**/*");
+    }
+
+    @Bean
+    protected SecurityFilterChain configure(HttpSecurity httpSecurity) throws Exception {
+      //..code..
+  
+      // filter 순서 지정 ( 사용할 Filter, 이전 실행의 기준이 될 Filter Class )
+      httpSecurity.addFilterBefore(apiCheckFilter(), UsernamePasswordAuthenticationFilter.class);
+      
+      //..code..
+    }
+}    
+```
+
+- **Filter, Interceptor, AOP 차이**
+  - 위 3개의 공통점은 공통적 기능 처리, 분기 처리, 권한 체크 등 어떠한 **시점**에서 내가 원하는 로직을 사용할 수 있지만  
+     ✅ 목적과 사용법이 다르다.
+>> Filter, Interceptor, AOP의 흐름  
+> 
+>  <img src="https://velog.velcdn.com/images%2Fyyong3519%2Fpost%2F3f00c4c7-072a-40d8-aeba-006b6dedd60f%2FScreen%20Shot%202022-01-28%20at%201.56.47%20AM.png">
+- Filter -> Interceptor -> AOP 순으로 진행된다.
+  - 👉 Filter
+    - 요청과 응답을 거른뒤 정제하는 역할을 한다.
+    - DispatcherServlet 이전에 실행되는데 필터가 동작하도록 지정된 자원의 앞단에서 로직을 지정할 수 있다.
+    - 필터는 스프링 컨텍스트 외부에 존재하여 스프링과 무관한 자원에 대해 동작한다.
+    - Servlet 컨테이너 레벨에서 동작하며 Spring Security와 함께 사용됩니다.
+    - HTTP 요청의 Header나 Body를 변경하거나, 요청이 인증되었는지 확인하는 등의 작업을 수행할 수 있습니다.
+
+  - 👉 Interceptor
+    - 요청에 대한 작업의 전,후로 가로챈 다음 로직 실행이 가능하다. 
+    - DispatcherServlet이 컨트롤러를 호출하기 전,후로 끼어들기 때문에 스프링 컨텍스트(Context,영역)  
+    내부에서 Controller(Handler)에 관한 요청과 응답에 대해 처리한다.
+    - 스프링의 모든 빈 객체에 접근할 수있다.
+    - 인터셉터는 여러 개를 사용할 수 있고, 로그인체크,권한체크,프로그램 실행시간 계산작업 로그확인 등의 업무처리를 할 수 있다.
+    - Controller 호출 전/후에 실행되는 구성 요소이며, Spring MVC 레벨에서 동작하며 HandlerMapping과 함께 사용됩니다.
+    
+  - 👉 AOP
+    - OOP를 보완하기 위해 나온 개념이다.
+    - 객체 지향의 프로그래밍을 했을때 중복을 줄일 수 없는 부분을 줄이기 위해 종단면(관점)에서 바라보고 처리한다.
+    - 주로 로깅,트랜젝션,에러처리 등 비지니스 단의 메서드에서 조금 더 세밀하게 조정하고 싶을 때 사용한다.
+    - Interceptor나 Filter와는 달리 **메소드 전후**의 시점에 자유롭게 설정이 가능하다.
+    - **Interceptor와 Filter는 주소로 대상을 구분해서 걸러내야하는 반면,** AOP는 주소, 파라미터, 애노테이션 등 다양한 방법으로 대상을 지정할 수 있다.
