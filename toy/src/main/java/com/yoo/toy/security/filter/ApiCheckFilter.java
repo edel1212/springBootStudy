@@ -1,7 +1,6 @@
 package com.yoo.toy.security.filter;
 
 import lombok.extern.log4j.Log4j2;
-import org.springframework.stereotype.Component;
 import org.springframework.util.AntPathMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -19,12 +18,16 @@ import java.io.IOException;
  *                  👉 순서 설정이 없을 경우 순서 : Security -> OncePerRequestFilter -> Controller
  * */
 @Log4j2
-//@Component  <- 해당 방법으로 주입도 가능함. 단 Bean Life Cycle을 생각하면 Security Config에서 해주는것이 더 안전
+//@Component  <- 구조를 생각하면 해당 방법을 사용할수 없음 해당 CLass는
+//               Interface도 없으며 객체 생성시 요구하는 매개변수가 존재한다.
 public class ApiCheckFilter extends OncePerRequestFilter {
 
+    // Ant Pattern으로 URL을 매칭용 객체 변수
     private AntPathMatcher antPathMatcher;
+    // 넘어올 URL을 받을 변수
     private String pattern;
 
+    // 생성자 메서드를 사용
     public ApiCheckFilter(String pattern){
         this.antPathMatcher = new AntPathMatcher();
         this.pattern = pattern;
