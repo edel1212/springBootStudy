@@ -1,6 +1,7 @@
 package com.yoo.toy.config;
 
 import com.yoo.toy.security.filter.ApiCheckFilter;
+import com.yoo.toy.security.filter.ApiLoginFilter;
 import com.yoo.toy.service.securiry.ClubUserDetailsService;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,7 +15,6 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
-import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 
@@ -47,10 +47,31 @@ public class SecurityConfig {
      * 요청단 한번의 생성으로 체크해주는 Filter
      *  - 순서 설정을 해주지 않으면 Security가 끝난 후 실행
      * */
-    //@Bean
+    @Bean
     public ApiCheckFilter apiCheckFilter(){
         //URI 패턴 추가
         return new ApiCheckFilter("/notes/**/*");
+    }
+
+    /***
+     * 로그인 결과를 Security-context에 해줄 Filter
+     * - SecurityFilterChain()에 순서 지정
+     *
+     * - ☠️ Error Msg : Parameter 0 of method apiLoginFilter in com.yoo.toy.config.SecurityConfig
+     *                  required a bean of type 'org.springframework.security.authentication.AuthenticationManageR®RARr'
+     *                  that could not be found.
+     *
+     * - 원인          : @Bean 추가시 Spring 빈에서 생성자나 메서드의 매개변수에 주입되는 의존성(Dependency) 객체를 찾을 수 없을 때 발생합니다.
+     *                  - 매개 변수로 받는 AuthenticationManager가 Bean에 등록되어 사용되는 것이 아니라
+     *                    configure(HttpSecurity httpSecurity) 내부에서 객체 변수를 만들어 사용하는 것이기 때문이다.
+     *
+     * - 해결 방법 👍   : @Bean 어노테이션을 제거 해주면 해결할 수 있다.
+     */
+    //@Bean
+    public ApiLoginFilter apiLoginFilter(AuthenticationManager authenticationManager){
+        ApiLoginFilter apiLoginFilter = new ApiLoginFilter("/api/login");
+        apiLoginFilter.setAuthenticationManager(authenticationManager);
+        return apiLoginFilter;
     }
 
     /**
@@ -112,8 +133,13 @@ public class SecurityConfig {
         // CSRF를 사용하지 않도록 설정
         httpSecurity.csrf().disable();
 
-        // filter 순서 지정 ( 사용할 Filter, 이전 실행의 기준이 될 Filter Class )
+        // Once-filter 순서 지정 ( 사용할 Filter, 이전 실행의 기준이 될 Filter Class )
         httpSecurity.addFilterBefore(apiCheckFilter(), UsernamePasswordAuthenticationFilter.class);
+
+        // Auth-filter 순서 지정 ( 사용할 Filter, 이전 실행의 기준이 될 Filter Class )
+        // 상단에서 선언한 AuthenticationManager 객체 뱐수 주입
+        httpSecurity.addFilterBefore(apiLoginFilter(authenticationManager)
+                , UsernamePasswordAuthenticationFilter.class);
 
         /**
         *   Logout 설정
