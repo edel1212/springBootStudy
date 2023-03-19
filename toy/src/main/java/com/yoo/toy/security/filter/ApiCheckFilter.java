@@ -16,6 +16,10 @@ import java.io.IOException;
  *                - 별도의 필터 순서 설정 없다면 현재 필터는 Spring Security 의 필터가 끝난 후
  *                  log가 찍히는 것을 확인 할 수 있다.
  *                  👉 순서 설정이 없을 경우 순서 : Security -> OncePerRequestFilter -> Controller
+ *
+ *                - HTTP 요청이 들어올 때마다 실행됩니다.
+ *                - 요청을 처리하기 전에 필요한 전처리 작업을 수행하고, 응답을 보내기 전에 후처리 작업을 수행합니다.
+ *                - 청을 처리하는 동안 동일한 필터가 여러 번 실행되는 것을 방지할 수 있습니다.
  * */
 @Log4j2
 //@Component  <- 구조를 생각하면 해당 방법을 사용할수 없음 해당 CLass는
@@ -46,6 +50,7 @@ public class ApiCheckFilter extends OncePerRequestFilter {
             log.info("ApiCheckFilter ........... doFilterInternal()");
             log.info("ApiCheckFilter ........... doFilterInternal()");
             log.info("ApiCheckFilter ........... doFilterInternal()");
+            return;
         }
 
         filterChain.doFilter(request,response);
