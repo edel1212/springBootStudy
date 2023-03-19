@@ -1751,3 +1751,93 @@ public class SecurityConfig {
     - 주로 로깅,트랜젝션,에러처리 등 비지니스 단의 메서드에서 조금 더 세밀하게 조정하고 싶을 때 사용한다.
     - Interceptor나 Filter와는 달리 **메소드 전후**의 시점에 자유롭게 설정이 가능하다.
     - **Interceptor와 Filter는 주소로 대상을 구분해서 걸러내야하는 반면,** AOP는 주소, 파라미터, 애노테이션 등 다양한 방법으로 대상을 지정할 수 있다.
+
+<br/>
+
+- ⭐️ API 서버를 위한 필터 ( AbstractAuthenticationProcessingFilter )
+  - 간략 설명 
+    - 추상클래스로 설계 되어있다.
+    - attemptAuthentication() 추상 메서드가 반드시 필요하다.
+    - AbstractAuthenticationProcessingFilter가 요구하는 문자열을 받는 생성자가 반드시 필요하다.
+    - SecurityConfig에서 사용 설정이 필요하다.
+  - 💬 사용 이유
+    - Spring Security에서 인증을 처리하는 데 사용됩니다.
+    - 인증을 위해 사용자가 제출한 자격 증명(예: 사용자 이름과 비밀번호)을 검증하고,  
+      인증이 성공하면 해당 사용자의 보안 주체(Principal)를 생성하여 SecurityContext에 저장합니다.  
+      이 필터는 인증이 실패하면 실패한 이유에 대한 적절한 응답을 생성합니다.
+    - 👉 인증 처리를 위한 Filter 라고 보면 된다.
+
+\- AbstractAuthenticationProcessingFilter 상속 구현 🔽
+```java
+//java - AbstractAuthenticationProcessingFilter구현 Class
+
+@Log4j2
+public class ApiLoginFilter extends AbstractAuthenticationProcessingFilter {
+
+  public ApiLoginFilter(String defaultFilterProcessesUrl) {
+    super(defaultFilterProcessesUrl);
+  }
+
+  @Override
+  public Authentication attemptAuthentication(HttpServletRequest request
+          , HttpServletResponse response) throws AuthenticationException, IOException, ServletException {
+    log.info("--------------------------------------------");
+    log.info("ApiLoginFilter");
+    log.info("--------------------------------------------");
+
+    // 이메일을 받는 테스트 코드
+    String email = request.getParameter("email");
+    String pw = "1111";
+
+    if(email == null) throw new BadCredentialsException("email cannot be null");
+
+    return null;
+  }
+}
+```
+
+\- AbstractAuthenticationProcessingFilter 사용 지정 ( SecurityConfig.java ) 🔽
+```java
+// java - SecurityConfig
+
+@Configuration 
+@Log4j2
+@EnableGlobalMethodSecurity(securedEnabled = true, prePostEnabled = true)
+public class SecurityConfig {
+    
+    //..code..
+
+    /***
+     * 로그인 결과를 Security-context에 해줄 Filter
+     * - SecurityFilterChain()에 순서 지정
+     *
+     * - ☠️ Error Msg : Parameter 0 of method apiLoginFilter in com.yoo.toy.config.SecurityConfig
+     *                  required a bean of type 'org.springframework.security.authentication.AuthenticationManageR®RARr'
+     *                  that could not be found.
+     *
+     * - 원인          : @Bean 추가시 Spring 빈에서 생성자나 메서드의 매개변수에 주입되는 의존성(Dependency) 객체를 찾을 수 없을 때 발생합니다.
+     *                  - 매개 변수로 받는 AuthenticationManager가 Bean에 등록되어 사용되는 것이 아니라
+     *                    configure(HttpSecurity httpSecurity) 내부에서 객체 변수를 만들어 사용하는 것이기 때문이다.
+     *
+     * - 해결 방법 👍   : @Bean 어노테이션을 제거 해주면 해결할 수 있다.
+     */
+    //@Bean
+    public ApiLoginFilter apiLoginFilter(AuthenticationManager authenticationManager){
+      ApiLoginFilter apiLoginFilter = new ApiLoginFilter("/api/login");
+      apiLoginFilter.setAuthenticationManager(authenticationManager);
+      return apiLoginFilter;
+    }
+
+    @Bean
+    protected SecurityFilterChain configure(HttpSecurity httpSecurity) throws Exception {
+      //..code..
+
+      // Auth-filter 순서 지정 ( 사용할 Filter, 이전 실행의 기준이 될 Filter Class )
+      // 상단에서 선언한 AuthenticationManager 객체 뱐수 주입
+      httpSecurity.addFilterBefore(apiLoginFilter(authenticationManager)
+              , UsernamePasswordAuthenticationFilter.class);
+      
+      //..code..
+    }
+}    
+```
