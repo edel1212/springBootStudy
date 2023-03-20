@@ -2,6 +2,7 @@ package com.yoo.toy.security.filter;
 
 import lombok.extern.log4j.Log4j2;
 import org.springframework.util.AntPathMatcher;
+import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import javax.servlet.FilterChain;
@@ -50,9 +51,36 @@ public class ApiCheckFilter extends OncePerRequestFilter {
             log.info("ApiCheckFilter ........... doFilterInternal()");
             log.info("ApiCheckFilter ........... doFilterInternal()");
             log.info("ApiCheckFilter ........... doFilterInternal()");
+
+            // 내가 지정한 Header의 값을 확인
+            if(!this.chkAuthHeader(request)) return;
+
+            filterChain.doFilter(request,response);
             return;
-        }
+        }//if
 
         filterChain.doFilter(request,response);
     }
+
+    /**
+     * @Description : Request로 넘어몬 Header값을 확인 하는 메서드
+     * */
+    private boolean chkAuthHeader(HttpServletRequest request){
+        boolean checkResult = false;
+
+        // 1 . Authorization라는 값으로 넘어온 Header 값을 추출한다.
+        String authHeader = request.getHeader("Authorization");
+
+        // 2. 값의 유무를 체크함
+        if(!StringUtils.hasText(authHeader)) return checkResult;
+
+        log.info("Authorization exist :: {}", authHeader);
+
+        // 3 . 내가 지정한 값과 일치한다면 true로 변환
+        if("123456789".equals(authHeader)) checkResult = true;
+
+        // 4 . 반환
+        return checkResult;
+    }
+
 }
