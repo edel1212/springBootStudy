@@ -1841,3 +1841,79 @@ public class SecurityConfig {
     }
 }    
 ```
+
+- ⭐️ 요청에 따른 Header 값 확인 ( OncePerRequestFilter 활용 )
+
+\- OncePerRequestFilter 상속 구현 Class를 활용 🔽
+```java
+//java - ApiCheckFilter
+
+public class ApiCheckFilter extends OncePerRequestFilter {
+
+  //.. code ..
+
+  @Override
+  protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response
+          , FilterChain filterChain) throws ServletException, IOException {
+    
+    // 1 . 내가 지정한 URL과 매칭 될경우 로직 실행 되도록 분기  
+    if(antPathMatcher.match(pattern, request.getRequestURI())){
+
+      /**
+       * 내가 지정한 Header의 값을 확인 메서드 chkAuthHeader(HttpServletRequest)
+       * - 💬 ApiCheckFilter에서는 현재 스프링 시큐리티가 사용하는
+       *      쿠키나 세션을 사용 하지 않기 때문에 Client에서 요청 시
+       *      chkAuthHeader()에서 체크하는 Authorization 해더 값이 없어도
+       *      이상없이 200을 반환하는 문제가있다.
+       *
+       * - 👉 AuthenticationManager를 사용하거나 JSON 포맷을 사용하여
+       *      에러 메세지 및 HTTP 상태를 반환해 주는 방법을 사용할 수 있다.
+       *      현재는 간단하게 JSON 반환을 사용함.
+       * */
+      if(this.chkAuthHeader(request)){
+        filterChain.doFilter(request,response);
+      } else {
+          
+        // 틀릴 경우 JSONObject를 사용하여 Error 반환
+          
+        // 403 Error
+        response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+        JSONObject json = new JSONObject();
+        String msg = "FAIL CHECK API TOKEN";
+        json.put("code" , HttpServletResponse.SC_FORBIDDEN);
+        json.put("msg"  , msg);
+        PrintWriter out = response.getWriter();
+        out.println(json);
+        return;
+      }//if - else
+      
+    }//if
+
+    // doFilter()를 사용하지 않으면 다음 필터로 넘어가지 않음
+    filterChain.doFilter(request,response);
+  }
+
+  /**
+   * @Description : Request로 넘어몬 Header값을 확인 하는 메서드
+   * */
+  private boolean chkAuthHeader(HttpServletRequest request){
+    boolean checkResult = false;
+
+    // 1 . Authorization라는 값으로 넘어온 Header 값을 추출한다.
+    String authHeader = request.getHeader("Authorization");
+
+    // 2. 값의 유무를 체크함
+    if(!StringUtils.hasText(authHeader)) return checkResult;
+
+    log.info("Authorization exist :: {}", authHeader);
+
+    // 3 . 내가 지정한 값과 일치한다면 true로 변환
+    if("123456789".equals(authHeader)) checkResult = true;
+
+    // 4 . 반환
+    return checkResult;
+  }
+
+}
+```
