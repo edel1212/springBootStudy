@@ -1,6 +1,10 @@
 package com.yoo.toy.security.filter;
 
+import com.nimbusds.common.contenttype.ContentType;
+import com.sun.net.httpserver.HttpContext;
 import lombok.extern.log4j.Log4j2;
+import net.minidev.json.JSONObject;
+import org.springframework.http.MediaType;
 import org.springframework.util.AntPathMatcher;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -10,6 +14,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.io.PrintWriter;
 
 /**
  * @Description : 현재 필터의 Bean 등록은 Security Config에서 해주고 있다.
@@ -52,13 +57,36 @@ public class ApiCheckFilter extends OncePerRequestFilter {
             log.info("ApiCheckFilter ........... doFilterInternal()");
             log.info("ApiCheckFilter ........... doFilterInternal()");
 
-            // 내가 지정한 Header의 값을 확인
-            if(!this.chkAuthHeader(request)) return;
+            /**
+             * 내가 지정한 Header의 값을 확인
+             * - 💬 ApiCheckFilter에서는 현재 스프링 시큐리티가 사용하는
+             *      쿠키나 세션을 사용 하지 않기 때문에 Client에서 요청 시
+             *      chkAuthHeader()에서 체크하는 Authorization 해더 값이 없어도
+             *      이상없이 200을 반환하는 문제가있다.
+             *
+             * - 👉 AuthenticationManager를 사용하거나 JSON 포맷을 사용하여
+             *      에러 메세지 및 HTTP 상태를 반환해 주는 방법을 사용할 수 있다.
+             *      현재는 간단하게 JSON 반환을 사용함.
+             * */
+            if(this.chkAuthHeader(request)){
+                filterChain.doFilter(request,response);
+            } else {
+                // 403 Error
+                response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+                JSONObject json = new JSONObject();
+                String msg = "FAIL CHECK API TOKEN";
+                json.put("code" , HttpServletResponse.SC_FORBIDDEN);
+                json.put("msg"  , msg);
+                PrintWriter out = response.getWriter();
+                out.println(json);
+                return;
+            }//if - else
 
-            filterChain.doFilter(request,response);
-            return;
+
         }//if
 
+        // doFilter()를 사용하지 않으면 다음 필터로 넘어가지 않음
         filterChain.doFilter(request,response);
     }
 
