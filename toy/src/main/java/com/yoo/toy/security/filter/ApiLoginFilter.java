@@ -2,6 +2,7 @@ package com.yoo.toy.security.filter;
 
 import lombok.extern.log4j.Log4j2;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.authentication.AbstractAuthenticationProcessingFilter;
@@ -39,12 +40,17 @@ public class ApiLoginFilter extends AbstractAuthenticationProcessingFilter {
         log.info("ApiLoginFilter");
         log.info("--------------------------------------------");
 
-        // 이메일을 받는 테스트 코드
         String email = request.getParameter("email");
-        String pw = "1111";
+        String pw    = request.getParameter("pw");
 
-        if(email == null) throw new BadCredentialsException("email cannot be null");
+        /**
+         * 인증 처리를 위해 attemptAuthentication()를 동작 하기 위해
+         * 1 . Authentication를 반환해 줘야함
+         * 2 . getAuthenticationManager()에 필요한 파라미터 객체인 xxxToken이 필요
+         * 3 . UsernamePasswordAuthenticationToken를 사용하여 파라미터로 사용될 객체 변수 생성하여 사용
+         * */
+        UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(email, pw);
 
-        return null;
+        return this.getAuthenticationManager().authenticate(authToken);
     }
 }
