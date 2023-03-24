@@ -14,14 +14,17 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
 /**
  * @Description : Security Exception 발생시 처리하는
  *                Handler class
+ *
+ *              - 💬 AuthenticationFailureHandler를 구현한 클래스 중 하나로,
+ *                   로그인 실패 시 리다이렉트할 URL을 지정하는 역할을 합니다.
+ *                   SimpleUrlAuthenticationFailureHandler를 사용하면 인증 실패 시
+ *                   자동으로 지정한 URL로 리다이렉트되도록 설정할 수 있습니다.
  * */
 @Component
 public class CustomAuthFailureHandler extends SimpleUrlAuthenticationFailureHandler {
