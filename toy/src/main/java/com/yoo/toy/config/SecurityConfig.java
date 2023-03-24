@@ -2,6 +2,7 @@ package com.yoo.toy.config;
 
 import com.yoo.toy.security.filter.ApiCheckFilter;
 import com.yoo.toy.security.filter.ApiLoginFilter;
+import com.yoo.toy.security.handler.ApiLoginFailHandler;
 import com.yoo.toy.service.securiry.ClubUserDetailsService;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -69,8 +70,15 @@ public class SecurityConfig {
      */
     //@Bean
     public ApiLoginFilter apiLoginFilter(AuthenticationManager authenticationManager){
+        // 사용될 URL을 필터링 함
         ApiLoginFilter apiLoginFilter = new ApiLoginFilter("/api/login");
+
+        // 로그인 방법에 clubUSerDetailService를 연결해줌
         apiLoginFilter.setAuthenticationManager(authenticationManager);
+
+        // API 로그인 사용 시 로그인 실패 Handler 적용
+        apiLoginFilter.setAuthenticationFailureHandler(new ApiLoginFailHandler());
+
         return apiLoginFilter;
     }
 
