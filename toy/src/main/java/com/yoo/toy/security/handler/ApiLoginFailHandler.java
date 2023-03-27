@@ -6,7 +6,6 @@ import org.springframework.http.MediaType;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -24,7 +23,7 @@ public class ApiLoginFailHandler implements AuthenticationFailureHandler {
 
     @Override
     public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response
-                    , AuthenticationException exception) throws IOException, ServletException {
+                    , AuthenticationException exception) throws IOException {
 
         log.info("Login Fail Handler!!!!");
 
@@ -33,6 +32,7 @@ public class ApiLoginFailHandler implements AuthenticationFailureHandler {
         // 반환할 JSON 데이터 생성
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED); // 401 Error
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+        response.setCharacterEncoding("UTF-8");
         JSONObject json = new JSONObject();
         json.put("code", HttpServletResponse.SC_UNAUTHORIZED);
         json.put("msg", exception.getMessage());
