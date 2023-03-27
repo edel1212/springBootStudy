@@ -1,12 +1,17 @@
 package com.yoo.toy.security.filter;
 
 import lombok.extern.log4j.Log4j2;
+import org.springframework.core.log.LogMessage;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.authentication.event.InteractiveAuthenticationSuccessEvent;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.AbstractAuthenticationProcessingFilter;
 
+import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -43,6 +48,9 @@ public class ApiLoginFilter extends AbstractAuthenticationProcessingFilter {
         String email = request.getParameter("email");
         String pw    = request.getParameter("pw");
 
+        log.info("email!!!!!!!!!!!,{}",email);
+        log.info("pw!!!!!!!!!!!,{}",pw);
+
         /**
          * 인증 처리를 위해 attemptAuthentication()를 동작 하기 위해
          * 1 . Authentication를 반환해 줘야함
@@ -51,6 +59,19 @@ public class ApiLoginFilter extends AbstractAuthenticationProcessingFilter {
          * */
         UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(email, pw);
 
+        log.info(authToken);
+
         return this.getAuthenticationManager().authenticate(authToken);
+    }
+
+    /**
+     * 성공 처리 Methdo
+     * */
+    @Override
+    protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain chain,
+                                            Authentication authResult) throws IOException, ServletException {
+        log.info("API Success Handler!!");
+        log.info("successFulAuthentication ::: {}", authResult);
+        log.info("가지고 있는 권한 ::: {}" , authResult.getPrincipal());
     }
 }
