@@ -1917,3 +1917,60 @@ public class ApiCheckFilter extends OncePerRequestFilter {
 
 }
 ```
+
+- ⭐️ 지정한 URL로 넘어오는 로그인 인증 처리 ( AuthenticationManager 활용 )
+  - 앞에서 장성했던 ApiLoginFilter.java에 추가적인 AuthenticationManager 작성으로 내부적으로 동작하게 함
+  - AuthenticationManager는 authenticate(**xxxToken**) 메서드를 가지고 있으며 **Parameter 와 Return 값이 동일함**
+  - authenticate(**xxxToken**)에서 주입 받는 파라미터는 Authentication 타입이어야하고 대부분의 Class명은  
+    xxxToken으로 시작된다.
+    - 현 예제에서는  UsernamePasswordAuthenticationToken를 사용
+    - 위에서 말한 Token 말고 직접 Authentication 타입의 객체를 만들어서 파라미터로 사용도 가능하다.
+    
+\- AuthenticationManager 상속 구현  🔽
+```java
+//java - ApiLoginFilter
+
+/**
+ * @Description : AbstractAuthenticationProcessingFilter 이란?
+ *               - 추상클래스로 설계 되어있다.
+ *               - attemptAuthentication() 추상 메서드가 반드시 필요하다.
+ *               - AbstractAuthenticationProcessingFilter가 요구하는 문자열을 받느 생성자가 반드시 필요하다
+ *
+ *               💬 사용 이유
+ *               - Spring Security에서 인증을 처리하는 데 사용됩니다.
+ *               - 인증을 위해 사용자가 제출한 자격 증명(예: 사용자 이름과 비밀번호)을 검증하고,
+ *                 인증이 성공하면 해당 사용자의 보안 주체(Principal)를 생성하여 SecurityContext에 저장합니다.
+ *                 이 필터는 인증이 실패하면 실패한 이유에 대한 적절한 응답을 생성합니다.
+ *
+ *              👉 인증 처리를 위한 Filter
+ * */
+@Log4j2
+public class ApiLoginFilter extends AbstractAuthenticationProcessingFilter {
+
+  public ApiLoginFilter(String defaultFilterProcessesUrl) {
+    super(defaultFilterProcessesUrl);
+  }
+
+  @Override
+  public Authentication attemptAuthentication(HttpServletRequest request
+          , HttpServletResponse response) throws AuthenticationException, IOException, ServletException {
+
+    String email = request.getParameter("email");
+    String pw    = request.getParameter("pw");
+    
+
+    /**
+     * 인증 처리를 위해 attemptAuthentication()를 동작 하기 위해
+     * 1 . Authentication를 반환해 줘야함
+     * 2 . getAuthenticationManager()에 필요한 파라미터 객체인 xxxToken이 필요
+     * 3 . UsernamePasswordAuthenticationToken를 사용하여 파라미터로 사용될 객체 변수 생성하여 사용
+     * */
+    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(email, pw);
+
+    log.info(authToken);
+
+    return this.getAuthenticationManager().authenticate(authToken);
+  }
+  
+}
+```
