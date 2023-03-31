@@ -1918,7 +1918,7 @@ public class ApiCheckFilter extends OncePerRequestFilter {
 }
 ```
 
-- ⭐️ 지정한 URL로 넘어오는 로그인 인증 처리 ( AuthenticationManager 활용 )
+- ⭐️ 지정한 URL로 넘어오는 로그인 인증 처리 ( AbstractAuthenticationProcessingFilter의 getAuthenticationManager() 활용  활용 )
   - 앞에서 장성했던 ApiLoginFilter.java에 추가적인 AuthenticationManager 작성으로 내부적으로 동작하게 함
   - AuthenticationManager는 authenticate(**xxxToken**) 메서드를 가지고 있으며 **Parameter 와 Return 값이 동일함**
   - authenticate(**xxxToken**)에서 주입 받는 파라미터는 Authentication 타입이어야하고 대부분의 Class명은  
@@ -1926,7 +1926,7 @@ public class ApiCheckFilter extends OncePerRequestFilter {
     - 현 예제에서는  UsernamePasswordAuthenticationToken를 사용
     - 위에서 말한 Token 말고 직접 Authentication 타입의 객체를 만들어서 파라미터로 사용도 가능하다.
     
-\- AuthenticationManager 상속 구현  🔽
+\- AbstractAuthenticationProcessingFilter 상속 구현  🔽
 ```java
 //java - ApiLoginFilter
 
@@ -1951,6 +1951,7 @@ public class ApiLoginFilter extends AbstractAuthenticationProcessingFilter {
     super(defaultFilterProcessesUrl);
   }
 
+  // 로그인 인증을 확인 하는 Logic 담당
   @Override
   public Authentication attemptAuthentication(HttpServletRequest request
           , HttpServletResponse response) throws AuthenticationException, IOException, ServletException {
@@ -1975,4 +1976,43 @@ public class ApiLoginFilter extends AbstractAuthenticationProcessingFilter {
 }
 ```
 
-// TODO  ..
+<br/>
+
+
+- ⭐️ 상단 로직에서 인증이 완료된 후 처리( AbstractAuthenticationProcessingFilter의 successfulAuthentication() 구현 )
+  - 상단 로직에서 상속 중인  AbstractAuthenticationProcessingFilter의 successfulAuthentication()를  
+  @Override 구현하여 사용함.
+  
+\- AbstractAuthenticationProcessingFilter 상속 구현  🔽
+```java
+//java - ApiLoginFilter
+
+@Log4j2
+public class ApiLoginFilter extends AbstractAuthenticationProcessingFilter {
+
+  public ApiLoginFilter(String defaultFilterProcessesUrl) {
+    super(defaultFilterProcessesUrl);
+  }
+
+  @Override
+  public Authentication attemptAuthentication(HttpServletRequest request
+          , HttpServletResponse response) throws AuthenticationException, IOException, ServletException {
+      // ... code ...
+  }
+
+  /**
+   * 성공 처리 Method
+   *
+   * - AbstractAuthenticationProcessingFilter 의 메서드를 @Override 구현
+   * */
+  @Override
+  protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain chain,
+                                          Authentication authResult) throws IOException, ServletException {
+    log.info("API Success Handler!!");
+    log.info("successFulAuthentication ::: {}", authResult);
+    log.info("가지고 있는 권한 ::: {}" , authResult.getPrincipal());
+  }
+}
+```
+
+//TODO Fail Handler
