@@ -65,7 +65,9 @@ public class ApiLoginFilter extends AbstractAuthenticationProcessingFilter {
     }
 
     /**
-     * 성공 처리 Methdo
+     * 성공 처리 Method
+     *
+     * - AbstractAuthenticationProcessingFilter 의 메서드를 @Override 구현
      * */
     @Override
     protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain chain,
