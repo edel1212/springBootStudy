@@ -2015,4 +2015,99 @@ public class ApiLoginFilter extends AbstractAuthenticationProcessingFilter {
 }
 ```
 
-//TODO Fail Handler
+<br/>
+
+
+- ⭐️ 지정 URL 로그인 시 실패 처리( AuthenticationFailureHandler의 onAuthenticationFailure() 구현 )
+
+\- AuthenticationFailureHandler 상속 구현  🔽
+```java
+//java - ApiLoginHailHandler
+
+/**
+ * @Description : Security Exception 발생시 처리하는
+ *                Handler class
+ *
+ *               - 💬 인증 실패 시 실행될 로직을 담은 인터페이스이며, 이를 구현한 클래스를 직접 작성하여 사용해야 합니다.
+ *                    예를 들어, 로그인 실패 시 로그를 남기거나, 실패 카운트를 증가시키는 등의 작업을 수행할 수 있습니다.
+ * */
+@Log4j2
+public class ApiLoginFailHandler implements AuthenticationFailureHandler {
+
+  @Override
+  public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response
+          , AuthenticationException exception) throws IOException {
+
+    log.info("Login Fail Handler!!!!");
+
+    log.info("exception Mag ::: {}", exception.getMessage());
+
+    // 반환할 JSON 데이터 생성
+    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED); // 401 Error
+    response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+    response.setCharacterEncoding("UTF-8");
+    JSONObject json = new JSONObject();
+    json.put("code", HttpServletResponse.SC_UNAUTHORIZED);
+    json.put("msg", exception.getMessage());
+    PrintWriter out = response.getWriter();
+    out.println(json);
+
+  }
+}
+```  
+
+\- AuthenticationFailureHandler 적용  🔽
+```java
+//SecurityConfig
+
+@Configuration //BeanContainer에서 해당 Class를 스캔하도록 지정
+@Log4j2
+@EnableGlobalMethodSecurity(securedEnabled = true, prePostEnabled = true)
+public class SecurityConfig {
+
+  // ..code ..
+  
+  public ApiLoginFilter apiLoginFilter(AuthenticationManager authenticationManager){
+    // 사용될 URL을 필터링 함
+    ApiLoginFilter apiLoginFilter = new ApiLoginFilter("/api/login");
+
+    // 로그인 방법에 clubUSerDetailService를 연결해줌
+    apiLoginFilter.setAuthenticationManager(authenticationManager);
+
+    // API 로그인 사용 시 로그인 실패 Handler 적용
+    apiLoginFilter.setAuthenticationFailureHandler(new ApiLoginFailHandler());
+
+    return apiLoginFilter;
+  }
+  
+
+  @Bean
+  protected SecurityFilterChain configure(HttpSecurity httpSecurity) throws Exception{
+
+    /***
+     * @Description : Spring-boot 의 버전이 올라가면서 authenticationManger() 주입법이 바뀜.
+     *               - 이전에는 해당 Class에 상속관계인 WebSecurityConfigurerAdapter 에서
+     *                 구현된 메서드라 따로 수정없이 사용이 가능했지만 현재는 deprecated 되어서
+     *                 👉 따로 ClubUSerDetailsService를 주입 받아 AuthenticationManager 객체를
+     *                    생성해줘야한다.
+     * */
+    AuthenticationManager authenticationManager = httpSecurity
+            .getSharedObject(AuthenticationManagerBuilder.class)
+            .userDetailsService(clubUSerDetailService)
+            .passwordEncoder(this.passwordEncoder())
+            .and()
+            .build();
+    httpSecurity.authenticationManager(authenticationManager);
+      
+      
+    // ..code ..
+
+    // Auth-filter 순서 지정 ( 사용할 Filter, 이전 실행의 기준이 될 Filter Class )
+    // 상단에서 선언한 AuthenticationManager 객체 뱐수 주입
+    httpSecurity.addFilterBefore(apiLoginFilter(authenticationManager)
+            , UsernamePasswordAuthenticationFilter.class);
+    
+    return httpSecurity.build();
+  }
+}
+```
