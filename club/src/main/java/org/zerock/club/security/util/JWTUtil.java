@@ -47,6 +47,8 @@ public class JWTUtil {
 
     /**
      * @Description : JWT 문자열을 검증하는 역할을 하는 Method
+     *               - 원하는 문자열에서 원하는 값을 추출하는 용도
+     *               - 만료기간 체크 또는 "sub"이름으로 보관된 이메일 역시 반환한다.
      * */
     public String validateAndExtract(String tokenStr) throws Exception{
         String contentValue = null;
