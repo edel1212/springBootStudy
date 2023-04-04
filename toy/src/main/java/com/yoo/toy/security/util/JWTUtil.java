@@ -1,5 +1,6 @@
 package com.yoo.toy.security.util;
 
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import lombok.extern.log4j.Log4j2;
@@ -12,7 +13,7 @@ import java.util.Date;
 public class JWTUtil {
 
     // 비밀 인증 키
-    private String secretKey = "edel1212@naver.com";
+    private String secretKey = "aaabbbbzzzcccaaaasssxxxzzzzsssdddaaasss";
 
     // 기간 1달
     private long expire = 60 * 24 * 30;
@@ -36,15 +37,26 @@ public class JWTUtil {
                 .compact();
     }
 
-    public String validateAndExtract(String token) throws Exception{
+    public String validateAndExtract(String tokenStr) throws Exception{
         String contentValue = "";
 
         try {
+            Claims claims = Jwts.parserBuilder()
+                    .setSigningKey(this.secretKey.getBytes(StandardCharsets.UTF_8))  //비밀키 주입
+                    .build()                                                         // 빌드
+                    .parseClaimsJws(tokenStr)                                        // 해석할 대상 JWT문자열
+                    .getBody();
 
+            log.info("Claims [Before - DefaultJws]::: " + claims);
+            //info :: {iat=1671456264, exp=1674048264, sub=user95@naver.com}
+
+            contentValue = claims.getSubject();
+
+            log.info("claims.getSubject() ::: {}", contentValue);
         } catch (Exception ex){
             ex.printStackTrace();
         }
-        return "TODO";
+        return contentValue;
     }
 
 
