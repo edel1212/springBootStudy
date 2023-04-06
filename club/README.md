@@ -2111,4 +2111,29 @@ public class SecurityConfig {
   }
 }
 ```
-//TODO .... 
+
+<br/>
+
+ ⭐️ Jwt 설정 및 사용 방법
+- dependency 추가
+```groovy
+//build.gradle
+
+// .. code ..
+
+dependencies {
+  
+  // ..code..
+
+  / JWT - JSON WEB Token 추가
+  implementation group: 'io.jsonwebtoken', name: 'jjwt-api', version: '0.11.5'
+
+  runtimeOnly group: 'io.jsonwebtoken', name: 'jjwt-impl', version: '0.11.5'
+
+  implementation 'io.jsonwebtoken:jjwt-jackson:0.11.2'
+  
+}
+
+```
+
+- Jwt Token을 생성할 Class 추가
