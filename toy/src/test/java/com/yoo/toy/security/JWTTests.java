@@ -20,6 +20,8 @@ public class JWTTests {
         jwtUtil = new JWTUtil();
     }
 
+
+    // JWT 인코딩 테스트
     @Test
     public void testEncode() throws Exception{
         String email = "edel1212@naver.com";
@@ -28,6 +30,32 @@ public class JWTTests {
         String str = jwtUtil.generateToken(email);
 
         log.info("str :::: {}",str);
+        //str :::: eyJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE2ODA3ODY1MjgsImV4cCI6M
+        // TY4MzM3ODUyOCwic3ViIjoiZWRlbDEyMTJAbmF2ZXIuY29tIn0.
+        // MKcyOwYZSUF7exYfMLnbnpk9JyuwqndjJMZMNPw6AbM
+    }
+
+
+    // JWT 기간 만료 테스트
+    @Test
+    public void testValidateTest() throws Exception{
+        String email = "eedel1212@naver.com";
+
+        // email을 사용하여 Jwt Token 생성
+        String str = jwtUtil.generateToken(email);
+
+        Thread.sleep(5,000);
+        /**
+         * 지연 테스트 시 만료기간이 지나면 Error 발생
+         * - Error Msg : JWT expired at 2023-04-06T13:30:28Z. Current time: 2023-04-06T13:30:28Z
+         *                  , a difference of 335 milliseconds.  Allowed clock skew: 0 milliseconds.
+         * */
+
+        // 생성된 Jwt를 사용하여 값 확인
+        String resultEmail = jwtUtil.validateAndExtract(str);
+
+        log.info("result Email :: {}",resultEmail);
+
     }
 
 }
