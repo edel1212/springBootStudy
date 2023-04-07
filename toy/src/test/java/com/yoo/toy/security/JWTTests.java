@@ -44,7 +44,7 @@ public class JWTTests {
         // email을 사용하여 Jwt Token 생성
         String str = jwtUtil.generateToken(email);
 
-        Thread.sleep(5,000);
+        Thread.sleep(5_000);
         /**
          * 지연 테스트 시 만료기간이 지나면 Error 발생
          * - Error Msg : JWT expired at 2023-04-06T13:30:28Z. Current time: 2023-04-06T13:30:28Z

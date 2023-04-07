@@ -1,14 +1,12 @@
 package com.yoo.toy.security.filter;
 
+import com.yoo.toy.dto.security.ClubAuthMemberDTO;
+import com.yoo.toy.security.util.JWTUtil;
 import lombok.extern.log4j.Log4j2;
-import org.springframework.core.log.LogMessage;
-import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.authentication.event.InteractiveAuthenticationSuccessEvent;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.AbstractAuthenticationProcessingFilter;
 
 import javax.servlet.FilterChain;
@@ -34,8 +32,13 @@ import java.io.IOException;
 @Log4j2
 public class ApiLoginFilter extends AbstractAuthenticationProcessingFilter {
 
-    public ApiLoginFilter(String defaultFilterProcessesUrl) {
+    // ⭐️ JWTUtil 추가
+    private JWTUtil jwtUtil;
+
+    public ApiLoginFilter(String defaultFilterProcessesUrl, JWTUtil jwtUtil) {
         super(defaultFilterProcessesUrl);
+        // ⭐️ JWTUtil 주입
+        this.jwtUtil = jwtUtil;
     }
 
     @Override
@@ -75,5 +78,25 @@ public class ApiLoginFilter extends AbstractAuthenticationProcessingFilter {
         log.info("API Success Handler!!");
         log.info("successFulAuthentication ::: {}", authResult);
         log.info("가지고 있는 권한 ::: {}" , authResult.getPrincipal());
+
+        // 인중 성공 시 로그인에 성공된 email을 받아옴
+        String email = ((ClubAuthMemberDTO)authResult.getPrincipal()).getUsername();
+
+        String token = "";
+
+        try {
+            // 위에서 받아온 email을 사용하여 JWT 토큰 생성
+            token = jwtUtil.generateToken(email);
+
+            response.setContentType(MediaType.TEXT_PLAIN_VALUE); // "text/plain"
+            response.getOutputStream().write(token.getBytes());  // Byte로 변경하여 전달
+
+            log.info("token ::: {}", token);
+        }catch (Exception ex){
+            ex.printStackTrace();
+        }
+
+
+
     }
 }

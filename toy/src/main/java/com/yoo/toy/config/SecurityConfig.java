@@ -3,6 +3,7 @@ package com.yoo.toy.config;
 import com.yoo.toy.security.filter.ApiCheckFilter;
 import com.yoo.toy.security.filter.ApiLoginFilter;
 import com.yoo.toy.security.handler.ApiLoginFailHandler;
+import com.yoo.toy.security.util.JWTUtil;
 import com.yoo.toy.service.securiry.ClubUserDetailsService;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -54,6 +55,14 @@ public class SecurityConfig {
         return new ApiCheckFilter("/notes/**/*");
     }
 
+    /**
+     * JWT 생성 및 값을 가져오는 기능을 하는 classs
+     * */
+    @Bean
+    public JWTUtil jwtUtil(){
+        return new JWTUtil();
+    }
+
     /***
      * 로그인 결과를 Security-context에 해줄 Filter
      * - SecurityFilterChain()에 순서 지정
@@ -71,7 +80,7 @@ public class SecurityConfig {
     //@Bean
     public ApiLoginFilter apiLoginFilter(AuthenticationManager authenticationManager){
         // 사용될 URL을 필터링 함
-        ApiLoginFilter apiLoginFilter = new ApiLoginFilter("/api/login");
+        ApiLoginFilter apiLoginFilter = new ApiLoginFilter("/api/login", this.jwtUtil());
 
         // 로그인 방법에 clubUSerDetailService를 연결해줌
         apiLoginFilter.setAuthenticationManager(authenticationManager);
