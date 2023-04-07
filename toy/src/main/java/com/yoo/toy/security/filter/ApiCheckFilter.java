@@ -2,6 +2,7 @@ package com.yoo.toy.security.filter;
 
 import com.nimbusds.common.contenttype.ContentType;
 import com.sun.net.httpserver.HttpContext;
+import com.yoo.toy.security.util.JWTUtil;
 import lombok.extern.log4j.Log4j2;
 import net.minidev.json.JSONObject;
 import org.springframework.http.MediaType;
@@ -37,10 +38,14 @@ public class ApiCheckFilter extends OncePerRequestFilter {
     // 넘어올 URL을 받을 변수
     private String pattern;
 
+    // 해더 메세지를 통해 Jwt를 확인하기 위한 객체 변수
+    private JWTUtil jwtUtil;
+
     // 생성자 메서드를 사용
-    public ApiCheckFilter(String pattern){
+    public ApiCheckFilter(String pattern, JWTUtil jwtUtil){
         this.antPathMatcher = new AntPathMatcher();
         this.pattern = pattern;
+        this.jwtUtil = jwtUtil;
     }
 
     @Override
@@ -100,12 +105,28 @@ public class ApiCheckFilter extends OncePerRequestFilter {
         String authHeader = request.getHeader("Authorization");
 
         // 2. 값의 유무를 체크함
-        if(!StringUtils.hasText(authHeader)) return checkResult;
+        if(!StringUtils.hasText(authHeader)) return false;
 
         log.info("Authorization exist :: {}", authHeader);
 
-        // 3 . 내가 지정한 값과 일치한다면 true로 변환
-        if("123456789".equals(authHeader)) checkResult = true;
+        // 3. ⭐️ 기존 하드코딩 값에서 변경 --> JWT 체크
+        try {
+            /**
+             * 💬 받아온 Authorization에서 substring(7)하는 이유 ?
+             * - 확장 가능성: "Bearer"는 인증 타입을 표시하는 문자열로, 향후에 다양한 타입의 토큰이 나올 경우에도 "Bearer"
+             *   외의 다른 인증 타입을 사용할 수 있습니다. 예를 들어, "Basic", "Digest", "OAuth" 등 다양한 인증 스킴이 존재하며,
+             *   "Bearer"를 사용함으로써 나중에 다른 인증 스킴을 추가하거나 교체할 때 유연성을 가질 수 있습니다.
+             *
+             *    따라서 "Bearer"를 JWT 토큰의 타입을 나타내는 문자열로 사용하는 것은 인증
+             *    스킴의 명시성과 확장성을 갖출 수 있는 이점을 가지고 있습니다.
+             * */
+            String email = jwtUtil.validateAndExtract(authHeader.substring(7));
+            log.info("validationCheck Result Email :: {}",email);
+
+            checkResult = email.length() > 0;
+        } catch (Exception ex){
+            ex.printStackTrace();
+        }
 
         // 4 . 반환
         return checkResult;

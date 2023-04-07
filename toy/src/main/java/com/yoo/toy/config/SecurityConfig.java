@@ -52,7 +52,7 @@ public class SecurityConfig {
     @Bean
     public ApiCheckFilter apiCheckFilter(){
         //URI 패턴 추가
-        return new ApiCheckFilter("/notes/**/*");
+        return new ApiCheckFilter("/notes/**/*", this.jwtUtil());
     }
 
     /**

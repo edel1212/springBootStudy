@@ -16,7 +16,7 @@ public class JWTUtil {
     private String secretKey = "aaabbbbzzzcccaaaasssxxxzzzzsssdddaaasss";
 
     // 기간 1달
-    private long expire = 1;//60 * 24 * 30;
+    private long expire = 60 * 24 * 30;
 
     /**
      * claim() 사용 이유
@@ -29,8 +29,8 @@ public class JWTUtil {
                 .setIssuedAt(new Date())                                  // 발급 일시
                 .setExpiration( Date.from(
                                         ZonedDateTime.now()
-                                        //.plusMinutes(expire)
-                                                .plusSeconds(expire) // 만료기간 지난 테스트
+                                        .plusMinutes(expire)
+                                        //        .plusSeconds(expire) // 만료기간 지난 테스트
                                         .toInstant()))                    // 만료 일자
                 .claim("sub" , content)                             // JWT 내용 추가 Subject()로 불러 사용
                 .signWith(SignatureAlgorithm.HS256
