@@ -2138,7 +2138,8 @@ dependencies {
 ```
 
 - Jwt Token을 생성할 Class 추가
-  - JWT의 경우 Spring Bean Container에서 관리하지 않으므로 Scan 대상으로 지정할 필요가 없다 
+  - 해당 Class에서 Scan 대상을 지정해 주지 않음
+  - SecurityConfig에서 Scan 대상 지정 해줄것임
 ```java
 //java - JWTUtil
 
