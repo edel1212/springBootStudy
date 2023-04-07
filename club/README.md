@@ -2114,9 +2114,11 @@ public class SecurityConfig {
 
 <br/>
 
- ⭐️ Jwt 설정 및 사용 방법
+## JWT 설정 및 사용 방법
 - dependency 추가
-  - 다양한 종류의  JWT dependencies가 존재함 
+  - 다양한 종류의  JWT dependencies가 존재함
+
+\- dependencies 추가  🔽
 ```groovy
 //build.gradle
 
@@ -2140,6 +2142,8 @@ dependencies {
 - Jwt Token을 생성할 Class 추가
   - 해당 Class에서 Scan 대상을 지정해 주지 않음
   - SecurityConfig에서 Scan 대상 지정 해줄것임
+
+\- JWTUtil 생성  🔽
 ```java
 //java - JWTUtil
 
@@ -2208,6 +2212,8 @@ public class JWTUtil {
 <br/>
 
 - JWTUtil Test Code
+
+\- JUnit Test  🔽
 ```java
 //java - JWT Test
 
@@ -2268,6 +2274,143 @@ public class JWTTests {
 
     log.info("result Email :: {}",resultEmail);
 
+  }
+
+}
+
+```
+
+- 기존 Security Login 적용
+
+\- ApiLoginFilter에 적용  🔽
+```java
+// java - ApiLoginFilter [ /api/login/ URL에 적용할 거기 떄문에 해당 Class 에 적용 ]
+
+@Log4j2
+public class ApiLoginFilter extends AbstractAuthenticationProcessingFilter {
+
+  // ⭐️ JWTUtil 추가
+  private JWTUtil jwtUtil;
+
+  public ApiLoginFilter(String defaultFilterProcessesUrl, JWTUtil jwtUtil) {
+    super(defaultFilterProcessesUrl);
+    // ⭐️ JWTUtil 주입
+    this.jwtUtil = jwtUtil;
+  }
+
+  @Override
+  public Authentication attemptAuthentication(HttpServletRequest request
+          , HttpServletResponse response) throws AuthenticationException, IOException, ServletException {
+      
+    String email = request.getParameter("email");
+    String pw    = request.getParameter("pw");
+    
+    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(email, pw);
+    
+    return this.getAuthenticationManager().authenticate(authToken);
+  }
+
+  /**
+   * 성공 처리 Method
+   *
+   * - AbstractAuthenticationProcessingFilter 의 메서드를 @Override 구현
+   * */
+  @Override
+  protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain chain,
+                                          Authentication authResult) throws IOException, ServletException {
+
+    // 인중 성공 시 로그인에 성공된 email을 받아옴
+    String email = ((ClubAuthMemberDTO)authResult.getPrincipal()).getUsername();
+
+    String token = "";
+
+    try {
+      // 위에서 받아온 email을 사용하여 JWT 토큰 생성
+      token = jwtUtil.generateToken(email);
+
+      response.setContentType(MediaType.TEXT_PLAIN_VALUE); // "text/plain"
+      response.getOutputStream().write(token.getBytes());  // Byte로 변경하여 전달
+
+      log.info("token ::: {}", token);
+    }catch (Exception ex){
+      ex.printStackTrace();
+    }
+
+
+
+  }
+}
+```
+
+\- SecurityConfig에 적용  🔽
+
+```java
+//java - SecurityConfig
+
+@Configuration 
+@Log4j2
+@EnableGlobalMethodSecurity(securedEnabled = true, prePostEnabled = true)
+public class SecurityConfig {
+    
+  //.. code..
+  
+  @Bean
+  public ApiCheckFilter apiCheckFilter(){
+    //URI 패턴 추가
+    return new ApiCheckFilter("/notes/**/*");
+  }
+
+  /**
+   * JWT 생성 및 값을 가져오는 기능을 하는 classs
+   * */
+  @Bean
+  public JWTUtil jwtUtil(){
+    return new JWTUtil();
+  }
+
+  
+  public ApiLoginFilter apiLoginFilter(AuthenticationManager authenticationManager){
+    // 사용될 URL을 필터링 함   ⭐️ JwtUtil을 생성 메서드에 추가
+    ApiLoginFilter apiLoginFilter = new ApiLoginFilter("/api/login", this.jwtUtil());
+
+    // 로그인 방법에 clubUSerDetailService를 연결해줌
+    apiLoginFilter.setAuthenticationManager(authenticationManager);
+
+    // API 로그인 사용 시 로그인 실패 Handler 적용
+    apiLoginFilter.setAuthenticationFailureHandler(new ApiLoginFailHandler());
+
+    return apiLoginFilter;
+  }
+  
+  @Autowired
+  private ClubUserDetailsService clubUSerDetailService;
+  
+
+  @Bean
+  protected SecurityFilterChain configure(HttpSecurity httpSecurity) throws Exception{
+      
+    AuthenticationManager authenticationManager = httpSecurity
+            .getSharedObject(AuthenticationManagerBuilder.class)
+            .userDetailsService(clubUSerDetailService)
+            .passwordEncoder(this.passwordEncoder())
+            .and()
+            .build();
+    httpSecurity.authenticationManager(authenticationManager);
+    
+    httpSecurity.formLogin();
+           
+    // ... code..
+    
+
+    // Auth-filter 순서 지정 ( 사용할 Filter, 이전 실행의 기준이 될 Filter Class )
+    // 상단에서 선언한 AuthenticationManager 객체 뱐수 주입
+    httpSecurity.addFilterBefore(apiLoginFilter(authenticationManager)
+            , UsernamePasswordAuthenticationFilter.class);
+
+
+    httpSecurity.logout();
+
+    return httpSecurity.build();
   }
 
 }
