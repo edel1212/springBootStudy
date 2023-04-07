@@ -2116,6 +2116,7 @@ public class SecurityConfig {
 
  ⭐️ Jwt 설정 및 사용 방법
 - dependency 추가
+  - 다양한 종류의  JWT dependencies가 존재함 
 ```groovy
 //build.gradle
 
@@ -2137,3 +2138,137 @@ dependencies {
 ```
 
 - Jwt Token을 생성할 Class 추가
+  - JWT의 경우 Spring Bean Container에서 관리하지 않으므로 Scan 대상으로 지정할 필요가 없다 
+```java
+//java - JWTUtil
+
+@Log4j2
+public class JWTUtil {
+
+  // 비밀 인증 키 [ JWT dependencies는 다양한 종류가 있는데 종류에 따라 비밀키의 최소 길이가 정해진 경우가 있음 ]
+  private String secretKey = "aaabbbbzzzcccaaaasssxxxzzzzsssdddaaasss";
+
+  // 만료기간 설정 - 1달
+  private long expire = 1;//60 * 24 * 30;
+  
+  public String generateToken(String content) throws Exception{
+    return Jwts.builder()
+            .setIssuedAt(new Date())                            // 발급 일시
+            .setExpiration( Date.from(
+                    ZonedDateTime.now()
+                            .plusMinutes(expire)
+                            //.plusSeconds(expire)              // 만료기간 지난 테스트
+                            .toInstant()))                      // 만료 일자 [ 발글일 기준 기간(+) 시킴 ]
+            /**
+             * claim() 사용 이유
+             * - 사용자의 ID, 이름, 권한 등의 정보를 JWT 내부에 추가하고 싶다면,
+             *   Jwts.builder().claim("key", value)와 같은 형식으로 정보를 추가할 수 있습니다.
+             * - JWT의 활용성을 높이고, 보안성을 강화하기 위해 중요한 역할을 합니다.
+             * 
+             * 💬 "sub"으로 추가한 email은 Subject()로 불러 사용
+             * */
+            .claim("sub" , content)                              
+            .signWith(SignatureAlgorithm.HS256
+                    , secretKey.getBytes(StandardCharsets.UTF_8)) // H2565암호화 적용
+            .compact();
+  }
+
+  /**
+   * Jwt로 만들어진 값을 확인
+   * */
+  public String validateAndExtract(String tokenStr) throws Exception{
+    String contentValue = "";
+
+    try {
+      Claims claims = Jwts.parserBuilder()
+              .setSigningKey(this.secretKey.getBytes(StandardCharsets.UTF_8))  //비밀키 주입
+              .build()                                                         // 빌드
+              .parseClaimsJws(tokenStr)                                        // 해석할 대상 JWT문자열
+              .getBody();
+
+      log.info("Claims [Before - DefaultJws]::: " + claims);
+      //info :: {iat=1671456264, exp=1674048264, sub=user95@naver.com}
+
+      contentValue = claims.getSubject();
+
+      log.info("claims.getSubject() ::: {}", contentValue);
+      //info :: 내가 sub에 주입한 email을 출력한다.
+    } catch (Exception ex){
+      ex.printStackTrace();
+    }
+    return contentValue;
+  }
+
+
+}
+
+```
+
+<br/>
+
+- JWTUtil Test Code
+```java
+//java - JWT Test
+
+/**
+ * Spring의 Bean객체가 필요한 테스트가 아니므로
+ * - @SpringBootTest를 사용하지 않음
+ * - @autowired를 사용하지 않음
+ * - 내부에서 직접 @BeforeEach을 사용하여
+ *   JWT객체를 만들어서 사용함
+ * **/
+@Log4j2
+public class JWTTests {
+
+  private JWTUtil jwtUtil;
+
+  // 테스트 메소드 실행 전에 초기화 작업을 수행하여 테스트의 독립성을 보장하고,
+  // 중복 코드를 제거하고, 테스트 환경을 설정하는 데 사용됩니다.
+  @BeforeEach
+  public void testBefore(){
+    log.info("testBefore......");
+    jwtUtil = new JWTUtil();
+  }
+
+
+  // JWT 인코딩 테스트
+  @Test
+  public void testEncode() throws Exception{
+    String email = "edel1212@naver.com";
+
+    // JWT 토큰 생성
+    String str = jwtUtil.generateToken(email);
+
+    log.info("str :::: {}",str);
+    //str :::: eyJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE2ODA3ODY1MjgsImV4cCI6M
+    // TY4MzM3ODUyOCwic3ViIjoiZWRlbDEyMTJAbmF2ZXIuY29tIn0.
+    // MKcyOwYZSUF7exYfMLnbnpk9JyuwqndjJMZMNPw6AbM
+  }
+
+
+  // JWT 기간 만료 테스트 - 기간에 이상이 없을 경우 sub에 주입한 
+  // 입력한 email출력
+  @Test
+  public void testValidateTest() throws Exception{
+    String email = "eedel1212@naver.com";
+
+    // email을 사용하여 Jwt Token 생성
+    String str = jwtUtil.generateToken(email);
+
+    Thread.sleep(5,000);
+    /**
+     * 지연 테스트 시 만료기간이 지나면 Error 발생
+     * - Error Msg : JWT expired at 2023-04-06T13:30:28Z. Current time: 2023-04-06T13:30:28Z
+     *                  , a difference of 335 milliseconds.  Allowed clock skew: 0 milliseconds.
+     * */
+
+    // 생성된 Jwt를 사용하여 값 확인
+    String resultEmail = jwtUtil.validateAndExtract(str);
+
+    log.info("result Email :: {}",resultEmail);
+
+  }
+
+}
+
+```
