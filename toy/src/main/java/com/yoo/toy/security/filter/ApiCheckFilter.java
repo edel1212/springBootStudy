@@ -73,9 +73,7 @@ public class ApiCheckFilter extends OncePerRequestFilter {
              *      에러 메세지 및 HTTP 상태를 반환해 주는 방법을 사용할 수 있다.
              *      현재는 간단하게 JSON 반환을 사용함.
              * */
-            if(this.chkAuthHeader(request)){
-                filterChain.doFilter(request,response);
-            } else {
+            if(!this.chkAuthHeader(request)){
                 // 403 Error
                 response.setStatus(HttpServletResponse.SC_FORBIDDEN);
                 response.setContentType(MediaType.APPLICATION_JSON_VALUE);
@@ -86,8 +84,7 @@ public class ApiCheckFilter extends OncePerRequestFilter {
                 PrintWriter out = response.getWriter();
                 out.println(json);
                 return;
-            }//if - else
-
+            }//if
 
         }//if
 
