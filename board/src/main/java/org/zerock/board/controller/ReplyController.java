@@ -2,13 +2,12 @@ package org.zerock.board.controller;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import org.apache.coyote.Response;
+
 import org.springframework.context.annotation.Description;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.zerock.board.dto.BoardDTO;
 import org.zerock.board.dto.ReplyDTO;
 import org.zerock.board.service.BoardService;
 import org.zerock.board.service.ReplyService;
