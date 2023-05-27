@@ -92,3 +92,49 @@
 <hr/>
 
 - 💬 **[ [이동](https://github.com/edel1212/springBootStudy/tree/main/integrateVue) ]** :: Spring Boot Vue 연동 라우터 사용
+
+<hr/>
+
+### Mybatis 사용 방법
+
+- 1 . dependencies 내 Mybatis 추가
+- 2 . application.properties 파일 내 DB 설정 및 Mybatis 경로 추가
+```properties
+spring.datasource.driver-class-name=org.mariadb.jdbc.Driver
+spring.datasource.url=jdbc:mariadb://localhost:3306/bootex
+spring.datasource.username=root
+spring.datasource.password=123
+
+## Mybatis Setting ##
+## 👉 사용될 패키치 위치를 지정해준다
+mybatis.mapper-locations = classpath:mapper/*.xml
+```
+
+- 3 . Mybatis를 읽을 Interface 추가
+  -  👉 중요사항 : properties에 지정한 패키지명에 생성해야한다
+    - src - > main -> myRoot -> mapper  
+      - 경로 수정을 통해 하위 패키지 내부에 지정 가능함
+```java
+package com.yoo.instarServer.mapper;
+
+import org.apache.ibatis.annotations.Mapper;
+
+@Mapper
+public interface Testyoo {
+    String getName();
+}
+
+```
+- 4 . resources 내부 xml 생성
+  - 파일명이 소문자여도 알아서 인식해줌 (단 소문자여도 인터페이스명과는 같아야함) 
+```xml
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yoo.instarServer.mapper.Testyoo">
+    <select id="getName" resultType="string">
+        SELECT 'yoojh' as name FROM dual
+    </select>
+</mapper>
+```
