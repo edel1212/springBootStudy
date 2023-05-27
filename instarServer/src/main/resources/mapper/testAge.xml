@@ -2,12 +2,8 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="com.yoo.instarServer.mapper.Testyoo">
-
-    <select id="getName" resultType="string">
-        SELECT 'yoojh' as name FROM dual
+<mapper namespace="com.yoo.instarServer.mapper.user.TestAge">
+    <select id="getAge" resultType="int">
+        SELECT '20' as age FROM dual
     </select>
-
-
-
 </mapper>
