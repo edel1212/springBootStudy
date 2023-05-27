@@ -107,7 +107,7 @@ spring.datasource.password=123
 
 ## Mybatis Setting ##
 ## 👉 사용될 패키치 위치를 지정해준다
-mybatis.mapper-locations = classpath:mapper/*.xml
+mybatis.mapper-locations = classpath:mapper/**/*.xml
 ```
 
 - 3 . Mybatis를 읽을 Interface 추가
