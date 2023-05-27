@@ -111,8 +111,9 @@ mybatis.mapper-locations = classpath:mapper/*.xml
 ```
 
 - 3 . Mybatis를 읽을 Interface 추가
-  -  👉 중요사항 : properties에 지정한 패키지명에 생성해야한다
-    - src - > main -> myRoot -> mapper  
+  -  👉 중요사항 : 인터페이스는 properties에 지정한 패키지명, 또는 위치에 맞게 생성하지 않아도 괜찮다
+    - 진짜로 위치를 읽는것은 .xml 내부 `namespace`이다 
+    - 단 가독성을 위해 맞게 위치하는 것이 좋다. src - > main -> myRoot -> mapper  
       - 경로 수정을 통해 하위 패키지 내부에 지정 가능함
 ```java
 package com.yoo.instarServer.mapper;
@@ -137,4 +138,53 @@ public interface Testyoo {
         SELECT 'yoojh' as name FROM dual
     </select>
 </mapper>
+```
+
+#### Mybatis 읽을 수 있는 흐름
+
+
+- 단위 테스트 기준으로 설명
+
+
+- 1 .  Mapper Interface 호출
+  -  testyoo의 getName()를 호출함
+
+✅ JUnit Test
+```java
+@SpringBootTest
+public class mybatisTest {
+    @Autowired
+    private Testyoo testyoo;
+
+    @Test
+    public void test1(){
+        System.out.println(testyoo.getName());
+    }
+}
+```
+
+- 2 .  Mapper Interface 내부 `@Mapper`를 통해 빈등록이 되어 있음 읽음
+  - 사실상 파일 위치나 파일명은 중요하지 않음 mybatis를 사용하는 xml 내부 `namesapce`에만 맞으면 된다.
+  
+✅ Mapper Interface
+```java
+  @Mapper
+  public interface Testyoo {
+      String getName();
+  }
+```
+
+- 3 .  Mybatis 내 `namespace`의 경로와 매칭되는 xml을 불러서 사용
+
+```xml
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yoo.instarServer.mapper.Testyoo">
+    <select id="getName" resultType="string">
+        SELECT 'yoojh' as name FROM dual
+    </select>
+</mapper>
+
 ```
