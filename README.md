@@ -188,3 +188,38 @@ public class mybatisTest {
 </mapper>
 
 ```
+
+<hr/>
+
+### Mybatis Log4JDBC 사용 방법
+
+- 1 . dependencies에 `log4jdbc`를 추가해준다.
+- 2 . resources 하위 `log4jdbc.log4j2.properties`파일을 생성해준다. - 설정 파일
+
+✅ log4jdbc.log4j2.properties
+```properties
+log4jdbc.spylogdelegator.name=net.sf.log4jdbc.log.slf4j.Slf4jSpyLogDelegator
+log4jdbc.dump.sql.maxlinelength=0
+```
+
+- 3 . DB연결 설정 중 **class-name** 과 **url** 변경 및 로그 Level을 설정해준다.
+
+✅ application.properties
+```properties
+## 변경 전 ❌ 
+#####spring.datasource.driver-class-name=org.mariadb.jdbc.Driver
+## 변경 후 👍
+spring.datasource.driver-class-name=net.sf.log4jdbc.sql.jdbcapi.DriverSpy
+
+## 변경 전 ❌ 
+#####spring.datasource.url=jdbc:mariadb://localhost:3306/bootex
+## 변경 후 👍
+spring.datasource.url=jdbc:log4jdbc:mariadb://localhost:3306/bootex
+
+spring.datasource.username=root
+spring.datasource.password=123
+
+## Log Level Setting ###
+logging.level.jdbc.sqlonly= DEBUG
+logging.level.org.springframework.web = DEBUG
+```
