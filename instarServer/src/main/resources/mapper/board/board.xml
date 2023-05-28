@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.yoo.instarServer.mapper.board.BoardMapper">
+    <select id="getBoard" resultType="com.yoo.instarServer.vo.BoardVO">
+        SELECT * from tbl_board ORDER BY bno DESC
+    </select>
+
+    <insert id="registerBoard" parameterType="com.yoo.instarServer.vo.BoardVO">
+        INSERT INTO tbl_board
+            (name, userimage, postimage, likes, date, liked, content, filter)
+        VALUES (#{name}, #{userImage}, #{postImage}, #{likes}, NOW(), #{liked}, #{content}, #{filter});
+    </insert>
+
+</mapper>
