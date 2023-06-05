@@ -1,6 +1,8 @@
 package com.yoo.loginServer.config;
 
 import com.yoo.loginServer.security.filter.ApiCheckFilter;
+import com.yoo.loginServer.security.handler.AuthFailureHandler;
+import com.yoo.loginServer.security.handler.AuthSuccessHandler;
 import com.yoo.loginServer.security.service.MemberDetailService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -33,6 +35,14 @@ public class SecurityConfig {
         return new ApiCheckFilter("/notes/**/*");
     }
 
+    public AuthFailureHandler authFailureHandler(){
+        return new AuthFailureHandler();
+    }
+
+    public AuthSuccessHandler authSuccessHandler(){
+        return new AuthSuccessHandler();
+    }
+
     @Bean
     SecurityFilterChain configure(HttpSecurity httpSecurity) throws Exception{
 
@@ -44,9 +54,14 @@ public class SecurityConfig {
 
         httpSecurity.authenticationManager(authenticationManager);
 
-        httpSecurity.formLogin();
+        httpSecurity
+                .formLogin()
+                .loginProcessingUrl("/user/login")
+                .successHandler(this.authSuccessHandler())
+                .failureHandler(this.authFailureHandler());
 
         httpSecurity.csrf().disable();
+
 
         // JWT를 사용할 것이며 서버가 나눠져 있으므로 해제
         httpSecurity

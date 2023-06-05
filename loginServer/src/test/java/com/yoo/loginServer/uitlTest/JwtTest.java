@@ -5,6 +5,8 @@ import lombok.extern.log4j.Log4j2;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.Arrays;
+
 @Log4j2
 public class JwtTest {
 
@@ -19,7 +21,7 @@ public class JwtTest {
     @Test
     public void generateToken() throws Exception {
         String email = "edel1212@naver.com";
-        String token = jwtUtil.generateToken(email);
+        String token = jwtUtil.generateToken(email, Arrays.asList("ADMIN"));
         log.info("token ::: {}", token);
     }
 
@@ -27,7 +29,7 @@ public class JwtTest {
     @Test
     public void validateCheck() throws Exception{
         String email = "edel1212@naver.com";
-        String token = jwtUtil.generateToken(email);
+        String token = jwtUtil.generateToken(email, Arrays.asList("ADMIN"));
 
         log.info("token ::: {}", token);
 

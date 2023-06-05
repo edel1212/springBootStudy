@@ -22,12 +22,6 @@ public class MemberAuthDTO extends User {
 
     private String role;
 
-
-    //////////////
-
-    // OAuth2로그인 성공 시 모든 정보를 갖고있음
-    private Map<String, Object> attrs;
-
     // UserDetailsService 사용
     public MemberAuthDTO(String username, String password, Collection<? extends GrantedAuthority> authorities) {
         super(username, password, authorities);

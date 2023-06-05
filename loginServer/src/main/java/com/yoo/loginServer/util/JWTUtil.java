@@ -4,10 +4,13 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.security.core.GrantedAuthority;
 
 import java.nio.charset.StandardCharsets;
 import java.time.ZonedDateTime;
+import java.util.Collection;
 import java.util.Date;
+import java.util.List;
 
 @Log4j2
 public class JWTUtil {
@@ -21,14 +24,15 @@ public class JWTUtil {
 
     /**
      * @description Token 생성 Method
-     * @param  content
+     * @param  id, roles
      * @return String
      * */
-    public String generateToken(String content) throws Exception{
+    public String generateToken(String id, List<String> roles) throws Exception{
         return Jwts.builder()
                 .setIssuedAt(new Date())    // 발급일자
                 .setExpiration( Date.from(ZonedDateTime.now().plusMinutes(expire).toInstant())) // 만료일자
-                .claim("sub", content)                                                    // 사용자 속성 - sub에 등록
+                .claim("sub"    , id)                                                     // 사용자 속성 - sub에 등록
+                .claim("roles"  , roles)                                                  // 권한
                 .signWith(SignatureAlgorithm.HS256, secretKey.getBytes(StandardCharsets.UTF_8)) // 암호화 방식, 비밀키 주입
                 .compact();
     }

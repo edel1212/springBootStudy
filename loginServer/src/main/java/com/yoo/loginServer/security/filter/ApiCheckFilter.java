@@ -1,6 +1,7 @@
 package com.yoo.loginServer.security.filter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.yoo.loginServer.util.JWTUtil;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.http.MediaType;
 import org.springframework.util.AntPathMatcher;
@@ -24,9 +25,12 @@ public class ApiCheckFilter extends OncePerRequestFilter {
 
     private String formatPattern;
 
+    private JWTUtil jwtUtil;
+
     public ApiCheckFilter(String formatPattern){
         this.antPathMatcher = new AntPathMatcher();
         this.formatPattern = formatPattern;
+        this.jwtUtil = new JWTUtil();
     }
 
     @Override
@@ -77,9 +81,17 @@ public class ApiCheckFilter extends OncePerRequestFilter {
 
         if(!StringUtils.hasText(authorizationKey)) return false;
 
-        log.info("authorizationKey :: {}",authorizationKey);
+        String jwtDecode = "";
+        try {
+            jwtDecode = jwtUtil.validateAndExtract(authorizationKey);
+        } catch (Exception e){
+            e.printStackTrace();
+        }
 
-        if("123".equals(authorizationKey)) result = true;
+        log.info("jwt Decode Result ::: {}", jwtDecode);
+
+        if(StringUtils.hasText(jwtDecode)) result = true;
+
         return result;
     }
 
