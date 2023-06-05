@@ -32,7 +32,7 @@ public class SecurityConfig {
 
     public ApiCheckFilter apiCheckFilter(){
         //URI 패턴 추가
-        return new ApiCheckFilter("/notes/**/*");
+        return new ApiCheckFilter("/member/**/*");
     }
 
     public AuthFailureHandler authFailureHandler(){

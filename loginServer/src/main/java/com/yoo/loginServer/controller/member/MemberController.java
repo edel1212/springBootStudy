@@ -15,10 +15,10 @@ public class MemberController {
 
     private final MemberService memberService;
 
-    @PostMapping("/login")
-    public ResponseEntity<String> login(@RequestBody MemberDTO memberDTO){
-
-        return ResponseEntity.ok("");
+    @GetMapping("/{email}")
+    public ResponseEntity<MemberDTO> getMemberInfo(@PathVariable String email){
+        MemberDTO memberDTO = MemberDTO.builder().id(email).build();
+        return ResponseEntity.ok(memberService.MemberInfo(memberDTO));
     }
 
 }

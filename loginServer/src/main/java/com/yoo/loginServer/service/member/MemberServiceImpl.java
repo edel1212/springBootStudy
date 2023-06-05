@@ -25,6 +25,12 @@ public class MemberServiceImpl implements MemberService{
     }
 
     @Override
+    public MemberDTO MemberInfo(MemberDTO memberDTO) {
+        Member member = memberRepository.findById(memberDTO.getId()).orElse(null);
+        return this.entityToDto(member);
+    }
+
+    @Override
     public String registerMember(MemberDTO memberDTO) {
         Member member = memberRepository.save(this.dtoToEntity(memberDTO));
         return member.getId();

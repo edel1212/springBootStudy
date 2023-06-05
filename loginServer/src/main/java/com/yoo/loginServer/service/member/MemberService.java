@@ -6,6 +6,8 @@ import com.yoo.loginServer.entity.member.Member;
 public interface MemberService {
     boolean findMember(MemberDTO memberDTO);
 
+    MemberDTO MemberInfo(MemberDTO memberDTO);
+
     String registerMember(MemberDTO memberDTO);
 
 
