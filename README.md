@@ -223,3 +223,14 @@ spring.datasource.password=123
 logging.level.jdbc.sqlonly= DEBUG
 logging.level.org.springframework.web = DEBUG
 ```
+<hr/>
+
+### Jar 파일 생성 후 배포 방법
+
+#### 완성된 project를 jar로 배포하는 방법
+- 1 . gradle -> Project -> Task -> build -> bootJar
+  - jar파일을 생성해준다.
+    - jar 생성 경로 
+      -  project -> build -> libs 
+- 2 . 해당 경로 이동
+- 3 . `java -jar fileName.jar`를 통해 실행
