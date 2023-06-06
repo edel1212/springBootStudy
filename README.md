@@ -234,3 +234,31 @@ logging.level.org.springframework.web = DEBUG
       -  project -> build -> libs 
 - 2 . 해당 경로 이동
 - 3 . `java -jar fileName.jar`를 통해 실행
+
+
+#### jar파일 생성 시 파일명 변경 방법
+- build.gradle을 수정하여 변경 가능
+
+```groovy
+plugins {/** code ..*/}
+
+group = 'com.yoo'
+version = '0.0.1-SNAPSHOT'
+sourceCompatibility = '11'
+
+configurations {/** code ..*/}
+
+repositories {/** code ..*/}
+
+dependencies { /** code ..*/}
+
+// 해당 부분을 추가
+bootJar{
+	archivesBaseName = '파일명지정'
+	archiveFileName = '파일명지정.jar'
+    archiveVersion = "0.0.0"
+}
+
+tasks.named('test') {/** code ..*/}
+
+```
