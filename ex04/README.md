@@ -1397,3 +1397,5 @@ public void syncTest(){
         log.info("result :: {}",response2);
 }
 ```
+	
+####심화 [링크](https://github.com/edel1212/springBootStudy/blob/main/webClientServer/serverReq/src/main/java/com/yoo/serverReq/service/WebclientServiceImpl.java)	
