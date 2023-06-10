@@ -26,7 +26,7 @@ public class RestSampleController {
     }
 
     @Description("반환값과 다르게 설정 - Error : Resolved [org.springframework.http.converter.HttpMessageNotWritableException: No converter for [class java.util.HashMap] with preset Content-Type 'null']")
-    @GetMapping(value = "/stringError", produces = MediaType.TEXT_PLAIN_VALUE)
+    @GetMapping(value = "/stringErr", produces = MediaType.TEXT_PLAIN_VALUE)
     public ResponseEntity<Map<String,String>> getStringError(){
         Map<String, String> map = new HashMap<>();
         map.put("name", "yoo");
@@ -56,11 +56,20 @@ public class RestSampleController {
         return ResponseEntity.ok("abc");
     }
 
+    // @RequestBody를 사용해도 문자열도 받을 수 있음
     @Description("요청값과 consumes가 다름 - Error : Resolved [org.springframework.web.HttpMediaTypeNotSupportedException: Content type 'application/json' not supported]")
-    @PostMapping(value = "/register2", consumes = MediaType.TEXT_PLAIN_VALUE)
+    @PostMapping(value = "/registerErr", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> postReqErr(@RequestBody String abc){
         log.info("abc:::: {}",abc);
         return ResponseEntity.ok(abc);
     }
+
+    @Description("요청값과 consumes를 같게 변경 해줌")
+    @PostMapping(value = "/registerSuc", consumes = MediaType.TEXT_PLAIN_VALUE)
+    public ResponseEntity<String> postReqSuc(@RequestBody String abc){
+        log.info("abc:::: {}",abc);
+        return ResponseEntity.ok(abc);
+    }
+
 
 }

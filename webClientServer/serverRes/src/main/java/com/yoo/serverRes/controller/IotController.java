@@ -41,6 +41,13 @@ public class IotController {
     public ResponseEntity<List<SensorDTO>> getSensorList(){
         List<SensorDTO> arr = new ArrayList<>();
 
+
+        log.info("==================");
+        log.info("==================");
+        log.info("다건!!!!");
+        log.info("==================");
+        log.info("==================");
+
         Map<String, String> map = new HashMap<>();
         map.put("name","유정호");
 
@@ -60,6 +67,7 @@ public class IotController {
     @Description("삭제")
     @DeleteMapping("/{serialNumber}")
     public ResponseEntity<String>  deleteSensor(@PathVariable String serialNumber){
+        log.info("------------------------");
         log.info("삭제요청 serialNumber::: {}",serialNumber);
         return ResponseEntity.ok("삭제완료!");
     }
@@ -74,7 +82,7 @@ public class IotController {
 
 
     @Description("등록")
-    @PutMapping()
+    @PostMapping
     public ResponseEntity<String>  registerSensor(@RequestBody SensorDTO sensorDTO){
         log.info("생성요청 sensorDTO::: {}",sensorDTO);
         return ResponseEntity.ok("수정완료!");
