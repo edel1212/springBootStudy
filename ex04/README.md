@@ -1398,4 +1398,7 @@ public void syncTest(){
 }
 ```
 	
-####심화 [링크](https://github.com/edel1212/springBootStudy/blob/main/webClientServer/serverReq/src/main/java/com/yoo/serverReq/service/WebclientServiceImpl.java)	
+### MVC로직 사용 - [자세히 보기](https://github.com/edel1212/springBootStudy/blob/main/webClientServer/serverReq/src/main/java/com/yoo/serverReq/service/WebclientServiceImpl.java)	
+
+
+---
