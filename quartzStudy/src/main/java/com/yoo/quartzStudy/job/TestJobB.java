@@ -9,10 +9,10 @@ import org.springframework.stereotype.Component;
 
 @Configuration
 @Log4j2
-public class TestJobA implements Job {
+public class TestJobB implements Job {
 
     @Override
     public void execute(JobExecutionContext context) throws JobExecutionException {
-        log.info("!?!?!?!?!?!");
+        log.info("@@@@@");
     }
 }
