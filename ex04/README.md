@@ -437,18 +437,6 @@ public class SwaggerConfiguration {
                     .version("v1.0.0"));                   // 버전 정보 기입
   }
 
-    /***
-     * @Description : Swagger Setting info
-     *
-     * @return ApiInfo
-     */
-    private ApiInfo apiInfo(){
-        return new ApiInfoBuilder()
-                .title("Rest API Swagger - yoo")
-                .description("Swagger!!!")
-                .version("1.0")
-                .build();
-    }
 
 }
 ```
