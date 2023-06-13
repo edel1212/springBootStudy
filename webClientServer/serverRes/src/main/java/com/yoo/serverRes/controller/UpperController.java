@@ -1,5 +1,6 @@
 package com.yoo.serverRes.controller;
 
+import com.yoo.serverRes.dto.BaseWrapDTO;
 import com.yoo.serverRes.dto.UpperDTO;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.http.ResponseEntity;
@@ -18,7 +19,9 @@ import java.util.stream.IntStream;
 public class UpperController {
 
     @GetMapping
-    public ResponseEntity<List<UpperDTO>> getList(){
+    public ResponseEntity<BaseWrapDTO> getList(){
+
+
 
         List<UpperDTO> result = new ArrayList<>();
 
@@ -31,7 +34,11 @@ public class UpperController {
             result.add(dto);
         });
 
-        return ResponseEntity.ok(result);
+        BaseWrapDTO dto = BaseWrapDTO.builder()
+                .Method("Mmmmmm")
+                .Result(result).build();
+
+        return ResponseEntity.ok(dto);
     }
 
     @GetMapping("/{code}")
