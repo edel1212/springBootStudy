@@ -29,6 +29,7 @@ dependencies {
 
 	// Quartz 추가
 	implementation 'org.springframework.boot:spring-boot-starter-quartz'
+	implementation 'org.springframework:spring-context-support'
 
 
 }

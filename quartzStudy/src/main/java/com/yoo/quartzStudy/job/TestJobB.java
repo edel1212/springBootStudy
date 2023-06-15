@@ -13,6 +13,8 @@ public class TestJobB implements Job {
 
     @Override
     public void execute(JobExecutionContext context) throws JobExecutionException {
-        log.info("@@@@@");
+        int count = context.getJobDetail().getJobDataMap().getInt("count");
+        log.info("count :::{}",count);
+        context.getJobDetail().getJobDataMap().put("count",++count);
     }
 }

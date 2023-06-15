@@ -18,9 +18,10 @@ public class UpperCamelServiceImpl implements UpperCamelService {
 
         WebClient webClient = WebClient.builder().baseUrl("http://localhost:8080").build();
 
-        BaseWrapDTO<UpperDTO> dto = webClient.get().uri("/upper").retrieve().bodyToMono(BaseWrapDTO.class).block();
+        BaseWrapDTO dto = webClient.get().uri("/upper").retrieve().bodyToMono(BaseWrapDTO.class).block();
 
         log.info("result ::: {}",dto.getResult().get(0).getFlagBool());
+        log.info("result ::: {}",dto.getResult().get(0).getAppleID());
 
         return null;
     }

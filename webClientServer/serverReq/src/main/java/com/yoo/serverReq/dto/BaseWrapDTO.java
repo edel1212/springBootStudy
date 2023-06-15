@@ -14,10 +14,10 @@ import java.util.List;
 @NoArgsConstructor
 @Builder
 @JsonNaming(PropertyNamingStrategies.UpperCamelCaseStrategy.class)
-public class BaseWrapDTO<T> {
+public class BaseWrapDTO{
 
     private String Method;
 
-    private List<T> Result;
+    private List<UpperDTO> Result;
 
 }

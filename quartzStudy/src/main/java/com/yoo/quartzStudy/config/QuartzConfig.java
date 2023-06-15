@@ -2,10 +2,7 @@ package com.yoo.quartzStudy.config;
 
 import com.yoo.quartzStudy.job.TestJobA;
 import com.yoo.quartzStudy.job.TestJobB;
-import org.quartz.JobBuilder;
-import org.quartz.JobDetail;
-import org.quartz.Trigger;
-import org.quartz.TriggerBuilder;
+import org.quartz.*;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -26,10 +23,15 @@ public class QuartzConfig {
 
     @Bean
     public JobDetail jobDetailA() {
+        JobDataMap jobDataMap = new JobDataMap();
+
+        jobDataMap.put("count",0);
+
         return JobBuilder.newJob().ofType(TestJobA.class)
                 .storeDurably()
                 .withIdentity("testA")
                 .withDescription("a")
+                .setJobData(jobDataMap)
                 .build();
     }
 
@@ -39,27 +41,10 @@ public class QuartzConfig {
                 // 트리거의 이름을 설정합니다. 이 이름은 트리거를 식별하는 데 사용됩니다.
                 // 같은 이름의 트리거를 여러 개 생성할 경우, 마지막에 생성된 트리거가 유지됩니다.
                 .withIdentity("test1")
-                .withSchedule(cronSchedule("/5 * * * * ?")
+                .withSchedule(cronSchedule("/1 * * * * ?")
                         .inTimeZone(TimeZone.getTimeZone("Asia/Seoul")))
                 .build();
     }
 
-    @Bean
-    public JobDetail jobDetailB() {
-        return JobBuilder.newJob().ofType(TestJobB.class)
-                .storeDurably()
-                .withIdentity("testB")
-                .withDescription("b")
-                .build();
-    }
-
-    @Bean
-    public Trigger tistoryTrigger2(JobDetail jobDetailB) {
-        return TriggerBuilder.newTrigger().forJob(jobDetailB)
-                .withIdentity("test2")
-                .withSchedule(cronSchedule("/5 * * * * ?")
-                        .inTimeZone(TimeZone.getTimeZone("Asia/Seoul")))
-                .build();
-    }
 
 }
