@@ -16,13 +16,13 @@ public class TestJobA implements Job {
     @Override
     public void execute(JobExecutionContext context) throws JobExecutionException {
         JobDataMap jobDataMap = context.getMergedJobDataMap();
-        //int count = jobDataMap.getInt("count");
-//        log.info("count before: {}", count);
-//        count++;
-//        jobDataMap.put("count", count);
-//        log.info("count after: {}", count);
+        int count = jobDataMap.getInt("count");
+        log.info("count before: {}", count);
+        count++;
+        jobDataMap.put("count", count);
+        log.info("count after: {}", count);
 
-        log.info(cnt);
+        //log.info(cnt);
 
         cnt++;
 
