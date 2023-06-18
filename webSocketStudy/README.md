@@ -223,3 +223,101 @@ public class WebSocketConfig implements WebSocketConfigurer {
     websocket.onclose   = onClose;
 </script>
 ```
+
+
+<br/>
+<hr/>
+
+### Server -> Client로 데이터 전달
+
+- 1 . `WebSocketHandler` 내 데이터를 전달해줄 메서드를 생성해준다.
+  -  해당 소켓에 연결된 모든 소켓에 전달해야하기 떄문에 소켓을 관리하고 있는 WebSocket Handler에서 구현
+    - TextMessage를 사용하여 전달한 데이터를 정의함 
+```java
+// WebSocketHandler - TextWebSocketHandler 상속 구현
+
+@Component
+@Log4j2
+public class WebSocketHandler extends TextWebSocketHandler {
+    
+    // Code ...
+    
+    /**
+     * @description : Service에서 요청하여 소켓에 연결 중인 모든 클라이언트에 값 전달.
+     * @param string message
+     * @return void
+     * **/
+    public void sendMessageToAllClient(String message) throws Exception{
+      TextMessage textMessage  = new TextMessage(message);
+      log.info("------------------------");
+      log.info("소켓에 접속중인 세션 목록 :::{}",list);
+      log.info("textMessage :::{}",textMessage);
+      log.info("------------------------");
+    
+      // 모든 세션에 전달하기위한 Loop
+      for(WebSocketSession sess: list) {
+        sess.sendMessage(textMessage);
+      }
+    }
+}
+```
+
+- 2 . `sendMessageToAllClient(String str)`을 요청할 Service 생성
+
+```java
+// Service
+
+public interface SendClientMsgToSocketService {
+  void sendMsgToAllClient(String msg) throws Exception;
+}
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// ServiceImplements
+
+@Service
+@Log4j2
+@RequiredArgsConstructor
+public class SendClientMsgToSocketServiceImpl implements SendClientMsgToSocketService{
+  // DI 주입
+  private final WebSocketHandler chatHandler;
+
+  @Override
+  public void sendMsgToAllClient(String msg) throws Exception{
+    log.info("msg ::::::::{}",msg);
+    chatHandler.sendMessageToAllClient(msg);
+  }
+}
+```
+
+- 3 . 사용
+  - 현재는 Controller 요청으로 사용하였으나 필요한 부분에서 요청하여 사용 하는방식으로 사용가능
+
+```java
+// Constroller
+
+@Controller
+@Log4j2
+@RequiredArgsConstructor
+public class ChatController {
+    // DI 주입
+    private final SendClientMsgToSocketService sendClientMsgToSocketService;
+
+    @GetMapping("/send")
+    @ResponseBody
+    public String sendClient() throws Exception{
+        sendClientMsgToSocketService.sendMsgToAllClient("서버단에서 전송한것임");
+        return "success";
+    }
+}
+```
+
+#### 주의사항
+- 문제 
+  - 해당 Service를 구현 후 JUnit 테스트시 연결된 클라이언트에 값이 찍히지 않는 문제가 발생하였음 -- 오류는 없었다
+
+- 이유 
+  - JUnit에서는 연결되어있는 소켓목록을 가져올 수 없기에 해당 소켓에 값을 전달해도 클라이언트에서 받을 수가 없던것임!
+    - `List<WebSocketSession> list`가 비어 있음!
+  - 따라서 테스트를 Junit 테스트가 아닌 기동 후 컨트롤러를 연결하여 요청 확인 방식으로 진행하였음
