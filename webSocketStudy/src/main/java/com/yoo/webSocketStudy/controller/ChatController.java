@@ -14,25 +14,14 @@ public class ChatController {
 
     private final SendClientMsgToSocketService sendClientMsgToSocketService;
 
-
     @GetMapping("/chatPage")
     public void chatPage(){
         log.info("--- chat Page----");
     }
 
-
-    @GetMapping("/chat")
-    public String chatGET(){
-
-        log.info("@ChatController, chat GET()");
-
-        return "chat";
-    }
-
     @GetMapping("/send")
     @ResponseBody
     public String sendClient() throws Exception{
-        log.info("!!!!!!!!!!!!!!!!!!!!!!!!");
         sendClientMsgToSocketService.sendMsgToAllClient("서버단에서 전송한것임");
         return "success";
     }
