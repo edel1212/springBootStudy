@@ -4,6 +4,11 @@
     <meta charset="UTF-8">
     <title>Title</title>
 </head>
+<style>
+    .alert-secondary{
+        color :green;
+    }
+</style>
 <body>
 <div class="container">
     <div class="col-6">
@@ -11,9 +16,12 @@
     </div>
     <div>
         <div id="msgArea" class="col"></div>
+
+        <hr/>
+
         <div class="col-6">
             <div class="input-group mb-3">
-                <input type="text" id="msg" class="form-control" aria-label="Recipient's username" aria-describedby="button-addon2">
+                <input type="text" id="msg" class="form-control" aria-label="Recipient's username" aria-describedby="button-addon2" value="8081">
                 <div class="input-group-append">
                     <button class="btn btn-outline-secondary" type="button" id="button-send">전송</button>
                 </div>
@@ -24,82 +32,79 @@
 
 <script>
 
-        const username = "유정호";
+    // websocket객체 생성
+    const websocket = new WebSocket("ws://localhost:8080/ws/chat");
 
-        const sentBtn = document.querySelector("#button-send");
+    // 하드코딩 유저네임
+    const username = "8081님";
 
-        sentBtn.addEventListener("click",()=>{
-            send();
-        })
+    // 전송 버튼 클릭 시
+    document.querySelector("#button-send").addEventListener("click",()=>{
+        send();
+    })
 
-        // websocket객체 생성
-        const websocket = new WebSocket("ws://localhost:8080/ws/chat");
+    // 메세지 전송!!!
+    const send = ()=>{
+        // text Input
+        const msg = document.getElementById("msg");
+        // 소켓을 통해 전달
+        websocket.send(`${username} : ${msg.value}`);
+        // 초기화
+        msg.value = '';
+    }
+
+    //채팅창에서 나갔을 때
+    const onClose = (evt) =>{
+        websocket.send(`${username} 님이 방을 나가셨습니다."`);
+    }
+
+    //채팅창에 들어왔을 때
+    const onOpen = (evt) => {
+        websocket.send(`${username} 님이 입장하셨습니다."`);
+    }
+    
+
+    // WebSocket에서 메시지를 수신할 때 실행될 함수
+    const onMessage = (msg) => {
+        // 소켓통신에서 전달 받은 데이터
+        const data = msg.data;
+        // 받아온 데이터를 : 기준으로 잘라서 사용 - 이건 상황에 맞게 사용하면 좋을 듯함
+        const arr = data.split(":");
+
+        // 현재 Client의 아이디를 지정핸다.
+        const cur_session = username;
+
+        
+        // ":"를 기준으로 나눠서 아이디를 가져옴
+        const sessionId = arr[0].trim();
+        // ":"를 기준으로 나눠서 내용을 가져옴
+        const message   = arr[1];
 
 
-        websocket.onmessage = onMessage;
-        websocket.onopen    = onOpen;
-        websocket.onclose   = onClose;
+        console.log("sessionID      : " + sessionId);
+        console.log("cur_session    : " + cur_session);
 
-        function send(){
+        
+        // 내가 쓴글과 상대방이 쓴글을 나눠서 제공 - sessionId == cur_session
+        const str = `<div class='col-6'>
+                        <div class='alert ${sessionId == cur_session ? "alert-secondary" : "alert-warning'" }'>
+                            <b> ${sessionId} :  ${message}</b>
+                        </div>
+                    </div>`
+        document.querySelector("#msgArea").insertAdjacentHTML("beforeEnd",str);
+    }
+    
+    /**
+     *  WebSocket 통신 설정
+    */
+    // WebSocket 서버로부터 수신된 메시지를 처리하는 역할을 수행 - 데이터 전송 및 전달 시 무조건 실행
+    websocket.onmessage = onMessage;
+    // WebSocket 연결이 열릴 때 실행될 함수를 지정
+    websocket.onopen    = onOpen;
+    // WebSocket 연결이 닫힐 때 실행
+    websocket.onclose   = onClose;
 
-                let msg = document.getElementById("msg");
-
-                console.log(username + ":" + msg.value);
-                websocket.send(username + ":" + msg.value);
-                msg.value = '';
-            }
-
-            //채팅창에서 나갔을 때
-            function onClose(evt) {
-                var str = username + ": 님이 방을 나가셨습니다.";
-                websocket.send(str);
-            }
-
-            //채팅창에 들어왔을 때
-            function onOpen(evt) {
-                var str = username + ": 님이 입장하셨습니다.";
-                websocket.send(str);
-            }
-
-            function onMessage(msg) {
-                var data = msg.data;
-                var sessionId = null;
-                //데이터를 보낸 사람
-                var message = null;
-                var arr = data.split(":");
-
-                for(var i=0; i<arr.length; i++){
-                    console.log('arr[' + i + ']: ' + arr[i]);
-                }
-
-                var cur_session = username;
-
-                //현재 세션에 로그인 한 사람
-                console.log("cur_session : " + cur_session);
-                sessionId = arr[0];
-                message = arr[1];
-
-                console.log("sessionID : " + sessionId);
-                console.log("cur_session : " + cur_session);
-
-                //로그인 한 클라이언트와 타 클라이언트를 분류하기 위함
-                if(sessionId == cur_session){
-                    var str = "<div class='col-6'>";
-                    str += "<div class='alert alert-secondary'>";
-                    str += "<b>" + sessionId + " : " + message + "</b>";
-                    str += "</div></div>";
-                    document.querySelector("#msgArea").insertAdjacentHTML("beforeEnd",str);
-                }
-                else{
-                    var str = "<div class='col-6'>";
-                    str += "<div class='alert alert-warning'>";
-                    str += "<b>" + sessionId + " : " + message + "</b>";
-                    str += "</div></div>";
-                    document.querySelector("#msgArea").insertAdjacentHTML("beforeEnd",str);
-                }
-            }
-
-    </script>
+</script>
 
 </body>
 </html>
