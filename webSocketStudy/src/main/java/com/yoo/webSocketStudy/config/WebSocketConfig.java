@@ -15,8 +15,10 @@ public class WebSocketConfig implements WebSocketConfigurer {
     @Override
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
         registry.addHandler(chatHandler         // 핸들러 주입
-                        , "ws/chat")    // 사용될 url 설정
-                .setAllowedOrigins("*");         // CORS 설정 모두가 접근 가능
+                        , "/ws/chat")    // 사용될 url 설정
+                //.setAllowedOrigins("*")         ❌ SockJS 사용시 보안상 문제로 "*"사용이 불가능해짐 [CORS 설정 ]
+                .setAllowedOriginPatterns("http://localhost:8080", "http://localhost:8081")
+                .withSockJS();
 
     //https://dev-gorany.tistory.com/224 적용 테스트 필요
     }
