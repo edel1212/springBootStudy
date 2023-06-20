@@ -30,10 +30,12 @@
     </div>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.4.0/sockjs.min.js"></script>
 <script>
 
     // websocket객체 생성
-    const websocket = new WebSocket("ws://localhost:8080/ws/chat");
+    //const websocket = new WebSocket("ws://localhost:8080/ws/chat");
+    const websocket = new SockJS("http://localhost:8080/ws/chat", null, {transports: ["websocket", "xhr-streaming", "xhr-polling"]});
 
     // 하드코딩 유저네임
     const username = "8081님";
