@@ -31,7 +31,7 @@
         // 첫번째 인자 : Socket 서버의 URL
         // 두번째 인자 : 일반적인 사용 시에는 null로 설정하면 됩니다. 이 매개변수는 SockJS 클라이언트의 동작에 대한 옵션을 제공할 수 있습니다.
         // 세번째 인자 : SockJS 클라이언트의 전송 방식(transport)을 지정하는 옵션입니다.
-        const websocket = new SockJS("http://localhost:8080/ws/chat", null, {transports: ["websocket", "xhr-streaming", "xhr-polling"]});
+        const websocket = new SockJS("/ws/chat", null, {transports: ["websocket", "xhr-streaming", "xhr-polling"]});
 
         // 하드코딩 유저네임
         const username = "8081님";

@@ -320,4 +320,100 @@ public class ChatController {
 - 이유 
   - JUnit에서는 연결되어있는 소켓목록을 가져올 수 없기에 해당 소켓에 값을 전달해도 클라이언트에서 받을 수가 없던것임!
     - `List<WebSocketSession> list`가 비어 있음!
-  - 따라서 테스트를 Junit 테스트가 아닌 기동 후 컨트롤러를 연결하여 요청 확인 방식으로 진행하였음
+  - 따라서 테스트를 Junit 테스트가 아닌 기동 후 컨트롤러를 연결하여 요청 확인 방식으로 진행 해야한다.
+
+
+<br/>
+<hr/>
+
+### SocketJS 
+
+#### SocketJS란?
+- SockJS는 어플리케이션이 WebSocket API를 사용하도록 허용하지만 브라우저에서 WebSocket을 지원하지 않는 경우에 대안으로 어플리케이션의 코드를  
+변경할 필요 없이 런타임에 필요할 때 대체하는 것이다.
+
+- 사용 이유
+  - 모든 클라이언트가 WebSocket를 지원해준다는 보장이 없기 떄문에 사용한다.
+  - Server와 CLient 중간에 위치한 Proxy가 Upgrade 해더를 해석하지 못해 서버에 전달하지 못할 수 있다.
+  - proxy가 중간에서 갑자기 connection을 종료하는 경우도 존재한다.
+- 해결 방법
+  - `WebSocket Emulation`를 사용하는 것이다. (지원하지 않는 클라이언트에서 지원되게 끔 유사한 기능을 모방하는 것)
+    - 우선 WebSocket을 시도하고, 실패할 경우 HTTP Streaming, Long-Polling 같은 HTTP 기반의 다른 기술로 전환해 다시 연결을 시도하는 것을 말한다.
+    - `node.js`에서는 `Socket.io`를 사용하는 것이 일반적이다.
+    - `Spring`에서는 `SockJS`를 사용하는것이 일반적이다.
+
+
+<br/>
+
+#### SocketJS의 구성
+- SocketJS Protocol
+- SockJS Javascript Client Library
+- SockJS Server
+
+
+<br/>
+
+#### 전송타입
+- WebSocket
+  - Handshaking을 위한 하나의 HTTP 요청을 필요로 한다. 이후 연결이 되면 모든 메세지들은 그 이후 사용했던 Socket을 통해 교환된다. 
+- HTTP Streaming
+  - 서버 -> 클라이언트로의 메세지들을 위해 하나의 Long-running 요청이 있고, 추가적인 HTTP POST 요청은 클라이언트 -> 서버로의 메세지를 위해 사용된다.
+- HTTP Long Polling
+  - 서버 -> 클라이언트로의 응답 후 현재의 요청을 끝내는 것을 제외하고는 XHR Streaming과 유사하다.
+
+   
+<br/>
+
+#### 적용 방법
+
+- 1 . Server에서의 WebSocket 설정 파일에 SocketJS 설정을 추가해준다.
+  - SocketJS 적용 시 보안상 문제로 `setAllowedOrigins("*")`는 사용할 수 없다.
+  - 사용할 `Origin`을 지정 해줘야햔다.
+```java
+// WebSocketConfig
+
+package com.yoo.webSocketStudy.config;
+
+import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.socket.config.annotation.*;
+
+@Configuration
+@RequiredArgsConstructor
+@EnableWebSocket // WebSocket을 활성화
+public class WebSocketConfig implements WebSocketConfigurer {
+
+  // WebSocket을 컨트롤하기 위하여 주입
+  private final WebSocketHandler chatHandler;
+
+  @Override
+  public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
+    registry.addHandler(chatHandler, "/ws/chat")    // 핸들러 주입 및  사용될 uri 지정           
+            //.setAllowedOrigins("*")  ❌ SockJS 사용시 보안상 문제로 "*"사용이 불가능해짐 [CORS 설정 ]
+            .setAllowedOriginPatterns("http://localhost:8080", "http://localhost:8081") // ✅ Origin 지정
+            .withSockJS();                                                              // ✅ SocketJS 추가
+  }
+}
+```
+
+- 2 . Client에서 SocketJS 라이브러리 import 후 기존 사용하던 `new WebSocket` -> `new SocketJS()` 생성 객체 변경
+```html
+<!-- Client -->
+
+<!-- ✅ SocketJS를 꼭 추가해 줘야한다  --->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.4.0/sockjs.min.js"></script>
+<script>
+    // ❌ 변경 const websocket = new WebSocket("ws://localhost:8080/ws/chat");
+
+    /***
+     *   ✅ WebSocket가 아닌 SockJS를 사용하여 기동함
+     *   
+     *   첫번째 인자 : Socket 서버의 URL
+     *   두번째 인자 : 일반적인 사용 시에는 null로 설정하면 됩니다. 이 매개변수는 SockJS 클라이언트의 동작에 대한 옵션을 제공할 수 있습니다.
+     *   세번째 인자 : SockJS 클라이언트의 전송 방식(transport)을 지정하는 옵션입니다.
+    */
+    const websocket = new SockJS("/ws/chat", null, {transports: ["websocket", "xhr-streaming", "xhr-polling"]});
+  
+    // 하위 코드는 같음
+</script>
+```
