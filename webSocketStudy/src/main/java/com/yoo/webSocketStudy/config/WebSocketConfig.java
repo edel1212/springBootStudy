@@ -19,7 +19,10 @@ public class WebSocketConfig implements WebSocketConfigurer {
                 //.setAllowedOrigins("*")         ❌ SockJS 사용시 보안상 문제로 "*"사용이 불가능해짐 [CORS 설정 ]
                 .setAllowedOriginPatterns("http://localhost:8080", "http://localhost:8081")
                 .withSockJS();
-
-    //https://dev-gorany.tistory.com/224 적용 테스트 필요
     }
+
+
+
+
+
 }
