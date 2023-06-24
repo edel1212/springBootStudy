@@ -18,7 +18,7 @@ public class RoomController {
 
     private final ChatRoomRepository chatRoomRepository;
 
-    @GetMapping("/chatRoom")
+    @GetMapping("/roomListPage")
     public void room(){
         log.info("Chat Room List!!!");
     }
@@ -38,6 +38,13 @@ public class RoomController {
         chatRoomRepository.createChatRoomDTO(name);
         return "success";
     }
+
+
+    @GetMapping("/roomPage")
+    public void roomPage(){
+        log.info("RoomPage");
+    }
+
 
     //채팅방 조회
     @GetMapping("/findRoom")
