@@ -16,4 +16,10 @@ public class ChatPageController {
         log.info("ChatPag!!");
     }
 
+    @GetMapping("/chatPageWithStomp")
+    public void chatPageWithStomp(){
+        log.info("ChatPageWithStomp!!");
+    }
+
+
 }
