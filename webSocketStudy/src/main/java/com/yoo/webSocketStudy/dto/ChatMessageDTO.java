@@ -1,6 +1,5 @@
 package com.yoo.webSocketStudy.dto;
 
-import com.yoo.webSocketStudy.enums.MessageType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -10,8 +9,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class ChanMessageDTO {
-    private MessageType messageType;
-    private String content;
-    private String sender;
+public class ChatMessageDTO {
+    private String roomId;
+    private String writer;
+    private String message;
 }
