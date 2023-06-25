@@ -28,48 +28,38 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
   <script>
     const urlParams = new URL(location.href).searchParams;
+    const roomName  = urlParams.get('roomName');
+    const roomId    = urlParams.get('roomId');
+    const username  = "8080포트";
 
-    const roomName = urlParams.get('roomName');
-    const roomId = urlParams.get('roomId');
-    const username = "yoojh";
-
-    console.log(roomName + ", " + roomId + ", " + username);
-
-    const sockJs = new SockJS("/stomp/chat");
     //1. SockJS를 내부에 들고있는 stomp를 내어줌
-    const stomp = Stomp.over(sockJs);
+    const stomp = Stomp.over( new SockJS("/stomp/chat"));
+
+    // 👉 해당 설정을 해줘야 sub, pub 시 로그기 안나옴
+    stomp.debug = null;
 
     //2. connection이 맺어지면 실행
-    stomp.connect({}, function (){
-       console.log("STOMP Connection")
+    stomp.connect({}, () => {
 
        //4. subscribe(path, callback)으로 메세지를 받을 수 있음
        stomp.subscribe("/sub/chat/room/" + roomId, function (chat) {
-           var content = JSON.parse(chat.body);
-           var writer = content.writer;
-           var str = '';
-           if(writer === username){
-               str = "<div class='col-6'>";
-               str += "<div class='alert alert-secondary'>";
-               str += "<b>" + writer + " : " + content.message + "</b>";
-               str += "</div></div>";
-               document.querySelector("#msgArea").insertAdjacentHTML("beforeEnd",str);
-           } else{
-               str = "<div class='col-6'>";
-               str += "<div class='alert alert-warning'>";
-               str += "<b>" + writer + " : " + content.message + "</b>";
-               str += "</div></div>";
-               document.querySelector("#msgArea").insertAdjacentHTML("beforeEnd",str);
-           }
+           const content = JSON.parse(chat.body);
+           const writer = content.writer;
+           const str = `<div class='col-6'>
+                        <div class='alert ${writer === username ?"alert-secondary" :  "alert-warning"}'>
+                          <b> ${writer} : ${content.message} </b>
+                          </div>
+                      </div>`;
+           document.querySelector("#msgArea").insertAdjacentHTML("beforeEnd",str);
        });
 
        //3. send(path, header, message)로 메세지를 보낼 수 있음
        stomp.send('/pub/chat/enter', {}, JSON.stringify({roomId: roomId, writer: username}))
     });
 
+    // 메세지 전송 버튼 이벤트
     document.querySelector("#button-send").addEventListener("click", (e)=> {
-        var msg = document.getElementById("msg");
-        console.log(username + ":" + msg.value);
+        const msg = document.getElementById("msg");
         stomp.send('/pub/chat/message', {}, JSON.stringify({roomId: roomId, message: msg.value, writer: username}));
         msg.value = '';
     });
