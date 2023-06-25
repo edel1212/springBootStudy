@@ -27,13 +27,17 @@
   <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
   <script>
+    // 편의상 Get방식을 사용함
     const urlParams = new URL(location.href).searchParams;
     const roomName  = urlParams.get('roomName');
     const roomId    = urlParams.get('roomId');
     const username  = "8080포트";
 
-    //1. SockJS를 내부에 들고있는 stomp를 내어줌
-    const stomp = Stomp.over( new SockJS("/stomp/chat"));
+    /**
+    * 1. SockJS를 객체를 사용하여 Stomp객체 생성
+        - 상대경로 작성 시 다른 클라이언트에서는 해당 포트가 적용 되므로 Full Path를 사용하자
+    */
+    const stomp = Stomp.over( new SockJS("http://localhost:8080/stomp/chat"));
 
     // 👉 해당 설정을 해줘야 sub, pub 시 로그기 안나옴
     stomp.debug = null;

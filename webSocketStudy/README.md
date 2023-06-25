@@ -442,3 +442,241 @@ public class WebSocketConfig implements WebSocketConfigurer {
 
 #### 사용 이유
 - 간편하게 하나의 소켓이 아닌 여러개의 소캣을 나눠서 사용할 수 있다.
+
+#### 사용 방법
+
+- 1 . stomp-websocket  Dependencies에 추가
+```groovy
+// build.gradle
+
+// code..
+
+dependencies {
+  //  tarter-websocket
+  implementation 'org.springframework.boot:spring-boot-starter-websocket'
+
+  // STOMP 추가
+  // https://mvnrepository.com/artifact/org.webjars/stomp-websocket
+  implementation group: 'org.webjars', name: 'stomp-websocket', version: '2.3.4'
+
+}
+```
+
+- 2 . 사용을 위한 Config class 작성
+  -  중요 포인트
+    - 소켓 통신 전 HandShake용 Path 지정이 필요하다.
+    - 보안 상 문제로 "*" Origin 설정이 불가능하닫.
+    - 요청,응답 path 설정을 해준다 `/pub`, `/sub`
+```java
+// java StompWebSocketConfig - WebSocketMessageBrokerConfigurer 구현함
+
+@Configuration
+@EnableWebSocketMessageBroker // 👉 Stomp를 사용하기위해 추가
+public class StompWebSocketConfig implements WebSocketMessageBrokerConfigurer {
+
+  @Override
+  public void registerStompEndpoints(StompEndpointRegistry registry) {
+    //WebSocket 또는 SockJS Client가 웹소켓을 사용하기 위해 "핸드셰이크" 커넥션을 생성할 Path
+    registry.addEndpoint("/stomp/chat")
+            // "*" 적용 시 보안상 문제로 에러 발생
+            .setAllowedOrigins("http://localhost:8080", "http://localhost:8081")
+            .withSockJS();
+  }
+
+  @Override
+  public void configureMessageBroker(MessageBrokerRegistry registry) {
+    // Client에서 SEND 요청을 처리 - 요청 path 시작 설정
+    registry.setApplicationDestinationPrefixes("/pub");
+    //  해당하는 경로를 SUBSCRIBE하는 Client에게 메세지를 전달하는 간단한 작업을 수행 - 응답 path 시작 설정
+    registry.enableSimpleBroker("/sub");
+  }
+}
+```
+
+- 3 . Client와 값전달을 편하게 하기위한 DTO 작성
+```java
+// ChatRoomDTO
+
+@Getter
+@Setter
+public class ChatRoomDTO {
+
+  // 소켓을 구분하기 위한 Id 사용
+  private String roomId;
+
+  // 해당 방의 이름 구분
+  private String name;
+
+  //WebSocketSession은 Spring에서 Websocket Connection이 맺어진 세션 - 예제에서는 실직적 사용 ❌
+  private Set<WebSocketSession> sessions = new HashSet<>();
+
+  // 객체 생성 시 방의 이름을 주입 받고 아이디는 UUID로 생성
+  public ChatRoomDTO (String name){
+    this.roomId = UUID.randomUUID().toString();
+    this.name = name;
+  }
+
+}
+```
+
+- 4 . STOMP 통신을 받을 Controller 작성
+  - Client에서 메세지 전송 시 해당 `path를 읽고 작동`
+  - simpMessagingTemplate.convertAndSend(`"path"`, `"소켓이 구분될 아이디"`, `전달 메세지`)
+    - 서버에서 만약 해당 소켓으로 전달하려면 `Message를 작성`해서 전달하면 된다.
+```java
+
+@Controller
+@RequiredArgsConstructor
+public class StompChatController {
+
+    private final SimpMessagingTemplate simpMessagingTemplate;
+
+    /**
+     * @MessageMapping 을 통해 WebSocket으로 들어오는 메세지 발행을 처리한다.
+     *
+     * - 둘의 URL Path 정보를 구분해 놓은 이유는
+     *   enter의 경우 Client에서 첫 한번만 실행 되게 끔 함 "~님이 입장"을 위해 사용되었음
+     *   message의 경우 받아온 메세지를 전달 하기 위함임
+     * **/
+    @MessageMapping(value = "/chat/enter")
+    public void enter(ChatMessageDTO message){
+        message.setMessage(message.getWriter() + "님이 채팅방에 참여하였습니다.");
+        simpMessagingTemplate.convertAndSend("/sub/chat/room/" + message.getRoomId(), message);
+    }
+
+    @MessageMapping(value = "/chat/message")
+    public void message(ChatMessageDTO message){
+        simpMessagingTemplate.convertAndSend("/sub/chat/room/" + message.getRoomId(), message);
+    }
+
+}
+```
+
+
+- 6 . 채팅방을 생성하기 위한 로직
+  - DB를 통해 사용해야하나 예제이기 떄문에 Memory를 사용하여 구현함.
+  - 간단한 로직이기에 주석으로 내부 코드를 설명함
+
+```java
+// ChatRoom 생성 Controller
+
+@Controller
+@RequiredArgsConstructor
+@RequestMapping("/chat")
+@Log4j2
+public class RoomController {
+
+  private final ChatRoomRepository chatRoomRepository;
+  
+  //채팅방 목록 조회
+  @GetMapping("/roomList")
+  @ResponseBody
+  public ResponseEntity<List<ChatRoomDTO>> rooms(){
+    return ResponseEntity.ok(chatRoomRepository.findAllRooms());
+  }
+
+  //채팅방 개설
+  @PostMapping("/room")
+  @ResponseBody
+  public String create(@RequestBody String name){
+    log.info("# Create Chat Room , name: " + name);
+    chatRoomRepository.createChatRoomDTO(name);
+    return "success";
+  }
+
+}
+
+
+//--------------------------------------------------------------------------------------
+
+
+// ChatRoomRepository
+
+@Repository
+public class ChatRoomRepository {
+
+  private Map<String, ChatRoomDTO> chatRoomDTOMap;
+  
+  // 👉 Memory를 사용하기에 객체 LinkedHshMap으로 객체 생성
+  @PostConstruct
+  private void init(){
+    chatRoomDTOMap = new LinkedHashMap<>();
+  }
+
+  // 👉 모든 방 찾기
+  public List<ChatRoomDTO> findAllRooms(){
+    //채팅방 생성 순서 최근 순으로 반환
+    List<ChatRoomDTO> result = new ArrayList<>(chatRoomDTOMap.values());
+    Collections.reverse(result);
+    return result;
+  }
+
+
+  // 👉 채팅 방 생성 - 방이름을 파라미토로 받고 UUID를 통해 ChatRoomDTO객체 생성
+  public ChatRoomDTO createChatRoomDTO(String name){
+    ChatRoomDTO room = new ChatRoomDTO(name);
+    chatRoomDTOMap.put(room.getRoomId(), room);
+    return room;
+  }
+
+}
+```
+
+- 7 . Client 사용
+  - `Socket.js, Stomp.js` import는 **필수**이다
+  - 방에 입장하기 위해서는 해당 방의 ID값을 전달해줘야 함
+    - Socket 연결중 어떠한 연결을 할지 정하기 위함
+  - `stomp.debug = null` 설정을 해주지 않으면 pub, sub 시 로그가 계속 찍힘
+
+```html
+<!--  client -->
+
+<script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+<script>
+    // 편의상 Get방식을 사용함
+    const urlParams = new URL(location.href).searchParams;
+    const roomName  = urlParams.get('roomName');
+    const roomId    = urlParams.get('roomId');
+    const username  = "8080포트";
+
+    /**
+    * 1. SockJS를 객체를 사용하여 Stomp객체 생성
+        - 상대경로 작성 시 다른 클라이언트에서는 해당 포트가 적용 되므로 Full Path를 사용하자
+    */
+    const stomp = Stomp.over( new SockJS("http://localhost:8080/stomp/chat"));
+
+    // 👉 해당 설정을 해줘야 sub, pub 시 로그기 안나옴
+    stomp.debug = null;
+
+    //2. connection이 맺어지면 실행 
+    stomp.connect({}, () => {
+
+       //4. subscribe(path, callback)으로 메세지를 받을 수 있음 - pub로 데이터가 들어올 경우 자동 실행
+       // 👉 StompWebSocketConfig.java에서 설정한 구독(응답 시) '/sub'을 사용함
+       stomp.subscribe("/sub/chat/room/" + roomId, function (chat) {
+           const content = JSON.parse(chat.body);
+           const writer = content.writer;
+           const str = `<div class='col-6'>
+                        <div class='alert ${writer === username ?"alert-secondary" :  "alert-warning"}'>
+                          <b> ${writer} : ${content.message} </b>
+                          </div>
+                      </div>`;
+           document.querySelector("#msgArea").insertAdjacentHTML("beforeEnd",str);
+       });
+
+       //3. send(path, header, message)로 메세지를 보낼 수 있음 - 최초 1회 실행 시킴
+       stomp.send('/pub/chat/enter', {}, JSON.stringify({roomId: roomId, writer: username}))
+    });
+
+    // 메세지 전송 버튼 이벤트
+    document.querySelector("#button-send").addEventListener("click", (e)=> {
+        const msg = document.getElementById("msg");
+        // 👉 StompWebSocketConfig.java에서 설정한 구독(요청 시) '/pub'을 사용함
+        stomp.send('/pub/chat/message', {}, JSON.stringify({roomId: roomId, message: msg.value, writer: username}));
+        msg.value = '';
+    });
+</script>
+```
+#### 참고하면 좋은 정보 링크
+- https://ppaksang.tistory.com/18 :  jwt 인증 추가 로직

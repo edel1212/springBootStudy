@@ -14,11 +14,11 @@ public class StompChatController {
 
     /**
      * @MessageMapping 을 통해 WebSocket으로 들어오는 메세지 발행을 처리한다.
+     *
+     * - 둘의 URL Path 정보를 구분해 놓은 이유는
+     *   enter의 경우 Client에서 첫 한번만 실행 되게 끔 함 "~님이 입장"을 위해 사용되었음
+     *   message의 경우 받아온 메세지를 전달 하기 위함임
      * **/
-
-    //Client가 SEND할 수 있는 경로
-    //stompConfig에서 설정한 applicationDestinationPrefixes와 @MessageMapping 경로가 병합됨
-    //"/pub/chat/enter"
     @MessageMapping(value = "/chat/enter")
     public void enter(ChatMessageDTO message){
         message.setMessage(message.getWriter() + "님이 채팅방에 참여하였습니다.");
