@@ -36,6 +36,9 @@ dependencies {
 	implementation "com.querydsl:querydsl-jpa:5.0.0" // querydsl 라이브러리
 	annotationProcessor "com.querydsl:querydsl-apt:5.0.0" //  Querydsl 관련 코드 생성 기능 제공
 
+	// build.gradle
+	implementation 'com.github.gavlyukovskiy:p6spy-spring-boot-starter:1.7.1'
+
 }
 
 tasks.named('test') {
