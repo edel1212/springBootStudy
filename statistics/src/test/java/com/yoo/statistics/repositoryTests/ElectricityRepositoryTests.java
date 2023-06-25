@@ -41,8 +41,15 @@ public class ElectricityRepositoryTests {
 
 
     @Test
+    @Description("하루 누적량")
     public void testCode2(){
-        repository.statistics();
+        repository.getElectricityOfToday();
+    }
+
+    @Test
+    @Description("각각 시간별 누적양")
+    public void testCode3(){
+        repository.getElectricityByHourOfDay();
     }
 
 }
