@@ -1,9 +1,10 @@
 package com.yoo.statistics.repository;
 
 import com.yoo.statistics.entity.Electricity;
+import com.yoo.statistics.repository.dsl.ElectricitySupport;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface ElectricityRepository extends JpaRepository<Electricity,Long> {
+public interface ElectricityRepository extends JpaRepository<Electricity,Long>, ElectricitySupport {
     // 오늘 등록 쿼리
     // SELECT * FROM electricity WHERE DATE(reg_date) = CURDATE();
 

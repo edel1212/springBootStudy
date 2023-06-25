@@ -37,9 +37,12 @@ public class ElectricityRepositoryTests {
             }// if - else
             repository.save(electricity);
         });
-
-
     }
 
+
+    @Test
+    public void testCode2(){
+        repository.statistics();
+    }
 
 }
