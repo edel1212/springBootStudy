@@ -52,4 +52,16 @@ public class ElectricityRepositoryTests {
         repository.getElectricityByHourOfDay();
     }
 
+    @Test
+    @Description("한달 누적양")
+    public void testCode4(){
+        repository.getElectricityOfMonth();
+    }
+
+    @Test
+    @Description("1년 누적양")
+    public void testCode5(){
+        repository.getElectricityOfYear();
+    }
+
 }
