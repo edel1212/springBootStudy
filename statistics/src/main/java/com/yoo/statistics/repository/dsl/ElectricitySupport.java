@@ -8,4 +8,7 @@ public interface ElectricitySupport {
     void getElectricityOfYear();
 
     void getElectricityByHourOfDay();
+
+    void getElectricityByYearsAndLastYearsToMonth();
+
 }

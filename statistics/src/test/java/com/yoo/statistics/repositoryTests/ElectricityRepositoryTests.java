@@ -64,4 +64,10 @@ public class ElectricityRepositoryTests {
         repository.getElectricityOfYear();
     }
 
+    @Test
+    @Description("올해 월별 작난월별 서브쿼리")
+    public void testCode6(){
+        repository.getElectricityByYearsAndLastYearsToMonth();
+    }
+
 }
