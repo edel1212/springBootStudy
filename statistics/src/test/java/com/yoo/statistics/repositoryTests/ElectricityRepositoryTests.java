@@ -70,4 +70,11 @@ public class ElectricityRepositoryTests {
         repository.getElectricityByYearsAndLastYearsToMonth();
     }
 
+
+    @Test
+    @Description("주간 데이터 일별 - 선택주")
+    void testCode7() {
+        System.out.println("!!!");
+        repository.getElectricityByWeekToDay();
+    }
 }

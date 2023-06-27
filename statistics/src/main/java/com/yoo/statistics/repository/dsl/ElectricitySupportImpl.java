@@ -13,7 +13,7 @@ import org.springframework.data.jpa.repository.support.QuerydslRepositorySupport
 
 import javax.persistence.TypedQuery;
 import java.time.*;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Log4j2
@@ -140,7 +140,7 @@ public class ElectricitySupportImpl extends QuerydslRepositorySupport implements
         // 2023-12-31T23:59:59.000+0900
         LocalDateTime endDateTime = year.atMonth(12).atEndOfMonth().atTime(23, 59, 59);
 
-        String jpql = "SELECT CONCAT('"+year+".', FUNCTION('TO_CHAR', e.regDate, 'MM')), SUM(e.value) " +
+        String jpql = "SELECT CONCAT('" + year + ".', FUNCTION('TO_CHAR', e.regDate, 'MM')), SUM(e.value) " +
                 "FROM Electricity e " +
                 "WHERE e.regDate BETWEEN :startDate AND :endDate " +
                 "GROUP BY FUNCTION('TO_CHAR', e.regDate, 'MM')";
@@ -162,4 +162,59 @@ public class ElectricitySupportImpl extends QuerydslRepositorySupport implements
         log.info("--------------------------------");
 
     }
+
+    @Override
+    public void getElectricityByWeekToDay() {
+
+        QElectricity qElectricity = QElectricity.electricity;
+
+        LocalDate startDate = LocalDate.of(2023, 6, 4); // 6월 1일
+        LocalDate endDate = startDate.plusDays(6); // 6월 1일부터 6일 후
+
+        JPQLQuery<Electricity> jpqlQuery = from(qElectricity);
+
+        // 검증용 쿼리
+//        select dayofweek(electricit0_.reg_date) as col_0_0_
+//                , sum(electricit0_.value) as col_1_0_
+//, date_format(electricit0_.reg_date,'%Y-%M-%d') as date
+//        from electricity electricit0_ where electricit0_.reg_date between '2023-06-01T00:00:00.000+0900' and '2023-06-07T23:59:59.999+0900' group by dayofweek(electricit0_.reg_date), date;
+
+        List<Tuple> result = jpqlQuery
+                .select(qElectricity.regDate.dayOfWeek(), qElectricity.value.sum())
+                .from(qElectricity)
+                .where(qElectricity.regDate.between(startDate.atStartOfDay(), endDate.atTime(LocalTime.MAX)))
+                .groupBy(qElectricity.regDate.dayOfWeek())
+                .fetch();
+
+
+        // 방법 1 - DayOfWeek 값을 내가 enum을 작성해서 사용해야할듯 //?
+        Map<DayOfWeek, Double> cumulativeValues = new LinkedHashMap<>();
+        for(Tuple tuple : result) {
+            DayOfWeek dayOfWeek = DayOfWeek.of(tuple.get(0,Integer.class) - 1 );
+            Double value = tuple.get(1,Double.class);
+            cumulativeValues.put(dayOfWeek, value);
+        }
+        System.out.println(cumulativeValues);
+
+        // 방법 2
+        Calendar calendar = Calendar.getInstance();
+        calendar.set(2023,6-1,27);
+        log.info("************************************************");
+        log.info(calendar.getDisplayName(Calendar.DAY_OF_WEEK, Calendar.LONG, Locale.KOREAN));
+        log.info("************************************************");
+
+
+        // 방법 2
+
+        //{MONDAY=1171.0
+        // , TUESDAY=1002.0
+        // , WEDNESDAY=1516.0
+        // , THURSDAY=1121.0
+        // , FRIDAY=1380.0
+        // , SATURDAY=1203.0
+        // , SUNDAY=1172.0}
+    }
+
+
+
 }

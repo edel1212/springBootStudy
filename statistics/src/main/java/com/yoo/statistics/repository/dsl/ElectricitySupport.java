@@ -11,4 +11,7 @@ public interface ElectricitySupport {
 
     void getElectricityByYearsAndLastYearsToMonth();
 
+
+    void getElectricityByWeekToDay();
+
 }
