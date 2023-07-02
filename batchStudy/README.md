@@ -152,6 +152,19 @@ public class SimpleJobConfiguration {
   - 👍 Meta Schema Table 생성 후 서버를 구동하면 정상적으로 배치가 실행된다.
     - 단 ! 한번 더 실행 시 중복 Job 실행으로  Error 발생
       - Error Message : `Duplicate entry '0' for key 'PRIMARY'`
+  - ☠️☠️☠️☠️☠️☠️☠️☠️☠️☠️☠️☠️☠️☠️
+  - 긴급 추가 [ 이걸로 삽질 2시간 함.. ]
+  - ☠️☠️☠️☠️☠️☠️☠️☠️☠️☠️☠️☠️☠️☠️
+    - SpringBoot 2.X 버전 사용시 위에서 제공해주는 쿼리 그대로 사용하면 시퀀스 값이 오르지 않는 문제 발생..
+      - 해결 방법 - 해당 sql 파일에서 제공해주는 시퀀스에 생성해주는 insert 쿼리를 다른것을 사용하자
+        - 사용 ❌
+          - `INSERT INTO BATCH_STEP_EXECUTION_SEQ (ID, UNIQUE_KEY) select * from (select 0 as ID, '0' as UNIQUE_KEY) as tmp where not exists(select * from BATCH_STEP_EXECUTION_SEQ);`
+          - `INSERT INTO BATCH_JOB_EXECUTION_SEQ (ID, UNIQUE_KEY) select * from (select 0 as ID, '0' as UNIQUE_KEY) as tmp where not exists(select * from BATCH_JOB_EXECUTION_SEQ);`
+          - `INSERT INTO BATCH_JOB_SEQ (ID, UNIQUE_KEY) select * from (select 0 as ID, '0' as UNIQUE_KEY) as tmp where not exists(select * from BATCH_JOB_SEQ);`
+        - 변경 👍
+          - `INSERT INTO BATCH_STEP_EXECUTION_SEQ values(0, '0');`
+          - `INSERT INTO BATCH_JOB_EXECUTION_SEQ values(0, '0');`
+          - `INSERT INTO BATCH_JOB_SEQ values(0, '0');`
 <br/>
 <hr/>
 
@@ -169,6 +182,57 @@ public class SimpleJobConfiguration {
 <br/>
 <hr/>
 
-#### Batch Meta Schema Table 구조
+#### Batch Meta Table
+
+- **`ERD`** 구조
 
 ![img_1.png](src/main/resources/static/image/img_1.png)
+
+- 1 ) **BATCH_JOB_INSTANCE**
+  - 실행 되었던 `Job Parameter`에 따라 생성되는 테이블이다.
+    - 여기서 `Job Parameter`란 ?
+      - Spring Batch가 실행도리 때 `외부`에서 받을 수 있는 파라미터 이다.
+      - 특정 날짜를 Job Parameter로 넘기면 Spring Batch에서는 해당 날짜 데이터로 Batch 작업을 진행 할 수있다.
+      - 같은 Job이라도 `Job Parameter가 "다르면" BATCH_JOB_INSTANCE`에 기록 된다.
+  - 적용 Code
+    - `@JobScope`를 사용해서 jobParameter를 변경 할 수 있게 함
+    - `@Value("#{jobParameters[requestDate]}"`를 사용해 파라미터를 변경함
+      - 여기서 `requestDate` 값은 Argument Parameter에서 받아옴
+  - **결과 정리**
+    - `BATCH_JOB_INSTANCE`테이블을 확인해 보면 `JOB_NAME`은 같아도 상관 없이 저장이 가능하지만 `Job Parameter`는 같으면 ***에러가 발생한다.*** 
+```java
+// SimpleJobConfiguration
+
+
+public class SimpleJobConfiguration {
+
+  private final JobBuilderFactory jobBuilderFactory;
+  private final StepBuilderFactory stepBuilderFactory;
+
+  @Bean
+  public Job simpleJob() {
+    return jobBuilderFactory.get("simpleJob")
+            .start(simpleStep1(null))
+            .build();
+  }
+
+  /**
+   * jobParameters의 값이 이미 DB에 저장되어 있을 경우 실행 X
+   * */
+  @Bean
+  @JobScope // ✅ 중요
+  public Step simpleStep1(@Value("#{jobParameters[requestDate]}") String requestDate){
+    return stepBuilderFactory.get("simpleStep1")
+            .tasklet((contribution, chunkContext)->{
+              log.info(">>>> THis is Step1");
+              // 👉 받아온 jobParameters 출력
+              log.info(">>>>>>>>>>>>> requestDate = {}",requestDate);
+              return RepeatStatus.FINISHED;
+            }).build();
+  }
+
+}
+```
+
+
+- 2 ) **BATCH_JOB_EXECUTION**
