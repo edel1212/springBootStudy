@@ -7,9 +7,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 @SpringBootApplication
 @EnableBatchProcessing // batch를 사용하기 위해 필 수 선언
 public class BatchStudyApplication {
-
 	public static void main(String[] args) {
 		SpringApplication.run(BatchStudyApplication.class, args);
 	}
-
 }
