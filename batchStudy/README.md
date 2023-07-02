@@ -28,11 +28,11 @@
 <hr/>
 
 ### Batch Application 조건
-- 대량 데이터 : 배치 어플리케이션은 대량의 데이;터를 가져오거나, 전달하거나 ,계산하는 등의 처리를 할 수 있어야한다.
-- 자동화 : 배치 어플리케이션은 심각한 문제를 제외 하고는 사용자 개입 없이 실행되어야 한다.
-- 견고성 : 배치 어플리케여슨은 잘못된 데이터를 충돌/중단 없이 처리할 수 있어야한다.
-- 신뢰성 : 배치 어플리케이션은 무것이 잘못되었는지 추적할 수 있어야 한다.
-- 성능 : 배치 어플리케이션은 지정한 시간 안에 처리를 완료하거나 동시에 실행되는 다른 어플리케이션을 방해하지 않도록 수행 되어야한다.
+- **대량 데이터** : 배치 어플리케이션은 대량의 데이;터를 가져오거나, 전달하거나 ,계산하는 등의 처리를 할 수 있어야한다.
+- **자동화** : 배치 어플리케이션은 심각한 문제를 제외 하고는 사용자 개입 없이 실행되어야 한다.
+- **견고성** : 배치 어플리케여슨은 잘못된 데이터를 충돌/중단 없이 처리할 수 있어야한다.
+- **신뢰성** : 배치 어플리케이션은 무것이 잘못되었는지 추적할 수 있어야 한다.
+- **성능** : 배치 어플리케이션은 지정한 시간 안에 처리를 완료하거나 동시에 실행되는 다른 어플리케이션을 방해하지 않도록 수행 되어야한다.
 
 <br/>
 <hr/>
@@ -62,5 +62,112 @@
 배치 와 스케줄러는 비교 대상이 아니며 배치를 사용할 때는 해당 배치를 실행 시켜줄 때 스케줄러를 사용한다 보면 된다.  
 대량의 데이터 처리를 위한 어플리케이션이 필요할 경우에는 Batch를 사용하고, 가벼운 주기적으로 실행될 가벼운 로직 같은 경우는  
 Quartz를 사용해 스케줄링을 사용해 주자.
+
+
+<br/>
+<hr/>
+
+
+#### Spring Batch 사용 - Simple 예제 
+
+- 1 ) Dependencies 추가
+  - DB (사용할 DB를 지정 - H2 Database 사용시 자동으로 Batch 스키마 Table을 생성해 줌)
+  - JPA ( Mybatis 중 선택 가능 )
+  - Lombok
+  - Batch
+```groovy
+// build.gradle
+
+dependencies {
+	implementation 'org.springframework.boot:spring-boot-starter-batch'
+	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+	compileOnly 'org.projectlombok:lombok'
+	runtimeOnly 'org.mariadb.jdbc:mariadb-java-client'
+	annotationProcessor 'org.projectlombok:lombok'
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testImplementation 'org.springframework.batch:spring-batch-test'
+}
+```
+
+- 2 ) `projectName`Application에 Batch 사용 선언
+```java
+// "Project"Application
+
+@SpringBootApplication
+@EnableBatchProcessing  // ✅ batch를 사용하기 위해 "필수" 선언 [ Batch 기능 활성화 ]
+public class BatchStudyApplication {
+    public static void main(String[] args) {
+        SpringApplication.run(BatchStudyApplication.class, args);
+    }
+}
+```
+
+- 3 ) JPA 설정 및 DB 연결 설정
+  - 간단한 방법이기에 Code Skip
+
+- 4 ) Job, Step 생성 
+  - BeanFactory 등록을 위한 `@COnfiguration` 추가
+  - Batch에 사용될 Job 과 Step을 생성 해줄 DI 주입
+    - `@RequiredArgsConstructor` 어노테이션 추가 
+    - `JobBuilderFactory` Job 생성 Class 추가
+    - `StepBuilderFactory` Step 새성 Class 추가 
+```java
+// SimpleJobConfiguration 
+
+@Log4j2
+@RequiredArgsConstructor
+@Configuration
+public class SimpleJobConfiguration {
+
+    private final JobBuilderFactory jobBuilderFactory;
+    private final StepBuilderFactory stepBuilderFactory;
+
+    // Job 생성
+    @Bean
+    public Job customSimpleJob() {
+        return jobBuilderFactory.get("job1")    // ✅ 해당 이름으로 Job 생성            
+                .start(customSimpleStep1())     // ✅ 시작 시 사용 될 Step 주입
+                .build();
+    }
+
+    // Step 생성
+    @Bean
+    public Step customSimpleStep1(){
+        return stepBuilderFactory.get("step2")              // ✅ 해당 이름으로 Step 생성
+                .tasklet((contribution, chunkContext)->{    // 해당 Step 해서 수행될 기능 정의
+                    log.info(">>>> THis is Step1");
+                    return RepeatStatus.FINISHED;
+                }).build();
+    }
+
+}
+```
+
+- 5 ) 실행 
+  - ❌ Exception 발생 ( Message :: `spring_batch_BATCH_JOB_INSTANCE dosen't exist` )
+    - 원인 : Spring Batch의 경우 중간에 문제가 겼을 경우 정지 된 부분 부터 재실행 및 중복 실행 방지를 위해 이력을 저장할 Meta Table이 필요하다
+    - 해결 방법 : Meta Table 추가해준다.
+      - 파일 찾기를 통해 `schema-사용DB.sql`을 찾은 후 해당 Create Query를 사용
+      - 또는 해당 파일 위치를 서버 기동시 읽을 수 있게 sql-script를 사용해 주자
+  - 👍 Meta Schema Table 생성 후 서버를 구동하면 정상적으로 배치가 실행된다.
+    - 단 ! 한번 더 실행 시 중복 Job 실행으로  Error 발생
+      - Error Message : `Duplicate entry '0' for key 'PRIMARY'`
+<br/>
+<hr/>
+
+#### Job의 구조
+
+- 하나의 Job은 여러개의 Step을 갖을 수 있다.
+- Step에서의 사용 방식에는 2가지 방법 있다
+  - Tasklet 방식
+    - 사용자의 커스텀 방식대로 진행 되는 방식
+  - Reader -> Processor -> Writer 방식
+    - DB를 읽고 로직 사용 후 OutPut을 정의 하는 방식
+
+<image src="https://t1.daumcdn.net/cfile/tistory/99E8E3425B66BA2713" />
+
+<br/>
+<hr/>
+
 
 
