@@ -169,5 +169,6 @@ public class SimpleJobConfiguration {
 <br/>
 <hr/>
 
+#### Batch Meta Schema Table 구조
 
-
+![img_1.png](src/main/resources/static/image/img_1.png)
