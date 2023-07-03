@@ -236,3 +236,64 @@ public class SimpleJobConfiguration {
 
 
 - 2 ) **BATCH_JOB_EXECUTION**
+  - `BATCH_JOB_INSTANCE`와 부모-자식 관계이다.
+  - `BATCH_JOB_INSTANCE`(부모)가 성공/실패했던 모든 내역을 갖고 있다.
+    - 👉 중복된 Job Parameter로 인한 실패는 저장하지 않음
+    - 실행 중 실패해야 저장된다.
+  - 강제 Exception 발생 Code
+    - Step을 한개 늘린 후 Step1에서 강제 Exception 발생
+      - Error Message : `java.lang.IllegalArgumentException: Step 1에서 강제 에러 발생`
+  - **결과 정리**
+    - 실패 시 실패 상태로 저장된다. 
+      - ✅ 실패한 `Job Parameter`로 2번 실행했는데 같은 파라미터로 실행되었다는 **에러가 발생하지 않았다**
+    - Spring Batch는 동일한 `Job Parameter`로 **성공한 기록이 있을때만 재수행**이 안된다는 것을 알 수 있다.
+      - 👉 예외를 발생 시키지 않는 코드로 작성시 `Status`가 `Completed`로 저장됨.
+
+```java
+// SimpleJobConfiguration
+
+@Log4j2
+@RequiredArgsConstructor
+@Configuration
+public class SimpleJobConfiguration {
+
+  private final JobBuilderFactory jobBuilderFactory;
+  private final StepBuilderFactory stepBuilderFactory;
+
+  @Bean
+  public Job simpleJob() {
+    return jobBuilderFactory.get("simpleJob")
+            .start(simpleStep1(null))
+            .next(simpleStep2(null))    // 👉 Step1 끝난 후 다음 Step - 단 실행 되지 않음 ❌
+            .build();
+  }
+
+  @Bean
+  @JobScope
+  public Step simpleStep1(@Value("#{jobParameters[requestDate]}") String requestDate){
+    return stepBuilderFactory.get("simpleStep1")
+            .tasklet((contribution, chunkContext)->{
+              // ☠️ 강제 예외 발생  
+              throw new IllegalArgumentException("Step 1에서 강제 에러 발생");
+            }).build();
+  }
+
+  // ☠️ 해당 Step은 실행되지 않음
+  @Bean
+  @JobScope
+  public Step simpleStep2(@Value("#{jobParameters[requestDate]}") String requestDate){
+    return stepBuilderFactory.get("simpleStep2")
+            .tasklet((contribution, chunkContext)->{
+              log.info(">>>> THis is Step2");
+              log.info(">>>>>>>>>>>>> requestDate = {}",requestDate); 
+              return RepeatStatus.FINISHED;
+            }).build();
+  }
+}
+```
+
+#### 💬 해당 예외로 인해 "FAILED"로 저장 `Status` 컬럼에 주목!
+![batchException.png](src/main/resources/static/image/batchException.png)
+
+#### 💬 성공적으로 완료 시 "COMPLETED"로 저장 `Status` 컬럼에 주목!
+![batchSuccess.png](src/main/resources/static/image/batchSuccess.png)

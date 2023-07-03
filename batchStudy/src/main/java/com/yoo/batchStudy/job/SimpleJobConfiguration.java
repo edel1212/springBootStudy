@@ -30,18 +30,30 @@ public class SimpleJobConfiguration {
         // Job 생성
         return jobBuilderFactory.get("simpleJob")
                 .start(simpleStep1(null))
+                .next(simpleStep2(null))
                 .build();
     }
 
     @Bean
-    @JobScope // ✅ 중요
+    @JobScope
     public Step simpleStep1(@Value("#{jobParameters[requestDate]}") String requestDate){
-
-        // Step 생성
         return stepBuilderFactory.get("simpleStep1")
-                // Step 단위 내에서 실행될 커스텀 기능
                 .tasklet((contribution, chunkContext)->{
                     log.info(">>>> THis is Step1");
+                    log.info(">>>>>>>>>>>>> requestDate = {}",requestDate);
+                    return RepeatStatus.FINISHED;
+                }).build();
+    }
+
+    @Bean
+    @JobScope
+    public Step simpleStep2(@Value("#{jobParameters[requestDate]}") String requestDate){
+
+        // Step 생성
+        return stepBuilderFactory.get("simpleStep2")
+                // Step 단위 내에서 실행될 커스텀 기능
+                .tasklet((contribution, chunkContext)->{
+                    log.info(">>>> THis is Step2");
                     log.info(">>>>>>>>>>>>> requestDate = {}",requestDate);
                     return RepeatStatus.FINISHED;
                 }).build();
