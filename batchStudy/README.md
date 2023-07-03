@@ -297,3 +297,8 @@ public class SimpleJobConfiguration {
 
 #### 💬 성공적으로 완료 시 "COMPLETED"로 저장 `Status` 컬럼에 주목!
 ![batchSuccess.png](src/main/resources/static/image/batchSuccess.png)
+
+- 3 ) **BATCH_JOB_EXECUTION_PARAM**
+  - `BATCH_JOB_EXECTUTION`는 생성 될 당시 입력 받은 `Key값` 과 `Job Parameter`를 갖고 있다.
+
+![batchParam.png](src/main/resources/static/image/batchParam.png)
