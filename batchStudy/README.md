@@ -365,7 +365,7 @@ spring.batch.job.names = ${job.name:NONE}
 <br/>
 <hr/>
 
-### Next 사용 시 흐름 제어
+### Batch Step 흐름 제어
 - 만약 Step1 사용 도중 Step2가 아닌 Step3으로 가게 끔 제어가 하고싶을 수 있다.
 - If 와 같은 개념으로 생각하자 내가 Step을 제어하는 것이다.
 
