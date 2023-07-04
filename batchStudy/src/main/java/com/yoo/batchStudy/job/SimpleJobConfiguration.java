@@ -27,7 +27,6 @@ public class SimpleJobConfiguration {
 
     @Bean
     public Job simpleJob() {
-        // Job 생성
         return jobBuilderFactory.get("simpleJob")
                 .start(simpleStep1(null))
                 .next(simpleStep2(null))
