@@ -37,7 +37,7 @@
 <br/>
 <hr/>
 
-#### Batch 지원 Reader & Writer
+### Batch 지원 Reader & Writer
 
 - iBatis 모듈은 현재 삭제된 상태
 
@@ -53,7 +53,7 @@
 <br/>
 <hr/>
 
-#### Batch 와 스케줄러(Quartz) 차이
+### Batch 와 스케줄러(Quartz) 차이
 
 - 스케줄러 : 설정 주기에 맞춰 반복해서 실행 하는 것
 - 배치 : 대용량의 데이터를 처리하는 기능을 갖고 있음
@@ -68,7 +68,7 @@ Quartz를 사용해 스케줄링을 사용해 주자.
 <hr/>
 
 
-#### Spring Batch 사용 - Simple 예제 
+### Spring Batch 사용 - Simple 예제 
 
 - 1 ) Dependencies 추가
   - DB (사용할 DB를 지정 - H2 Database 사용시 자동으로 Batch 스키마 Table을 생성해 줌)
@@ -168,7 +168,7 @@ public class SimpleJobConfiguration {
 <br/>
 <hr/>
 
-#### Job의 구조
+### Job의 구조
 
 - 하나의 Job은 여러개의 Step을 갖을 수 있다.
 - Step에서의 사용 방식에는 2가지 방법 있다
@@ -182,7 +182,7 @@ public class SimpleJobConfiguration {
 <br/>
 <hr/>
 
-#### Batch Meta Table
+### Batch Meta Table
 
 - **`ERD`** 구조
 
@@ -302,3 +302,70 @@ public class SimpleJobConfiguration {
   - `BATCH_JOB_EXECTUTION`는 생성 될 당시 입력 받은 `Key값` 과 `Job Parameter`를 갖고 있다.
 
 ![batchParam.png](src/main/resources/static/image/batchParam.png)
+
+
+<br/>
+<hr/>
+
+### Next
+
+- Job 에서 진행될 Step들을 연결할 때 사용된다.
+
+👉 ↓ 아래 코드를 Job Parameter를 수정 후 실행 시 이전에 작성한  Batch도 같이 실행된다는 문제가 있다.
+```java
+// StepNextJobConfig
+
+@Log4j2
+@Configuration
+@RequiredArgsConstructor
+public class StepNextJobConfig {
+
+  private final JobBuilderFactory jobBuilderFactory;
+  private final StepBuilderFactory stepBuilderFactory;
+
+  @Bean
+  public Job stepNextJob(){
+    return jobBuilderFactory.get("stepNextJob")
+            .start(step1())
+            .next(step2())
+            .next(step3())
+            .build();
+  }
+  
+  // 아래와 같은 코드를 스텝별로 있음
+  @Bean
+  public Step step1(){
+    return stepBuilderFactory.get("step1")
+            .tasklet(((contribution, chunkContext) -> {
+              log.info(">>>> THis is Step1");
+              return RepeatStatus.FINISHED;
+            })).build();
+  }
+
+}
+```
+
+👉 지정한 Batch Job만 실행하는 방법
+- 문제
+  - 현재 문제점은 Job parameter를 넣고 실행 시키면 다른 배치도 같이 진행 된다는 문제가 발생
+- 해결방법
+  - application.properties에 `spring.batch.job.names = ${job.name:NONE}` 설정을 추가하여 `job`이름까지 Argument parameter로 받아 실행
+  - Argument Parameter 예시 `--job.name=stepNextJob version=???`
+    - job.name은 내가 실행하고자 하는 `Job Name`과 맞춰줘야한다.
+
+```properties
+# application.properties
+
+# Batch 이름 설정
+## - Spring Batch가 실행 시, Program arguments로 job.name 값이 넘어오면 해당 값과 일치하는 Job만 실행
+## - NONE이 할당되면 어떤 배치도 실행하지 않겠다는 의미입니다.
+spring.batch.job.names = ${job.name:NONE}
+```
+
+<br/>
+<hr/>
+
+### Next 사용 시 흐름 제어
+- 만약 Step1 사용 도중 Step2가 아닌 Step3으로 가게 끔 제어가 하고싶을 수 있다.
+- If 와 같은 개념으로 생각하자 내가 Step을 제어하는 것이다.
+
