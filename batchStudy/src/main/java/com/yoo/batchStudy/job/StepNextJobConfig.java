@@ -18,8 +18,11 @@ public class StepNextJobConfig {
     private final JobBuilderFactory jobBuilderFactory;
     private final StepBuilderFactory stepBuilderFactory;
 
+    // --job.name=stepNextJob version=2 로 실행
+
     @Bean
     public Job stepNextJob(){
+        // application.properties에서 설정한 Job Name을 찾음
         return jobBuilderFactory.get("stepNextJob")
                 .start(step1())
                 .next(step2())
