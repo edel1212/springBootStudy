@@ -20,8 +20,8 @@ public class StepNextConditionalJobConfiguration {
 
     /**
      * 예상 시나리오
-     * 1 ) tep1 실패 시나리오: step1 -> step3
-     * 2 ) step1 성공 시나리오: step1 -> step2 -> step3
+     * 1 ) Step1 실패 시나리오: step1 -> step3
+     * 2 ) Step1 성공 시나리오: step1 -> step2 -> step3
      * */
 
     @Bean
