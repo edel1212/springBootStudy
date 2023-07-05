@@ -365,7 +365,82 @@ spring.batch.job.names = ${job.name:NONE}
 <br/>
 <hr/>
 
-### Batch Step 흐름 제어
+### Batch Step 흐름(Flow) 제어
 - 만약 Step1 사용 도중 Step2가 아닌 Step3으로 가게 끔 제어가 하고싶을 수 있다.
 - If 와 같은 개념으로 생각하자 내가 Step을 제어하는 것이다.
 
+✅ 예시 코드
+```java
+// StepNextConditionalJobConfiguration
+
+@Log4j2
+@RequiredArgsConstructor
+@Configuration
+public class StepNextConditionalJobConfiguration {
+  private final JobBuilderFactory jobBuilderFactory;
+  private final StepBuilderFactory stepBuilderFactory;
+
+  /**
+   * 예상 시나리오
+   * 1 ) Step1 실패 시나리오: step1 -> step3
+   * 2 ) Step1 성공 시나리오: step1 -> step2 -> step3
+   * */
+
+  @Bean
+  public Job stepNextConditionalJob(){
+    return jobBuilderFactory.get("stepNextConditionalJob")
+            .start(conditionalJobStep1())   // ✅ conditionalJobStep1()을 실행
+            .on("FAILED")                // 👉 실패할 경우 - IF 문으로 보자
+            .to(conditionalJobStep3())          // 👉 conditionalJobStep3()을 실행
+            .on("*")                    // 👉 conditionalJobStep3()의 결과는 상관없이
+            .end()                             // Job 종료
+            .from(conditionalJobStep1())    // ✅ conditionalJobStep1()으로 부터 체이닝을 위해 재선언 (싫행은 X)
+            .on("*")                    // 👉 FAILED 외에 모든 경우
+            .to(conditionalJobStep2())          // 👉 step2로 이동한다.
+            .next(conditionalJobStep3())        // 👉 step2가 정상 종료되면 step3으로 이동한다.
+            .on("*")                    // 👉 step3의 결과 관계 없이
+            .end()                             // 👉 step3으로 이동하면 Flow가 종료한다.
+            .end()                          // ✅ Job 종료
+            .build();
+  }
+
+  @Bean
+  public Step conditionalJobStep1(){
+    return stepBuilderFactory.get("step1")
+            .tasklet((contribution, chunkContext) -> {
+              log.info(">>>>> This is stepNextConditionalJob Step1");
+              // 👉 일부러 상태를 "FAILED"로 만듬
+              contribution.setExitStatus(ExitStatus.FAILED);
+              return RepeatStatus.FINISHED;
+            }).build();
+  }
+
+  @Bean
+  public Step conditionalJobStep2() {
+    return stepBuilderFactory.get("conditionalJobStep2")
+            .tasklet((contribution, chunkContext) -> {
+              log.info(">>>>> This is stepNextConditionalJob Step2");
+              return RepeatStatus.FINISHED;
+            })
+            .build();
+  }
+
+  @Bean
+  public Step conditionalJobStep3() {
+    return stepBuilderFactory.get("conditionalJobStep3")
+            .tasklet((contribution, chunkContext) -> {
+              log.info(">>>>> This is stepNextConditionalJob Step3");
+              return RepeatStatus.FINISHED;
+            })
+            .build();
+  }
+
+}
+```
+
+#### 흐름(Flow) 제어 코드 의미
+👉  아래의 메서드들은 모두 `체이닝 방식`을 사용한다.
+- `.on()`
+  - 앞에서 실행되 었던 Job 또는 tep의 `상태(ExitStatus)`로 종료 되었는지 확인 한다 **( if문에서 `a == 0`과 같은 조건을 확인 한다 보면 된다. )**
+  - `*`을 사용할 경우 모든 `상태(ExitStatus)`를 `True`로 생각한다.
+ss
