@@ -456,3 +456,7 @@ public class StepNextConditionalJobConfiguration {
     - `on("*")`뒤에 있는 `end()`는 FlowBuilder를  **반환**하는 `end()`
       - 반환하는 `end()` 사용시 `from()`을 사용해서 계속해서 **조건을 이어갈 수 있다.**
     - `build()`앞에 있는 가장 마지막 `end()`의 경우 FlowBuilder를 **종료**하는 `end()`
+
+#### 💬 중요포인트
+- `on()`에서 캐치되는 상태값은 BatchStatus가 아닌  `ExitStatus`이다!
+  - Step에서  마지막에 사용되는 return 값 `return RepeatStatus.FINISHED;`
