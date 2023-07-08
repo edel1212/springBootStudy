@@ -458,5 +458,12 @@ public class StepNextConditionalJobConfiguration {
     - `build()`앞에 있는 가장 마지막 `end()`의 경우 FlowBuilder를 **종료**하는 `end()`
 
 #### 💬 중요포인트
-- `on()`에서 캐치되는 상태값은 BatchStatus가 아닌  `ExitStatus`이다!
-  - Step에서  마지막에 사용되는 return 값 `return RepeatStatus.FINISHED;`
+- `on()`에서 캐치되는 상태값은 `BatchStatus`가 아닌 `ExitStatus`이다!
+  - Step에서 마지막에 사용되는 return 값 `return RepeatStatus.FINISHED;` 해당 값이 `ExitStatus`이다
+#### 💬 `Batch Status` 와 `ExitStatus` 차이
+  - `BatchStatus`란?
+    - Job 또는 Step의 실행 결과를 Spring에 기록할 때 사용하는 Enum 값이다.
+    - ![batchStatus.png](src/main/resources/static/image/batchStatus.png)
+  - `ExitStatus`란?
+    - Step의 실행 후 상태를 말한다. 여기서 중요한 점은 해당 값은 Enum이 아닌 `ExitStatus`객체 이다.
+    - `on()`에서 catch 하는 값은 해당 `ExitStatus`값이다.
