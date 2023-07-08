@@ -471,4 +471,89 @@ public class StepNextConditionalJobConfiguration {
 <br/>
 <hr/>
 
-### 
+### JobExecutionDecider란?
+
+- Step의 종료 값인 `ExitStatus`뿐 만으로는 분기처리 하는데 무리가 있는데 `JobExecutionDecider`를 사용해서 `Custom ExitStatus`를 생성하여 해결할 수 있다. 
+- 사용 방법
+  - 1 ) `JobExecutionDecider`를 구현한 class 생성
+    - `FlowExecutionStatus decide()` 내부에 사용할 로직 및 결과에 맞는 `ExitStatus`값 생성
+  - 2 ) 위에서 작성한 class를 Batch에서 사용하기 위해 `@Bean`을 위한 생성 Method 생성
+  - 3 ) `Job` 내부 코드에서 Flow방식으로 사용
+
+✅ 예시 코드
+```java
+// DeciderJobConfiguration
+
+@Log4j2
+@Configuration
+@RequiredArgsConstructor
+public class DeciderJobConfiguration {
+
+  private final JobBuilderFactory jobBuilderFactory;
+  private final StepBuilderFactory stepBuilderFactory;
+
+  @Bean
+  public Job deciderJbo(){
+    return jobBuilderFactory.get("deciderJob")  // Job Name
+          .start(startStep())                   // Start Step
+            .next(decider())                        // 👉 Decider 주입
+            .on("ODD")                              // 👉 Decider에서 커스텀한 값
+            .to(oddStep())                          // 일치할 경우 "oddStep()" 실행
+          .from(decider())                      // 👉 EventListener 재등록
+            .on("EVEN")                             // 👉 Decider에서 커스텀한 값
+            .to(evenStep())                         // 일치할 경우 "evenStep()" 실행
+          .end()                                // 종료
+          .build();
+  }
+
+  @Bean
+  public Step startStep(){
+    return stepBuilderFactory.get("startStep")
+            .tasklet((contribution, chunkContext) -> {
+              log.info(">>>> Start!");
+              return RepeatStatus.FINISHED;
+            })
+            .build();
+  }
+
+  // 짝수
+  @Bean
+  public Step evenStep(){
+    return stepBuilderFactory.get("evenStep")
+            .tasklet((contribution, chunkContext) -> {
+              log.info("짝수 입니다!!");
+              return RepeatStatus.FINISHED;
+            }).build();
+  }
+
+  // 홀수
+  @Bean
+  public Step oddStep(){
+    return stepBuilderFactory.get("oddStep")
+            .tasklet((contribution, chunkContext) -> {
+              log.info("홀수 입니다!!");
+              return RepeatStatus.FINISHED;
+            }).build();
+  }
+
+  // ✅ Bean Factory 등록 👉 중요
+  @Bean
+  public JobExecutionDecider decider(){
+    return new OddDecider();
+  }
+
+  /**
+   * 👉 JobExecutionDecider를 구현한 Inner class
+   * **/
+  public static class OddDecider implements JobExecutionDecider{
+    @Override
+    public FlowExecutionStatus decide(JobExecution jobExecution, StepExecution stepExecution) {
+      int randomNum = new Random().nextInt(50);
+      log.info("randomNum ::: {}",randomNum);
+      String result = randomNum % 2 == 0 ? "EVEN" : "ODD";
+      return new FlowExecutionStatus(result);
+    }
+  }
+
+}
+```
