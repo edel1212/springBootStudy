@@ -9,7 +9,7 @@
 <br/>
 <hr/>
 
-### 사용 이유?
+### Batch 사용 이유?
 - 웹 서버에서 대량의 데이터를 집계 및 통계 와 같은 일괄 처리를 하게되면 웹의 Request, Response를 할 수 없게된다.
 - 집계가 하루에 단 1번 수행 되는데 이것을 WebApplication으로 만드는 것 자체도 개발 시간 낭비이다.
 - 집계 중간에 실패 시 (총 10만번 의 실행이 필요한 상태) 다시 처음부터 하기에는 비효율적임
@@ -557,3 +557,14 @@ public class DeciderJobConfiguration {
 
 }
 ```
+
+<br/>
+<hr/>
+
+### JobParameter 와 Scope
+- `JobParameter`란?
+  - 외부 혹은 내부에서 `파라미터`를 받아 여러가지의 Batch를 사용할 수 있게 하는 것
+  - `JobParameter`를 사용하기 위해선 **꼭 `Scope`**를 선언해야한다.
+    - 사용 가능한 Scope는 크게 `@StepScope` 와 `@JobScope` 2가지가 있다.
+    - 사용 방법은 아래와 같은 SpEL(Spring Expression Language)로 선언해서 사용 가능하다.
+      - >`@Value("#{jobParameters[파라미터명]}")`
