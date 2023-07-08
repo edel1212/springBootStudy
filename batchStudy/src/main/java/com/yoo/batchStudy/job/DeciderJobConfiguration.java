@@ -68,8 +68,7 @@ public class DeciderJobConfiguration {
                 }).build();
     }
 
-
-    // 커스텀 분기 결정자
+    // Bean Factory 등록 👉 중요
     @Bean
     public JobExecutionDecider decider(){
         return new OddDecider();
@@ -79,13 +78,9 @@ public class DeciderJobConfiguration {
     public static class OddDecider implements JobExecutionDecider{
         @Override
         public FlowExecutionStatus decide(JobExecution jobExecution, StepExecution stepExecution) {
-
             int randomNum = new Random().nextInt(50);
-
             log.info("randomNum ::: {}",randomNum);
-
             String result = randomNum % 2 == 0 ? "EVEN" : "ODD";
-
             return new FlowExecutionStatus(result);
         }
     }
