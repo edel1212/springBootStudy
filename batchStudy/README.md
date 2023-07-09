@@ -734,3 +734,41 @@ public class JobParamErrorJobConfiguration {
   }
 }
 ```
+
+<br/>
+<hr/>
+
+### 만약 외부 Cotroller에서 사용 하려면 ?
+- 일단 웹서버에서 Batch를 돌리는것은 권장 되지 않는다 대량의 데이터 처리를 하려면 그만큼의 서버에 부하가 오기 떄문임.
+
+✅ 예시 코드
+```java
+// java - JobLauncherController
+
+@RequiredArgsConstructor
+@RestController
+public class JobLauncherController {
+
+  private final JobLauncher jobLauncher;
+  private final Job job;
+
+  @GetMapping("/launchjob")
+  public String handle(@RequestParam("fileName") String fileName) throws Exception {
+    try {
+      JobParameters jobParameters = new JobParametersBuilder()
+              // 파라미터 설정
+              .addString("input.file.name", fileName)
+              // 시간 설정
+              .addLong("time", System.currentTimeMillis())
+              // jobParameter 생성
+              .toJobParameters();
+      // Job 실행
+      jobLauncher.run(job, jobParameters);
+    } catch (Exception e) {
+      log.info(e.getMessage());
+    }
+
+    return "Done";
+  }
+}
+```
