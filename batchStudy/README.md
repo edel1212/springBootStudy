@@ -620,7 +620,7 @@ public class JobParameterJobConfiguration {
   }
 }
 ``` 
-✅ `@StepScope` 사용 예시 코드
+✅ `@StepScope` 사용 예시 코드 (다양한 방법으로 사용 가능)
 ```java
 // JobParameterStepScopeConfiguration  
 
@@ -636,10 +636,101 @@ public class JobParameterStepScopeConfiguration {
     return new ListItemReader<>(item);
   }
 }
-``` 
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// SimpleTasklet
+
+@Log4j2
+@Component
+@StepScope
+public class SimpleTasklet implements Tasklet {
+
+  @Value("#{jobParameters[requestDate]}")
+  private String requestDate;
+
+  @Override
+  public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {
+    log.info("This is Step1 Tasklet Class Call Method");
+    log.info("requestDate ::: {}", requestDate);
+    return RepeatStatus.FINISHED;
+  }
+}
+``` 
 
 <br/>
 <hr/>
 
-### 
+### `@StepScope` , `@JobScope` 장점
+- 첫번째 : `Late Binding`이 가능하다.
+  - Application의 실행 시점에 주입되는것이 아닌 원하는 로직중간에서 (Controller 혹은 Service)에서 `JobParameter` 할당이 가능하다.
+- 두번째 : 동일 컴포넌트를 병렬 혹은 동시 사용 가능하다. 
+  - Step 내부에 Tasklet이 있고 해당 Tasklet 내부에서는 멤버 변수가 있고 이 멤버변수가 있는 로직이 존재한다면 이러한 경우 `@StepScope` 없이 병렬로 실행 시키면  
+  서로 다른 Step에서 하나의 Tasklet을 두고 마구잡이로 상태를 변경 하려는 문제가 있는데 이러한 문제를 방지 할 수 있다. ****( 각각의 Step에서 별도의 Tasklet을 생성하고  
+  관리 하기떄문에 서로의 상태를 침범 하지 않음 )****
+
+   
+<br/>
+<hr/>
+
+### `JobParameter` 사용 시 주의사항
+- Step, Tasklet, Reader 등의 Batch 컴포넌트 Bean의 생성 시점에 호출이 가능 하지만
+  - 여기서 주의할 점은 `Sopce Bean`을 생성 할때만 가능하다는 것이다.
+  - `Sopce Bean`은 간단하게 말하면 ( `@StepScope` , `@JobScope`) 해당 어노테이션을 붙여서 생성되는 Bean 객체를 말한다.
+
+✅ `Sopce Bean` 사용하지 않을 경우 에러 코드
+```java
+// SimpleTasklet
+
+@Log4j2
+@Component
+/**
+ * 미사용시 Error 발생
+ * Error Msg : bean with name 'simpleTasklet': Unsatisfied dependency expressed through field 'requestDate';
+ * */
+@StepScope
+public class SimpleTasklet implements Tasklet {
+
+  @Value("#{jobParameters[requestDate]}")
+  private String requestDate;
+
+  @Override
+  public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception {
+    log.info("This is Step1 Tasklet Class Call Method");
+    log.info("requestDate ::: {}", requestDate);
+    return RepeatStatus.FINISHED;
+  }
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// JobParamErrorJobConfiguration
+
+@Log4j2
+@Configuration
+@RequiredArgsConstructor
+public class JobParamErrorJobConfiguration {
+  private final StepBuilderFactory stepBuilderFactory;
+  private final JobBuilderFactory jobBuilderFactory;
+
+  //  👉 DI 주입
+  private final SimpleTasklet simpleTasklet;
+
+  @Bean
+  public Job simpleTaskletJob(){
+    return jobBuilderFactory.get("simpleTaskletJob")
+            .start(scopeTaskletCallStep1())
+            .build();
+  }
+
+  @Bean
+  public Step scopeTaskletCallStep1(){
+    return stepBuilderFactory.get("scopeTaskletCallStep1")
+            .tasklet(simpleTasklet).build(); // 👉생성한 Tasklet 사용
+  }
+}
+```
