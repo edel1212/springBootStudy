@@ -5,6 +5,7 @@ import com.yoo.statistics.repository.ElectricityRepository;
 import jdk.jfr.Description;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.time.LocalDateTime;
@@ -16,6 +17,9 @@ public class ElectricityRepositoryTests {
 
     @Autowired
     private ElectricityRepository  repository;
+
+    @Value("${test.value}")
+    private String folderPath;
 
     @Test
     @Description("DummyInsert")
@@ -76,5 +80,11 @@ public class ElectricityRepositoryTests {
     void testCode7() {
         System.out.println("!!!");
         repository.getElectricityByWeekToDay();
+    }
+
+
+    @Test
+    void testCode8() {
+        System.out.println(folderPath);
     }
 }
