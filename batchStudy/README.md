@@ -564,7 +564,82 @@ public class DeciderJobConfiguration {
 ### JobParameter 와 Scope
 - `JobParameter`란?
   - 외부 혹은 내부에서 `파라미터`를 받아 여러가지의 Batch를 사용할 수 있게 하는 것
-  - `JobParameter`를 사용하기 위해선 **꼭 `Scope`**를 선언해야한다.
-    - 사용 가능한 Scope는 크게 `@StepScope` 와 `@JobScope` 2가지가 있다.
-    - 사용 방법은 아래와 같은 SpEL(Spring Expression Language)로 선언해서 사용 가능하다.
+  - `JobParameter`를 사용하기 위해선 **꼭 `Scope 어노테이션`을** 선언해야한다.
+    - 사용 가능한 Scope 어노테이션는 크게 `@StepScope` 와 `@JobScope` 2가지가 있다.
+    - 사용 방법은 SpEL(Spring Expression Language)로 선언해서 사용 가능하다.
       - >`@Value("#{jobParameters[파라미터명]}")`
+  - `@StepScope` & `@JobScope` 요약 소개
+    - `@StepScope` : (Tasklet, ItemReader, ItemWriter, ItemProcessor 등)에 사용하게 되면 Step의 실행 시점에 해당 컴포넌트를 Spring Bean으로 생성  
+    👉 단계(Step)의 범위를 정의할때 사용한다.  - **배치 작업의 각 단계에 대한 범위를 정의**
+    - `@JobScope`는 Job 실행 시점에 Bean 생성  👉 ( Job의 범위를 정의할 때 사용된다. - **배치 작업 전체에 대한 범위를 정의합니다**)
+    - JobParameter 자체는 `Spring MVC`와 굉장히 유사하다.
+      - `MVC`에서 처럼 요정(Request),응답(Response) 후 사라지는것 과같이 Job이 실행 되고 끝나거나 Step이 실행되고 끝날때 사라지는 것이 같다
+
+✅ `@JobScope` 사용 예시 코드
+```java
+// JobParameterJobConfiguration 
+
+@Configuration
+@Log4j2
+@RequiredArgsConstructor
+public class JobParameterJobConfiguration {
+
+  private final JobBuilderFactory jobBuilderFactory;
+  private final StepBuilderFactory stepBuilderFactory;
+
+
+  /**
+   * 👉 같은 이름의 Bean이 겹치면
+   * - Error : could not be registered. A bean with that name has already been defined in class path resource 발생
+   * */
+
+
+  @Bean
+  public Job scopeJob(){
+    return jobBuilderFactory.get("scopeJob")
+            /**
+             * null을 입력해도 Step 단계에서  로그가 찍히는 이유눈
+             * Job Parameter의 할당이 어플리케이션 실행시에 하지 않기 때문에 가능합니다.
+             * */
+            .start(scopeStep1( null))
+            .build();
+  }
+
+  /**
+   * 👉 @JobScope가 없을 시 Error 발생
+   * - Error :  EL1008E: Property or field 'jobParameters' cannot be found on object of type 에러 발생
+   * */
+  @JobScope
+  @Bean
+  public Step scopeStep1(@Value("#{jobParameters[requestDate]}")String requestDate){
+    return stepBuilderFactory.get("step1")
+            .tasklet((contribution, chunkContext) -> {
+              log.info("param ::: {}", requestDate);
+              return RepeatStatus.FINISHED;
+            }).build();
+  }
+}
+``` 
+✅ `@StepScope` 사용 예시 코드
+```java
+// JobParameterStepScopeConfiguration  
+
+@Configuration
+@Log4j2
+@RequiredArgsConstructor
+public class JobParameterStepScopeConfiguration {
+    
+  @Bean
+  @StepScope
+  public ListItemReader<Integer> simpleWriterReader(){
+    List<Integer> item = IntStream.rangeClosed(1,50).boxed().collect(Collectors.toList());
+    return new ListItemReader<>(item);
+  }
+}
+``` 
+
+
+<br/>
+<hr/>
+
+### 
