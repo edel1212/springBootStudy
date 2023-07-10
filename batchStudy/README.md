@@ -786,6 +786,11 @@ public class JobLauncherController {
   - `Page Size` : 한번에 조회할 Item의 양 이다.
   - `Chunk Size` : 한번에 처리될 트랜잭션 단위이다.
   - 👉 2개 값을 일치시키는 것이 보편적으로 좋은 방법이니 꼭 2개 값을 일치시키시길 추천드립니다.
+- Step은 Tasklet 단위로 처리되고, Tasklet 중에서  `ChunkOrientedTasklet`을 통해 Chunk를 처리하며 이를 구성하는 3요소로는 `ItemReader`, `ItemWriter`, `ItemProcessor`가 있다.
+
+> 💬 요약 : ItemReader & ItemWriter & ItemProcessor의 묶음 역시 Tasklet 이다.  
+> 이들의 묶음을 ChunkOrientedTasklet에서 관리하기 때문이다..
+
 #### 💬 [상세 설명 참고](https://jojoldu.tistory.com/331?category=902551)
 ✅ Chunk Java 예시 코드
 ```java
