@@ -813,3 +813,12 @@ class Foo{
   
 }
 ```
+
+
+<br/>
+<hr/>
+
+### ItemReader
+
+- 흐름
+  - ![itemReader.png](src/main/resources/static/image/itemReader.png)
