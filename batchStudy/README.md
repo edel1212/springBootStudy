@@ -772,3 +772,39 @@ public class JobLauncherController {
   }
 }
 ```
+
+
+<br/>
+<hr/>
+
+### Chunk
+
+- 데이터 덩어리로 작업할 떄 각 `커밋 사이에 처리되는 row 수`를 말한다.
+- 한번에 하나씩 데이터를 읽어 Chunk 덩어리를 만든 뒤, `Chunk 단위로 트랜잭션을 다룬다.`
+  - 실패할 경우 엔 해당 `Chunk 만큼만 롤백` 되고, 이전에 커밋된 트랜잭션 범위까지는 반영이 된다.
+- `Page Size` 와 `Chunk Size`는 다른 개념이다.
+  - `Page Size` : 한번에 조회할 Item의 양 이다.
+  - `Chunk Size` : 한번에 처리될 트랜잭션 단위이다.
+  - 👉 2개 값을 일치시키는 것이 보편적으로 좋은 방법이니 꼭 2개 값을 일치시키시길 추천드립니다.
+#### 💬 [상세 설명 참고](https://jojoldu.tistory.com/331?category=902551)
+✅ Chunk Java 예시 코드
+```java
+class Foo{
+    
+    public void testCode(){
+        int totalSize = 10;
+        for(int i = 0; i < totalSize ; i += chunkSize){ // 👉 chunkSize 단위만큼 추가
+            List items = new Arraylist();
+            // 👉 chunkSize 내부 사이즈 만큼 For 문
+            for(int j = 0; j < chunkSize; j++){
+              Object item = itemReader.read();
+              Object processedItem = itemProcessor.process(item);
+              items.add(processedItem);
+            }// for
+            itemWriter.write(items);
+        }//for   
+      
+    }// method
+  
+}
+```
