@@ -822,3 +822,16 @@ class Foo{
 
 - 흐름
   - ![itemReader.png](src/main/resources/static/image/itemReader.png)
+- `ItemReader`는 DB의 데이터만 읽는것을  의미 하지 않는다. File, XML, JSON, String 등등 다양한 데이터 소스를 배치 처리에서 Read할 수 있다.
+- Spring Batch 에서 지우너하지 않는 Reader가 필요할 경우 **직접  Reader를 만들 수 있다.**
+  - `Custom Reader` 구현체를 만들 수 있도록 지원 중이다.
+- 대표적으로 사용되는 구현체는 `jdbcPaingItemReader`이다.
+- `jdbcPaingItemReader`인터페이스
+  - `ItemReader`
+    - `read()`메서드만을 갖고 있으며 값을 읽는 역할을 한다.
+  - `ItemStream`
+    - 주기적으로 상태를 저장하고 오류가 발생하면 해당 상태에서 복원하기 위한 마커 인터페이스이다.
+      - `ItemReader`의 상태를 저장하고 실패한 곳에서 다시 실행 할수 있게 도와주는 역할을 함.
+    - `open()`, `close()`, `update()` 메서드를 갖고있다.
+      - `open()`,`close()` 스트림을 열고 닫는 역할
+      - `update()` Batch의 처리 상태를 업데이트
