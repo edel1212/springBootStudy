@@ -839,3 +839,13 @@ class Foo{
 #### 👉 `ItemReader`와 `ItemStream` 인터페이스를 직접 구현해서 원하는 형태의 `ItemReader`를 만들 수 있다. (대부분의 데이터 형태는 이미 ItemReader로 제공하기 떄문에 따로 구현 해야하는 일은 많지 않음)
  
 > 단 `Querydsl`를 사용 하는 경우 JPA의 영속성 컨텍스트가 지원이 안되서 HibernateItemReader를 이용하여 Reader 구현체를 직접 구현야함
+ 
+ 
+<br/>
+<hr/>
+
+### ItemReader ( Database Reader )
+
+> Batch의 특성상 실시간 처리가 어려운 대용량 데이터나 대규모 데이터일 경우에 배치 어플리케이션을 작업을 수행 해야 하기 때문에 수백만개의 데이터르 조회하는    
+> 쿼리가 있는 경우 해당 모든 데이터를 한번에 메모리에 불러 처리하기에는 부적합 하기에 👉 2가지의 `Reader` 타입인 `Curosor` 와 `Paging`을 지원한다.
+> 
