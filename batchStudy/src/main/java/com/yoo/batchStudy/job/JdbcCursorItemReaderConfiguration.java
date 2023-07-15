@@ -28,7 +28,11 @@ public class JdbcCursorItemReaderConfiguration {
     private static final int CHUNK_SIZE = 10;   // Chunk Size 설정
 
     /**
-     * JdbcItemReader는 JdbcTemplate 과 인터페이스가 동일하기 사용 문법이 비슷하다.
+     * 👉 JdbcItemReader는 JdbcTemplate 과 인터페이스가 동일하기 사용 문법이 비슷하다.
+     * 👉 Jpa에는 CursorItemReader가 없다
+     * 👉 CursorItemReader를 사용하실때는 Database와 SocketTimeout을 충분히 큰 값으로 설정해야만 합니다.
+     * 👉 따라서  Batch 수행 시간이 오래 걸리는 경우에는 PagingItemReader를 사용하시는게 안전하고 좋다
+     *    - Paging의 경우 한 페이지를 읽을때마다 Connection을 맺고 끊기 때문에 많은 데이터라도 타임아웃과 부하 없이 수행이 가능함
      * */
 
     @Bean
@@ -75,7 +79,7 @@ public class JdbcCursorItemReaderConfiguration {
                  *   보편적으로는 Spring에서 공식적으로 지원하는 BeanPropertyRowMapper.class를 많이 사용함
                  * */
                 .rowMapper(new BeanPropertyRowMapper<>(Pay.class))
-                .sql("SELECT id, amount, tx_name, tx_date_time FROM  pay")
+                .sql("SELECT id, amount, tx_name, tx_date_time FROM pay")
                 /**
                  * - reader의 이름을 지정합니다.
                  * - Spring Batch의 ExecutionContext에서 저장되어질 이름입니다.
@@ -86,7 +90,9 @@ public class JdbcCursorItemReaderConfiguration {
 
     private ItemWriter<Pay> jdbcCursorItemWriter() {
         return list -> {
-            list.stream().forEach(log::info);
+            for (Pay pay: list) {
+                log.info("Current Pay={}", pay);
+            }
         };
     }
 
