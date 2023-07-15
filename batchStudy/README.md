@@ -852,9 +852,23 @@ class Foo{
 -  `Cursor`
   - 실제로 JDBC ResultSet의 기본 기능이다.
   - ResultSet이 open 될때마다 `next()` 메소드가 호출되어 Database의 데이터가 반환 됩니다. 이를 통해 필요에 따라  데이터를 Streaming 할 수 있다.
+  - 사용되는 `ItemReader` 구현체
+    - JdbcCursorItemReader
+    - HibernateCursorItemReader
+    - StoredProcedureItemReader
+
 
 - `Paging`
   - 페이지라는 Chunk로 Database에서 데이터를 검색한다는 것이다.
   - 즉 페이지 단위로 한번에 데이터를 조회해 오는 방식이다.
+  - 사용되는 `ItemReader` 구현체
+    - JdbcPagingItemReader
+    - HibernatePagingItemReader
+    - JpaPagingItemReader
 
 ![itemReaderCompare.png](src/main/resources/static/image/itemReaderCompare.png)
+> ### 이미지 설명
+> - `Cursor`
+>   - Database와 커넥션을 맺은 후, Cursor를 한칸씩 옮기며 지속적으로 데이터를 가져온다.  
+> - `Paging`
+>   - 10Row는 PageSize를 얘기하며, Row의 값은 설정에 따라 변경이 가능하다
