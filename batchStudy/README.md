@@ -872,3 +872,12 @@ class Foo{
 >   - Database와 커넥션을 맺은 후, Cursor를 한칸씩 옮기며 지속적으로 데이터를 가져온다.  
 > - `Paging`
 >   - 10Row는 PageSize를 얘기하며, Row의 값은 설정에 따라 변경이 가능하다
+
+
+<br/>
+<hr/>
+
+### CursorItemReader
+ 
+> Streaming으로 데이터를 처리한다. 쉽게 생각하면 Database와 어플리케이션 사이에 통로를 연결하고 하나씩 전달한다 생각하면 된다.  
+> 쿼리질의 결과를 한 행씩 요청해서 받는 개념이라 생각하면 쉬울 듯 !
