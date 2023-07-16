@@ -60,6 +60,7 @@ public class JdbcBatchItemWriterJobConfiguration {
      */
     @Bean
     public JdbcBatchItemWriter<Pay> jdbcBatchItemWriter() {
+        // new JdbcBatchItemWriterBuilder<Map<String, Object>>() // Map 사용  👉 해방 제네릭을 경우 "columnMapped"를 사용해야 함!
         return new JdbcBatchItemWriterBuilder<Pay>()
                 .dataSource(dataSource)
                 .sql("insert into pay2(amount, tx_name, tx_date_time) values (:amount, :txName, :txDateTime)")
