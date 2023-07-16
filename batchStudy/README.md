@@ -877,7 +877,121 @@ class Foo{
 <br/>
 <hr/>
 
-### CursorItemReader
+###  PagingItemReader
  
-> Streaming으로 데이터를 처리한다. 쉽게 생각하면 Database와 어플리케이션 사이에 통로를 연결하고 하나씩 전달한다 생각하면 된다.  
-> 쿼리질의 결과를 한 행씩 요청해서 받는 개념이라 생각하면 쉬울 듯 !
+> 위에서 설명 했듯이 `CursorItemReader` 방법이 있긴하나 해당 방법은 SocketTime 시간 관리를 해줘야 하는 불편함이 있다. 💬 **( 통로를 연결해줘야하기 떄문 )**  
+> 따라서 Batch의 수행 시간이 오래 걸리는 경우 `PagingItemReader`를 사용하는것이  훨씬 안정 적이다  
+> 그 이유는 Paing의 겨우 한페이지를 읽을 떄 마다 Connection을 맺고 끊기 떄문에 아무리 많은 데이터라도 부하 없이 처리가 가능하기 떄문이다.
+
+- Spring Batch 에서는  `offset`과 `limit`를  PageSize에 맞게 자동으로 생성해  준다.
+- 각 쿼리는 개별적으로 실행한다는 점을 유의해야함
+- 각 페이지마다 새로운 쿼리를 실행하므로 페이징시 결과를 ✅ ***정렬하는 것이 중요합니다.***
+  - 따라서 데이터 결과의 순서가 보장될 수 있도록 **order by가 권장한다**
+
+
+- Database들의 자체적인 `Paging` 전략
+  - ![databasePaging.png](src/main/resources/static/image/databasePaging.png)
+
+✅ PagingItemReader Java 예시 코드
+```java
+// java 
+
+/**
+ * Pay Entity Class는 생략함 
+ * id , amount, txName, txDateTime를 갖고 있음 
+ * */
+@Log4j2
+@Configuration
+@RequiredArgsConstructor
+public class JdbcPagingItemReaderJobConfiguration {
+    private final JobBuilderFactory jobBuilderFactory;
+    private final StepBuilderFactory stepBuilderFactory;
+    private final DataSource dataSource; // DataSource DI
+
+    private static final int chunkSize = 10;
+
+    @Bean
+    public Job jdbcPagingItemReaderJob() throws Exception {
+        return jobBuilderFactory.get("jdbcPagingItemReaderJob")
+                .start(jdbcPagingItemReaderStep())
+                .build();
+    }
+
+    @Bean
+    public Step jdbcPagingItemReaderStep() throws Exception {
+        return stepBuilderFactory.get("jdbcPagingItemReaderStep")
+                /**
+                 * 👉 제네릭 설정을 해주지 않으면 Writer 부분에서 Error 발생
+                 * <Pay, Pay>
+                 *     첫번쨰로 선언된 Pay는 reader()에서 "반환"될 타입이며
+                 *     두번째로 선언된 Pay는 writer()에 "파라미터"로 넘어올 타입이다.
+                 *
+                 * (CHUNK_SIZE)
+                 *      Reader & Writer가 묶일 Chunk 트랜잭션 범위입니다
+                 * */
+                .<Pay, Pay>chunk(chunkSize)
+                .reader(jdbcPagingItemReader())
+                .writer(jdbcPagingItemWriter())
+                .build();
+    }
+
+    @Bean
+    public JdbcPagingItemReader<Pay> jdbcPagingItemReader() throws Exception {
+        // 파라미터 정의
+        Map<String, Object> parameterValues = new HashMap<>();
+        parameterValues.put("amount", 2000);
+
+        return new JdbcPagingItemReaderBuilder<Pay>()
+                .pageSize(chunkSize)                  // 페이징 사이즈 절성
+                .fetchSize(chunkSize)                 // Database에서 한번에 가져올 데이터 양을 설정
+                .dataSource(dataSource)               // DataSource 주입
+                /**
+                 * - 쿼리 결과를 Java 인스턴스로 매핑하기 위한 Mapper 입니다.
+                 * - 커스텀하게 생성해서 사용할 수 도 있지만, 이렇게 될 경우 매번 Mapper 클래스를 생성해야 되기에
+                 *   보편적으로는 Spring에서 공식적으로 지원하는 BeanPropertyRowMapper.class를 많이 사용함
+                 * */
+                .rowMapper(new BeanPropertyRowMapper<>(Pay.class))
+                .queryProvider(createQueryProvider()) // 쿼리 주입
+                .parameterValues(parameterValues)     // 쿼리에 사용 될 파라미터
+                .name("jdbcPagingItemReader")         // reader의 이름을 지정합니다.
+                .build();
+    }
+
+    /**
+     * ReadItem의 필요 쿼리 생성정
+     *
+     * 💬 SqlPagingQueryProviderFactoryBean 생성 이유
+     *      각 Database에는 Paging을 지원하는 자체적인 전략들이 있습니다.
+     *      때문에 Spring Batch에는 각 Database의 Paging 전략에 맞춰 구현되어야만 합니다.
+     *      그래서 아래와 같이 각 Database에 맞는 Provider들이 존재하는데 그것을
+     *      Datasource 설정값을 보고 위 이미지에서 작성된 Provider중 하나를 <b>자동으로<b/> 선택하도록 합니다.
+     * */
+    @Bean
+    public PagingQueryProvider createQueryProvider()throws Exception{
+        SqlPagingQueryProviderFactoryBean queryProviderFactoryBean = new SqlPagingQueryProviderFactoryBean();
+        queryProviderFactoryBean.setDataSource(dataSource);
+
+        // 필요 쿼리
+        queryProviderFactoryBean.setSelectClause("id, amount, tx_name, tx_date_time");
+        queryProviderFactoryBean.setFromClause("from pay");
+        queryProviderFactoryBean.setWhereClause("where amount >= :amount");
+
+        // 정렬 조건
+        Map<String, Order>  sortKeys = new HashMap<>();
+        sortKeys.put("id", Order.ASCENDING);
+        queryProviderFactoryBean.setSortKeys(sortKeys);
+
+        return queryProviderFactoryBean.getObject();
+    }
+
+    // Write
+    private ItemWriter<Pay> jdbcPagingItemWriter() {
+        return list -> {
+            for (Pay pay: list) {
+                log.info("Current Pay={}", pay);
+            }
+        };
+    }
+
+}
+```
