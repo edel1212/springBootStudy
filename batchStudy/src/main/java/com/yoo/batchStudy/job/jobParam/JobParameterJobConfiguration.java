@@ -1,4 +1,4 @@
-package com.yoo.batchStudy.job;
+package com.yoo.batchStudy.job.jobParam;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;

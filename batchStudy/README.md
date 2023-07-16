@@ -1074,3 +1074,26 @@ public class JpaPagingItemReaderJobConfiguration {
 
 }
 ```
+
+
+<br/>
+<hr/>
+
+###  ItemWriter
+
+> ItemWriter는 item 하나를 작성하지 않고 Chunk 단위로 묶인 item List를 다룹니다.  
+> 다양한 방법의 ItemWriter가 있다 예제에서는 보편적으로 사용되는 Database Writer를 사용  
+> Ex) `void write(List<? extends  T>items)throws Exception` // ItemWriter<T> Interface의 내부 코드
+
+- 데이터베이스와 관련된 Writer는 아래와 같이 3가지가 있다.
+  - JdbcBatchItemWriter
+  - HibernateItemWriter
+  - JpaItemWriter
+
+<br/>
+<hr/>
+
+###  JdbcBatchItemWriter
+
+> ORM을 사용하지 않는 경우 대부분 사용되는 방식이다. JDBC의 Batch 기능을 사용하면 한번에 Database로 전달하여 Database 내부에서 쿼리들이 실행 되도록 함  
+> 이러한 처리방식의 이유는 어플리케이션과 데이터베이스의 **주고받는 횟수를 낮춰 성능 향상을 위함**

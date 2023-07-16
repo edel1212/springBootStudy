@@ -1,4 +1,4 @@
-package com.yoo.batchStudy.job;
+package com.yoo.batchStudy.job.itemRead;
 
 import com.yoo.batchStudy.entity.Pay;
 import lombok.RequiredArgsConstructor;

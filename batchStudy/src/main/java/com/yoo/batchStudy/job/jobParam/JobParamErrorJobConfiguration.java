@@ -1,4 +1,4 @@
-package com.yoo.batchStudy.job;
+package com.yoo.batchStudy.job.jobParam;
 
 
 import com.yoo.batchStudy.tasklet.SimpleTasklet;
