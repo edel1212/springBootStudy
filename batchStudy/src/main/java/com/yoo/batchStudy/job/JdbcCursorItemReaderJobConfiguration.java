@@ -19,7 +19,7 @@ import javax.sql.DataSource;
 @Log4j2
 @Configuration
 @RequiredArgsConstructor
-public class JdbcCursorItemReaderConfiguration {
+public class JdbcCursorItemReaderJobConfiguration {
 
     private final JobBuilderFactory jobBuilderFactory;
     private final StepBuilderFactory stepBuilderFactory;
