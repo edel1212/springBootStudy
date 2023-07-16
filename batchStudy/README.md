@@ -995,3 +995,82 @@ public class JdbcPagingItemReaderJobConfiguration {
 
 }
 ```
+
+
+<br/>
+<hr/>
+
+###  JpaPagingItemReader
+
+> Jpa를 사용해서 PagingItemReader를 할 수 있다. ORM으로 더이상 데이터를 단순값으롬나 보는게 아닌 객체로 보며  
+> 특이시항으로는  
+> - Querydsl, Jooq 등을 통한 ItemReader는 현재까지는 미지원이다.
+>   -  사용을 원한다면 따로 CustomItemReader를 사용하여 구현해야한다.  
+> - `JpaRepository`를 ListItemReader, QueueItemReader에 사용하면 안된다.
+>   - Jpa의 조회 쿼리를 쉽게 구현하기 위해 `JpaRepository`를 이용해서 `new ListItemReader<>(jpaRepository.findByAge(age))`를 Reader를 구현하면 안된다.
+>     - Spring Batch의 장점인 `페이징 & Cursor` 구현이 없어 **대규모 데이터 처리가 불가능합니다.** (물론 Chunk 단위 트랜잭션은 됩니다.)
+>     - JpaRepository를 써야 하신다면 `RepositoryItemReader`를 사용하시는 것을 추천합니다.
+
+✅ JpaPagingItemReader Java 예시 코드
+```java
+// java
+
+@RequiredArgsConstructor
+@Log4j2
+@Configuration
+public class JpaPagingItemReaderJobConfiguration {
+
+  private final JobBuilderFactory jobBuilderFactory;
+  private final StepBuilderFactory stepBuilderFactory;
+  // 👉 JpaPagingItemReaderBuilder 사용을 위함
+  private final EntityManagerFactory entityManagerFactory;
+
+  private int chunkSize = 10;
+
+  @Bean
+  public Job jpaPagingItemReaderJob() {
+    return jobBuilderFactory.get("jpaPagingItemReaderJob")
+            .start(jpaPagingItemReaderStep())
+            .build();
+  }
+
+  @Bean
+  public Step jpaPagingItemReaderStep() {
+    return stepBuilderFactory.get("jpaPagingItemReaderStep")
+            .<Pay, Pay>chunk(chunkSize)
+            .reader(jpaPagingItemReader())
+            .writer(jpaPagingItemWriter())
+            .build();
+  }
+
+  @Bean
+  public JpaPagingItemReader<Pay> jpaPagingItemReader(){
+    return new JpaPagingItemReaderBuilder<Pay>()
+            .name("jpaPagingItemReader")
+            .entityManagerFactory(entityManagerFactory)                 // entityManagerFactory 주입
+            .pageSize(chunkSize)                                        // 페이징 개수
+            .queryString("SELECT p FROM Pay p WHERE amount >= 2000 ORDER BY p.id DESC")    // JPA Query 방식
+            .build();
+    /**
+     * Result Query
+     * Hibernate:
+     *     select
+     *         pay0_.id as id1_0_,
+     *         pay0_.amount as amount2_0_,
+     *         pay0_.tx_date_time as tx_date_3_0_,
+     *         pay0_.tx_name as tx_name4_0_
+     *     from
+     *         pay pay0_
+     *     where
+     *         pay0_.amount>=2000
+     *     order by
+     *         pay0_.id DESC limit ?
+     * */
+  }
+
+  private ItemWriter<Pay> jpaPagingItemWriter() {
+    return list -> list.stream().forEach(log::info);
+  }
+
+}
+```
