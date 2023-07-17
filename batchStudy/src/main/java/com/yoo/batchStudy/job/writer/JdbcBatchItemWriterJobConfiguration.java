@@ -17,6 +17,11 @@ import org.springframework.jdbc.core.BeanPropertyRowMapper;
 
 import javax.sql.DataSource;
 
+
+/***
+ *
+ * JdbcBatchItemWriter 사용
+ * */
 @Log4j2
 @RequiredArgsConstructor
 @Configuration
