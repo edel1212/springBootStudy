@@ -1170,3 +1170,78 @@ public class JpaItemWriterJobConfiguration {
   }
 }
 ```
+
+
+<br/>
+<hr/>
+
+###  Custom ItemWriter
+
+> Writer의 경우 원하는 방식대로 구현이 필요할 경우가 많다  
+> - Reader에서 읽어온 데이터를 WebClient를 사용하여 외부 API에 요청 해야하는 경우
+> - 한곳에 Write하는 것이 아닌 여러곳에 Write를 해야하난 경우 등등 이있다.
+
+
+✅ Custom Writer Java 예시 코드
+```java
+//java 
+
+@Log4j2
+@RequiredArgsConstructor
+@Configuration
+public class CustomItemWriterJobConfiguration {
+  private final JobBuilderFactory jobBuilderFactory;
+  private final StepBuilderFactory stepBuilderFactory;
+  private final EntityManagerFactory entityManagerFactory;
+
+  private static final int chunkSize = 10;
+
+  @Bean
+  public Job customItemWriterJob() {
+    return jobBuilderFactory.get("customItemWriterJob")
+            .start(customItemWriterStep())
+            .build();
+  }
+
+  @Bean
+  public Step customItemWriterStep() {
+    return stepBuilderFactory.get("customItemWriterStep")
+            .<Pay, Pay2>chunk(chunkSize)
+            .reader(customItemWriterReader())
+            .processor(customItemWriterProcessor())
+            .writer(customItemWriter())
+            .build();
+  }
+
+  @Bean
+  public JpaPagingItemReader<Pay> customItemWriterReader() {
+    return new JpaPagingItemReaderBuilder<Pay>()
+            .name("customItemWriterReader")
+            .entityManagerFactory(entityManagerFactory)
+            .pageSize(chunkSize)
+            .queryString("SELECT p FROM Pay p")
+            .build();
+  }
+
+  @Bean
+  public ItemProcessor<Pay, Pay2> customItemWriterProcessor() {
+    return pay -> new Pay2(pay.getAmount(), pay.getTxName(), pay.getTxDateTime());
+  }
+
+  /**
+   * 해당 Witer는 타입이 ItemWriter<T> 이다.
+   *
+   * 아래의 로직을 커스텀하여 원하는 대로  write 기능을 사용가능하다.
+   * */
+  @Bean
+  public ItemWriter<Pay2> customItemWriter() {
+    return items -> {
+      // 아래의 로직을 사용하여 Write 로직을 커스텀하여 사용이 가능하다.
+      // ✅ Insert 로직이 사용되지 않았음!!!
+      for (Pay2 item : items) {
+        System.out.println(item);
+      }
+    };
+  }
+}
+```
