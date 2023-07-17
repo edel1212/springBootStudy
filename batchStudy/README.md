@@ -1093,7 +1093,80 @@ public class JpaPagingItemReaderJobConfiguration {
 <br/>
 <hr/>
 
-###  JdbcBatchItemWriter
+###  JpaItemWriter
 
-> ORM을 사용하지 않는 경우 대부분 사용되는 방식이다. JDBC의 Batch 기능을 사용하면 한번에 Database로 전달하여 Database 내부에서 쿼리들이 실행 되도록 함  
-> 이러한 처리방식의 이유는 어플리케이션과 데이터베이스의 **주고받는 횟수를 낮춰 성능 향상을 위함**
+> ORM을 사용할 수 있는 JPAItemWriter이다.  
+> `spring-boot-starter-data-jpa` Dependencies 추가로 Entity Manager를 바로 Bean 등록없이 사용이 가능하다.  
+> 👉 JdbcWriter의 경우 git 내 해당 소스 참고
+
+✅ JpaItemWriter Java 예시 코드
+```java
+// java 
+
+@Configuration
+@Log4j2
+@RequiredArgsConstructor
+public class JpaItemWriterJobConfiguration {
+
+  private final JobBuilderFactory jobBuilderFactory;
+  private final StepBuilderFactory stepBuilderFactory;
+  // spring-boot-starter-data-jpa를 의존성에 등록하면 Entity Manager가 Bean으로 자동생성 된다.
+  private final EntityManagerFactory  entityManagerFactory;
+
+  private static final int chunkSize = 10;
+
+
+  @Bean
+  public Job jpaItemWriterJob() {
+    return jobBuilderFactory.get("jpaItemWriterJob")
+            .start(jpaItemWriterStep())
+            .build();
+  }
+
+  @Bean
+  public Step jpaItemWriterStep() {
+    return stepBuilderFactory.get("jpaItemWriterStep")
+            .<Pay, Pay2>chunk(chunkSize)    // Chunk Size 지정
+            .reader(jpaItemWriterReader())
+            .processor(jpaItemProcessor())
+            .writer(jpaItemWriter())
+            .build();
+  }
+
+  /**
+   * Item Read 역할 수행
+   * */
+  @Bean
+  public JpaPagingItemReader<Pay> jpaItemWriterReader() {
+    return new JpaPagingItemReaderBuilder<Pay>()
+            .name("jpaItemWriterReader")
+            .entityManagerFactory(entityManagerFactory)
+            .pageSize(chunkSize)
+            .queryString("SELECT p FROM Pay p")
+            .build();
+  }
+
+  /**
+   * Reader에서 읽은 데이터를 Writer에서 사용 할 수 있도록 가공 해주는 역할을 해줌
+   *
+   * 제네릭 설명 <ReadItem, WriteItem>
+   * */
+  @Bean
+  public ItemProcessor<Pay, Pay2> jpaItemProcessor(){
+    return pay -> new Pay2(pay.getAmount(), pay.getTxName(), pay.getTxDateTime());
+    //return pay -> new Pay2(19930223L, pay.getTxName(), pay.getTxDateTime()); 👉 변경한 값이 Write 되는 것 확인 완료
+  }
+
+  /**
+   * JpaItemWriter 는 넘어온 Item을 그대로 entityManger.merge()로 테이블에 반영한다.
+   *
+   * 👉 포인트는 알아서 Processor를 거쳐서 변환 된 값을 자동으로 Merge를 진행 했다는 것이다.
+   * */
+  @Bean
+  public JpaItemWriter<Pay2> jpaItemWriter(){
+    JpaItemWriter<Pay2> jpaItemWriter = new JpaItemWriter<>();
+    jpaItemWriter.setEntityManagerFactory(entityManagerFactory);
+    return jpaItemWriter;
+  }
+}
+```

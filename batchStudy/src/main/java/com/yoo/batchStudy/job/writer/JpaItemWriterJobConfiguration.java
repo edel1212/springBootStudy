@@ -82,6 +82,4 @@ public class JpaItemWriterJobConfiguration {
         jpaItemWriter.setEntityManagerFactory(entityManagerFactory);
         return jpaItemWriter;
     }
-
-
 }
