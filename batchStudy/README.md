@@ -1328,3 +1328,42 @@ public class ProcessorConvertJobConfiguration {
   }
 }
 ```
+
+
+✅ Processor Java 예시 코드 - 필터처럼 사용하기
+```java
+// java
+
+@Configuration
+@Log4j2
+@RequiredArgsConstructor
+public class ProcessorNullJobConfiguration {
+    
+  /**
+   *  상단의 코드는 위와 유사하기에 제외함
+   * */  
+ 
+  @Bean(BEAN_PREFIX + "processor")
+  public ItemProcessor<Teacher, Teacher> processor() {
+    return teacher -> {
+      // 조건식  
+      boolean isIgnoreTarget = teacher.getTno() % 2 == 0L;
+      if(isIgnoreTarget){
+        log.info(">>>>>>>>> Teacher name={}, isIgnoreTarget={}", teacher.getName(), isIgnoreTarget);
+        // ✅ null 일경우 Writer에 전달 되지 않음!!!
+        return null;
+      }
+
+      return teacher;
+    };
+  }
+
+  private ItemWriter<Teacher> writer() {
+    return items -> {
+      for (Teacher item : items) {
+        log.info("Teacher Name={}", item.getName());
+      }
+    };
+  }
+}
+```
