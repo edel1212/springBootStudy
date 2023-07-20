@@ -1010,6 +1010,7 @@ public class JdbcPagingItemReaderJobConfiguration {
 >   - Jpa의 조회 쿼리를 쉽게 구현하기 위해 `JpaRepository`를 이용해서 `new ListItemReader<>(jpaRepository.findByAge(age))`를 Reader를 구현하면 안된다.
 >     - Spring Batch의 장점인 `페이징 & Cursor` 구현이 없어 **대규모 데이터 처리가 불가능합니다.** (물론 Chunk 단위 트랜잭션은 됩니다.)
 >     - JpaRepository를 써야 하신다면 `RepositoryItemReader`를 사용하시는 것을 추천합니다.
+> - `EntityManagerFactory`를 DI 주입 해줘야한다. 
 
 ✅ JpaPagingItemReader Java 예시 코드
 ```java
@@ -1367,3 +1368,11 @@ public class ProcessorNullJobConfiguration {
   }
 }
 ```
+
+<br/>
+<hr/>
+
+###  트랜잭션 범위
+
+> - Spring Batch에서 트랜잭션 범위는 Chunk 단위이다.
+>   - Reader -> Processor -> Writer  `Entity 간의 Lazy Loading`이 가능하다. 
