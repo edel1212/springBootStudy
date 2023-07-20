@@ -1376,3 +1376,37 @@ public class ProcessorNullJobConfiguration {
 
 > - Spring Batch에서 트랜잭션 범위는 Chunk 단위이다.
 >   - Reader -> Processor -> Writer  `Entity 간의 Lazy Loading`이 가능하다. 
+>     - 간단 요약 : Reader에서 읽을 `Entity`객체의 값들은 Processor 및 Writer에서 해당 객체에 접근을 하여도 에러가 나지 않기에 LazyLoding인 것을 알 수 있다. 
+
+✅ Transaction 범위 확인 - 각각의 3단계간 Lazy Loding
+```java
+// java
+
+@Log4j2
+@RequiredArgsConstructor
+@Configuration
+public class TransactionProcessorJobConfiguration {
+    
+  // Code ...
+    
+  public ItemProcessor<Teacher, ClassInformation> processor() {
+    return teacher -> ClassInformation.builder()
+            // ✅ teacher.getName() 로 접근해도 에러가 나지 않기에 Lazy Loading인 것 을 알 수 있음
+            .name(teacher.getName())
+            .studentCnt(teacher.getTno())
+            .build();
+  }
+
+  private ItemWriter<ClassInformation> writer() {
+    return items -> {
+        // ✅ items.getName()을 사용해오 에러가 없음!!
+        log.info(items.getName());
+        items.forEach(log::info);
+    };
+    // 👉 JpaItemWriter를 사용하지 않았기에 Merge문이 실행되지 않았음
+    //        JpaItemWriter<Pay2> jpaItemWriter = new JpaItemWriter<>();
+    //        jpaItemWriter.setEntityManagerFactory(entityManagerFactory);
+    //        return jpaItemWriter;
+  }
+}
+```
