@@ -1,8 +1,6 @@
 package com.yoo.batchStudy.batchTest;
 
 import com.yoo.batchStudy.job.itemRead.JpaPagingItemReaderJobConfiguration;
-import com.yoo.batchStudy.repository.PayRepository;
-import org.junit.After;
 import org.junit.Assert;
 import org.junit.jupiter.api.Test;
 import org.springframework.batch.core.*;
