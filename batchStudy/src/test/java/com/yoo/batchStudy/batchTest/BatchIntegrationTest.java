@@ -24,10 +24,9 @@ public class BatchIntegrationTest {
     @Test
     public void batchTestCode() throws Exception {
 
-        LocalDateTime now = LocalDateTime.now();
-
+        // Job Parameter 생성
         JobParameters jobParameters = new JobParametersBuilder()
-                .addString("orderDate", now.toString())
+                .addString("orderDate", LocalDateTime.now().toString())
                 .toJobParameters();
 
         // when

@@ -1410,3 +1410,61 @@ public class TransactionProcessorJobConfiguration {
   }
 }
 ```
+
+
+<br/>
+<hr/>
+
+###  Batch Test 방법
+
+- #### 주의 사항
+  - `@SpringBootTest{}` 설정을 꼭 해주자 : {테스트 대상 Batch, ✅ 필수 설정이 되어있는 BatchConfig(중요!!)}
+    - TestBatchConfig는 따로 작성해 줘야하는 클래스이다!
+  - `Jpa 기반` Batch의 경우 테스트 시 `@EntityScan()` 위치를 잡아주지 않으면 Entity를 찾지 못하는 에러가 발생한다.  
+
+✅ TestBatchConfig 클래스 - Batch 테스트를 하기위한 Class
+```java
+// java
+
+/***
+ * @SpringBatchConfig로 인해 불필요한 설정이 제거된 Config 클래스이다.
+ * */
+@Configuration
+@EnableAutoConfiguration    // Spring Application Context의 자동 구성을 활성화하여 필요할 수 있는 Bean을 등록
+@EnableBatchProcessing      // Spring Batch 기능을 활성화하고 @Configuration 클래스에서 배치 작업을 설정하기 위한 기본 구성 제공
+public class TestBatchConfig {}
+```
+
+
+✅ Batch Test 클래스
+```java
+//java 
+
+@SpringBatchTest // Spring Batch 테스트용 어노테이션
+// {테스트 대상 Batch, ✅ 필수 설정이 되어있는 BatchConfig(중요!!)}
+@SpringBootTest(classes = {JpaPagingItemReaderJobConfiguration.class, TestBatchConfig.class})
+@EntityScan("com.yoo.batchStudy.entity")    // 👉 해당 어노테이션이 없으면 Entity를 찾지 못함
+public class BatchIntegrationTest {
+
+  @Autowired
+  private JobLauncherTestUtils jobLauncherTestUtils;
+
+  @Test
+  public void batchTestCode() throws Exception {
+
+    // Job Parameter 생성
+    JobParameters jobParameters = new JobParametersBuilder()
+            .addString("orderDate", LocalDateTime.now().toString())
+            .toJobParameters();
+
+    // when
+    JobExecution jobExecution =
+            jobLauncherTestUtils.launchJob(jobParameters);
+
+    // then
+    Assert.assertEquals(ExitStatus.COMPLETED,
+            jobExecution.getExitStatus());
+
+  }
+}
+```
