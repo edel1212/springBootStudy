@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import java.time.LocalDateTime;
 
 @SpringBatchTest // Spring Batch 테스트용 어노테이션
+// {테스트 대상 Batch, ✅ 필수 설정이 되어있는 BatchConfig(중요!!)}
 @SpringBootTest(classes = {JpaPagingItemReaderJobConfiguration.class, TestBatchConfig.class})
 @EntityScan("com.yoo.batchStudy.entity")    // 👉 해당 어노테이션이 없으면 Entity를 찾지 못함
 public class BatchIntegrationTest {
