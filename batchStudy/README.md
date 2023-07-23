@@ -1467,3 +1467,77 @@ public class BatchIntegrationTest {
   }
 }
 ```
+
+<br/>
+<hr/>
+
+###  Quartz 스케줄러를 사용해 Batch 실행
+
+- ✅ 스케줄링을 지원해 줄 `Quartz` 추가
+
+```groovy
+// build.gradle
+
+dependencies {
+  // Add Quartz
+  implementation 'org.springframework.boot:spring-boot-starter-quartz'
+}
+```
+
+- ✅ 스케줄링 Job Class
+```java
+// java
+
+@Component
+@Log4j2
+@RequiredArgsConstructor
+@EntityScan("com.yoo.batchStudy.entity") // 👉 Entity를 찾지 못하는 문제로 추가
+public class TestJobA extends QuartzJobBean {
+  private final JobLauncher jobLauncher;
+
+  private final Job jpaPagingItemReaderJob;// 👉  실행 시킬 Job의 Bean Name이다
+
+  @Override
+  protected void executeInternal(JobExecutionContext context) throws JobExecutionException {
+    // Job Parameter 생성
+    JobParameters jobParameters = new JobParametersBuilder()
+            .addString("orderDate", LocalDateTime.now().toString())
+            .toJobParameters();
+    try {
+      // 실행 
+      jobLauncher.run(jpaPagingItemReaderJob,  jobParameters);
+    } catch (Exception e){
+      e.printStackTrace();
+    }
+  }
+}
+```
+
+- ✅ Quartz Config
+```java
+// java
+
+@Configuration
+public class QuartzConfig {
+   
+  @Bean
+  public JobDetail jobDetailA() {
+
+    return JobBuilder.newJob(TestJobA.class)
+            .storeDurably()
+            .withIdentity("jobDetailA")
+            .withDescription("jobDetailA Descriptin")
+            .build();
+  }
+
+  @Bean
+  public Trigger tistoryTrigger(JobDetail jobDetailA) {
+    return TriggerBuilder.newTrigger()
+            .forJob(jobDetailA)
+            .withIdentity("test1") // 트리거 식별자 설정
+            .withSchedule(CronScheduleBuilder.cronSchedule("/10 * * * * ?"))
+            .build();
+  }
+
+}
+```
