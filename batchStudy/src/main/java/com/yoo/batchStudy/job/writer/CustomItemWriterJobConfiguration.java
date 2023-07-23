@@ -57,7 +57,11 @@ public class CustomItemWriterJobConfiguration {
 
     @Bean
     public ItemProcessor<Pay, Pay2> customItemWriterProcessor() {
-        return pay -> new Pay2(pay.getAmount(), pay.getTxName(), pay.getTxDateTime());
+        return pay -> Pay2.builder()
+                .amount(pay.getAmount())
+                .txName(pay.getTxName())
+                .txName(pay.getTxName())
+                .build();
     }
 
     /**
