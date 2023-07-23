@@ -203,7 +203,6 @@ public class SimpleJobConfiguration {
 ```java
 // SimpleJobConfiguration
 
-
 public class SimpleJobConfiguration {
 
   private final JobBuilderFactory jobBuilderFactory;
