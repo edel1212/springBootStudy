@@ -27,7 +27,7 @@ public class JpaPagingItemReaderJobConfiguration {
 
     private int chunkSize = 10;
 
-    @Bean
+    @Bean("jpaPagingItemReaderJob")
     public Job jpaPagingItemReaderJob() {
         return jobBuilderFactory.get("jpaPagingItemReaderJob")
                 .start(jpaPagingItemReaderStep())

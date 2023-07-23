@@ -67,7 +67,7 @@ public class JpaItemWriterJobConfiguration {
    * */
    @Bean
    public ItemProcessor<Pay, Pay2> jpaItemProcessor(){
-       return pay -> new Pay2(pay.getAmount(), pay.getTxName(), pay.getTxDateTime());
+       return pay -> Pay2.builder().build();
        //return pay -> new Pay2(19930223L, pay.getTxName(), pay.getTxDateTime()); 👉 변경한 값이 Write 되는 것 확인 완료
    }
 
