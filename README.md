@@ -89,9 +89,6 @@
   - 8 ) OAuth Login [ 소셜 로그인 ]
   - 9 ) JWT (JSON Web Token)
 
-<hr/>
-
-- 💬 **[ [이동](https://github.com/edel1212/springBootStudy/tree/main/integrateVue) ]** :: Spring Boot Vue 연동 라우터 사용
 
 <hr/>
 
