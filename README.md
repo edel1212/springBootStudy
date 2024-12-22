@@ -9,6 +9,12 @@
 
 <hr/>
 
+- 💬 **[ [이동](https://github.com/edel1212/springBootStudy/tree/main/exceptionStudy) ]** :: 예외 처리
+  - Global Exception Handler
+  - Filter 내 Exception 처리
+
+<hr/>
+
 - 💬 **[ [이동](https://github.com/edel1212/springBootStudy/tree/main/exGraphQL) ]** :: GraphQL 사용 방법 및 RESTAPI 차이점
   - 1 ) GraphQL 이란❔
   - 2 ) Rest API 와 GraphQL의 차이
