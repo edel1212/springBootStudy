@@ -154,3 +154,56 @@ public class CustomErrorController implements ErrorController {
     }
 }
 ```
+
+## Filter Exception 처리
+```properties
+# ℹ️ 가장 대중적인 OncePerRequestFilter를 기준으로 작성
+```
+### JWT 처리
+```java
+@Log4j2
+@Component
+@RequiredArgsConstructor
+public class JwtAuthenticationFilter extends OncePerRequestFilter {
+
+    private final JwtTokenProvider jwtTokenProvider;
+
+    @Override
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+        String token = jwtTokenProvider.resolveToken(request);
+
+        try {
+            if (token != null && jwtTokenProvider.validateToken(token)) {
+                Authentication authentication = jwtTokenProvider.getAuthentication(token);
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+            } // if
+            filterChain.doFilter(request, response);
+        } catch (io.jsonwebtoken.security.SecurityException | MalformedJwtException e) {
+            log.warn("Invalid JWT Token : '%s'", e);
+            setErrorResponse(response, ExceptionCode.WRONG_TYPE_TOKEN);
+            return;
+        } catch (ExpiredJwtException e) {
+            log.warn("Expired JWT Token : '%s'", e);
+            setErrorResponse(response, ExceptionCode.EXPIRED_TOKEN);
+        } catch (UnsupportedJwtException e) {
+            log.warn("Unsupported JWT Token : '%s'", e);
+            setErrorResponse(response, ExceptionCode.UNSUPPORTED_TOKEN);
+        } catch (IllegalArgumentException e) {
+            log.warn("JWT claims string is empty.  : '%s'", e);
+            setErrorResponse(response, ExceptionCode.WRONG_TOKEN);
+        }
+    }
+
+    /**
+     * ✨ 해당 메스드에서 응답 반환 값을 json 형식으로 응답함 
+     * */
+    private void setErrorResponse(HttpServletResponse response, ExceptionCode exceptionCode) throws IOException {
+        var objectMapper = new ObjectMapper();
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+        response.setCharacterEncoding(StandardCharsets.UTF_8.name());
+        CommonResponse commonResponse = CommonResponse.fail(exceptionCode);
+        response.getWriter().write(objectMapper.writeValueAsString(commonResponse));
+    }
+}
+```
