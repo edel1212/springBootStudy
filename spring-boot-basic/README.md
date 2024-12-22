@@ -3,8 +3,8 @@
 - 💬 **[ [이동](https://github.com/edel1212/springBootStudy/tree/main/spring-boot-basic/ex01) ]** :: Spring Boot, Spring Framework 차이 및 설정 JUnit Test
     - 1 ) Gradle , Maven 차이
     - 2 ) Spring , Spring Boot 차이
-    - 3 ) Spring Boot Port 변경 방법
-    - 4 ) Spring Boot JUnit Test 방법
+    - 3 )  Port 변경 
+    - 4 ) JUnit Test
 
 <hr/>
 
@@ -18,7 +18,6 @@
     - 7 ) JpaRepository를 사용한 Paging
     - 8 ) QueryMethod
     - 9 ) @Query 어노테이션 [ JPQL ]
-    - 10 ) Docker를 사용한 MariaDB 설치 및 연결
 <hr/>
 
 - 💬 **[ [이동](https://github.com/edel1212/springBootStudy/tree/main/spring-boot-basic/ex03) ]** :: Thymeleaf 사용법, RedirectAttributes를 사용하여 Redirect 시  데이터 전달
