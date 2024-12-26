@@ -15,7 +15,7 @@ import java.util.UUID;
 @RestController
 public class MemberController {
 
-    private MemberRepository memberRepository;
+    private final MemberRepository memberRepository;
 
     @GetMapping
     ResponseEntity<String> registerMember(){
