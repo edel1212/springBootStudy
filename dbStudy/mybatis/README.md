@@ -77,3 +77,28 @@ public interface MemberRepository {
     </select>
 </mapper>
 ```
+
+## Query Log
+```properties
+# ✅ P6psy를 이용하여 작성
+#    - 단 hibernate를 사용하지 않기에 일부 커스텀이 필요함 
+```
+- 참고 **[ [이동](https://github.com/edel1212/springBootStudy/tree/main/p6spyStudy) ]**
+
+### hibernate를 제외한 P6psy format 설정
+```java
+public class CustomP6spySqlFormat  implements MessageFormattingStrategy {
+
+    @Override
+    public String formatMessage(int connectionId, String now, long elapsed, String category, String prepared, String sql, String url) {
+        // SQL이 비어 있거나 null인 경우 카테고리와 실행 시간만 반환
+        if (!StringUtils.hasText(sql))  return String.format("%s %dms", category, elapsed);
+        return String.format("%s %dms %s", category, elapsed, format(sql));
+    }
+
+    private String format(String sql) {
+        return sql;
+    }
+
+}
+```
