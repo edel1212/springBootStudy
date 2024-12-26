@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+    <!-- Define the console appender -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <charset>UTF-8</charset>
+            <pattern>[%d{yyyy-MM-dd HH:mm:ss}:%-4relative] %green([%thread]) %highlight(%-5level) %boldWhite([%C.%M:%yellow(%L)]) - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- Define logging for 'test' profile -->
+    <springProfile name="test">
+        <root level="INFO">
+            <appender-ref ref="CONSOLE"/>
+        </root>
+    </springProfile>
+
+    <!-- Define logging for 'local' profile -->
+    <springProfile name="local">
+        <!-- Log To File Setting xml   -->
+        <include resource="log/local/file-info.xml" />
+        <include resource="log/local/file-warn.xml" />
+        <include resource="log/local/file-error.xml" />
+        <include resource="log/local/file-all.xml" />
+        <root level="INFO">
+            <appender-ref ref="CONSOLE"/>
+            <appender-ref ref="LEVEL-INFO"/>
+            <appender-ref ref="LEVEL-WARN"/>
+            <appender-ref ref="LEVEL-ERROR"/>
+            <appender-ref ref="LEVEL-ALL"/>
+        </root>
+    </springProfile>
+
+    <!-- Define logging for 'dev' profile -->
+    <springProfile name="dev">
+        <!-- Log To File Setting xml   -->
+        <include resource="log/dev/file-info.xml" />
+        <include resource="log/dev/file-warn.xml" />
+        <include resource="log/dev/file-error.xml" />
+        <include resource="log/dev/file-all.xml" />
+        <root level="INFO">
+            <appender-ref ref="LEVEL-INFO"/>
+            <appender-ref ref="LEVEL-WARN"/>
+            <appender-ref ref="LEVEL-ERROR"/>
+            <appender-ref ref="LEVEL-ALL"/>
+        </root>
+    </springProfile>
+
+    <!-- Define logging for 'prod' profile -->
+    <springProfile name="prod">
+        <!-- Log To File Setting xml   -->
+        <include resource="log/prod/file-info.xml" />
+        <include resource="log/prod/file-warn.xml" />
+        <include resource="log/prod/file-error.xml" />
+        <include resource="log/prod/file-all.xml" />
+        <root level="INFO">
+            <appender-ref ref="LEVEL-INFO"/>
+            <appender-ref ref="LEVEL-WARN"/>
+            <appender-ref ref="LEVEL-ERROR"/>
+            <appender-ref ref="LEVEL-ALL"/>
+        </root>
+    </springProfile>
+
+</configuration>
