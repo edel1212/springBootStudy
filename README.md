@@ -19,6 +19,12 @@
 
 <hr/>
 
+- 💬 **[ [이동](https://github.com/edel1212/springBootStudy/tree/main/dbStudy) ]** :: DB
+  - mybatis 적용
+  - 다중 데이터베이스 적용
+
+<hr/>
+
 - 💬 **[ [이동](https://github.com/edel1212/springBootStudy/tree/main/exGraphQL) ]** :: GraphQL 사용 방법 및 RESTAPI 차이점
   - 1 ) GraphQL 이란❔
   - 2 ) Rest API 와 GraphQL의 차이
