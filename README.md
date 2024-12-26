@@ -19,6 +19,10 @@
 
 <hr/>
 
+- 💬 **[ [이동](https://github.com/edel1212/springBootStudy/tree/main/logStudy) ]** :: log 적용
+
+<hr/>
+
 - 💬 **[ [이동](https://github.com/edel1212/springBootStudy/tree/main/dbStudy) ]** :: DB
   - mybatis 적용
   - 다중 데이터베이스 적용
