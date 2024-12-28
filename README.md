@@ -38,8 +38,4 @@
 <hr/>
 
 
-- 💬 **[ [이동](https://github.com/edel1212/springBootStudy/tree/main/webSocketStudy) ]** :: WebSocket
-  - 1 ) WebSocket
-  - 2 ) SocketJS
-
 
