@@ -1,18 +1,15 @@
-<h1>REST API, Swagger, RestTemplate, WebClient</h1>
+# REST API, Swagger, RestTemplate, WebClient
 
-<h3>1 ) REST API 란❔</h3>
+## 1 ) REST API 란❔
 
-- 👉 Representational State Transfer의 약자 이다. 
-  - 자원(Data)을 이름으로 구분하여 해당 자원의 상태(정보)를 주고받는 것을 의미한다.
-  - HTTP URI를 통해 자원을 명시하고, HTTP Method(POST, GET, PUT, DELETE)를<br/>
-사용하여 해당 자원에 대한 CRUD를 적용하는것을 의미한다.
 - 👉 각각의 Method 의미
   - POST : Create
   - GET  : Read
-  - PUT  : Update
+  - PUT  : Update  ( 일부분 변경 요청하면 **다른 값이 다 null** )
+  - PATCH  : Update ( 변경 **요청한 부분만 변경**된다  )  
   - DELETE : Delete
   - HEAD : header 정보 조회
-- 👉 REST의 장단점
+- 👉 장/단점
   - 장점👍
     - 1 . HTTP 표준 프로토콜에 따르는 모든 플랫폼에서 사용이 가능하다.
     - 2 . REST API 메세지가 의도하는 바를 명확하게 나타내므로 의도하는 바를 쉽게 파악 가능하다.
@@ -28,7 +25,7 @@
     - Client에서는 URI를 이용해서 자연월 지정하고 해당 자원의 상태에 대한 조작을 Server에 요청한다.
   - 2 . 행위(Verb) : HTTP Method
     - HTTP 프로토콜의 Method를 사용한다.
-    - HTTP 프로토콜은 GET, POST, PUT, DELETE 와 같은 메서드를 제공한다. 
+    - HTTP 프로토콜은 GET, POST, PUT, PATCH, DELETE 와 같은 메서드를 제공한다. 
   - 3 . 표현(Representation of Resource)
     - Client가 자원의 상태에 대한 조작을 요청하면 Sever는 이에 적당한 응답(Response)울 보낸다.
     - JSON, XML, TEXT, RSS 등 어려 형태의 응답으로 보내줄 수 있다. [ 일반적으로 JSON, XML로 응답함. ]
@@ -55,139 +52,60 @@
     - HTTP 표준 프로토콜에 따르는 모든 플랫폼에서 사용이 가능하다 [ 특정 언어나 기술에 종속 되지 ❌ ]
 - 👉 REST API 설계 기본 규칙
   - 1 . URI는 정보의 자원을 표시 해야한다.
-    - resource는 동사 👎 - > 명사 👍
-    - resource는 대문자 👎 - > 소문자 👍
-    - 단수보다는 복수를 사용
-      - Ex) GET /Member/1 👎  -> GET /members/1 👍  
+    - resource는 동사 👎 - > **명사** 👍
+    - resource는 대문자 👎 - > **소문자** 👍
   - 2 . 자원에 대한 행위는 HTTP Method로  표현한다.
-    - URI에 HTTP Method가 들어가면 안된다
+    - URI에 의도가 보이지 않고 HTTP Method를 사용해서 의도를 구분해야 함
       - Ex) GET /members/show/1 👎 -> GET /members/1
       - Ex) GET /members/insert/2 👎 -> POST /members/1
   - 3 . 슬래시 구분자(/)는 계층 관계를 나타내는데 사용한다.
     - Ex) https://blackgom.com/cities/townships
   - 4 . URI 마지막 문자로 / 를 포함하지 않는다.
-  - 5 . URI 경로에는 언더바( "_" ) 는  사용하지 ❌ // 불가피하게 URI가 긴 경우 하이픈( "-" )을 사용 👍
-  - 6 . URI 경로에는 소문자가 적합하다.
+  - 5 . URI 경로에는 언더바( "_" ) 는  **사용하지 ❌** // 불가피하게 URI가 긴 경우 **하이픈( "-" )을 사용** 👍
+  - 6 . URI 경로에는 **소문자가 적합**하다.
     - RFC 3986(URI 문법 형식)은 URI 스키마와 호스트를 제외하고는 대소문자를 구별하도록 규정하기 때문
-  - 7 . URI 경로에는 파일확장자를 포함하면 안된다. [ 💬 필요한다면 Accept Header에 추가해서 사용 ]
-    - Ex) https://blackgom.com/cities/townships/photo/336/yoo.jpg  👎
-    - Ex) https://blackgom.com/cities/townships/photo/336   ____ Accept:image/jpg  👍
+  - 7 . URI 경로에는 **파일 확장자를 포함하면 안된다.**  - [ 💬 필요한다면 Accept Header에 추가 ]
+    - Ex) `/cities/townships/photo/336/yoo.jpg`  👎
+    - Ex) `/cities/townships/photo/336`   -> `header :  Accept:image/jpg`  👍
 
 
-<br/>
-<hr/>
+## 2 ) @RestController 란❔
 
-<h3>2 ) @RestController 란❔</h3>
-
-- @RestController의 경우 모든 메서드의 리턴 타입은 기본으로 JSON을 사용한다.
-- 해당 어노테이션을 사용하면 메서드 마다 @ResponseBody를 사용하지 않아도 된다.
+- 반환 메서드 마다 `@ResponseBody`를 사용하지 않아도 된다.
+  - `@RestController`에노테이션이 기본적으로 JSON 반환을 의미하기 때문
 - @RestController 와 @Controller 차이점 [ 간단설명 ]  
   - @Controller : Model 또는 @ResponseBody를 사용하여 데이터를 전달할 수 있지만 주된 기능은 View를 반환하기 위해 사용
   - @RestController : @Controller에 + @ResponseBody로 생각하면 된다, 주된 용도는 Json 형태로 객체 데이터를 반환하는 것이다.
 
-\- Controller - GET 방식🔽
-```java
-// java - Controller
 
-@Log4j2
-@RequiredArgsConstructor
+
+## 3 ) Consumes 와  Produces ❔
+
+### Consumes 
+```properties
+# ℹ️ Get 방식일 경우에는 Consumes가 불필요 -> URI형태로 받기에 Body를 사용할 수 없기 때문
+```
+- 소비 가능한 미디어 타입을 지정하는 것이며 주요한 매핑을 제한 할수있다.
+  - HTTP 통신 대상의 Content-Type 요청 헤더가 **Consumes에 지정한 미디어 타입**과 **일치할 때만 요청 성공**
+
+
+#### Controller 🔽
+```java
 @RestController
-@RequestMapping("/replies/")
-public class ReplyController {
-
-    private final ReplyService replyService;
-
-    @GetMapping(value = "/board/{bno}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<List<ReplyDTO>> getListByBoard(@PathVariable Long bno){
-        log.info("bno ::: {}" , bno);
-        return ResponseEntity.ok().body(replyService.getList(bno));
-    }
-
-
+class TestController{
+  @PostMapping(value = "/consumesSuccess", consumes = MediaType.APPLICATION_JSON_VALUE)
+  public ResponseEntity<Map<String, String>> errorCase2(@RequestBody Map<String, String> testValue){
+  
+          log.info("testValue :: {}", testValue);
+  
+          Map<String , String > result = new HashMap<>();
+          result.put("result","SUCCESS");
+  
+          return ResponseEntity.ok().body(result);
+  }
 }
 ```
-
-\- View [ javascript ] - GET 방식🔽
-```javascript
-// javascript - use fetchAPI
-
-fetch("/replies/board/90") // bno : 90번을 찾음
-      .then((response) => response.json())
-      .then((data) => {
-        console.log(data);
-      })
-      .catch((error) => console.log(error));
-
-```
-
-<br/>
-<hr/>
-
-<h3>3 ) @RequestMapping의 Consumes 와  Produces 란❔</h3>
-
-- Consumes : 소비 가능한 미디어 타입을 지정하는 것이며 주요한 매핑을 제한 할수있다.
-  - HTTP 통신 대상의 Content-Type 요청 헤더가 Consumes에 지정한 미디어 타입과 일치할 때만 요청이 성공한다.
-  - Get 방식일 경우에는 Consumes가 불필요하다 [ Get방식의 데이터 전달 방식은 URI형태로 받기에 Body가 없기 때문이다. ]
-  - 💬 간단설명 : <strong>consumes는 클라이언트가 서버에게 보내는 데이터 타입을 명시한다.</strong>
-
-\- Consumes Test Controller [ ☠️ Error Case ]🔽
-```java
-//java - Controller
-
-@Description("Error Case Get방식은 Body가 없으므로 consumes가 불필요함")
-@Deprecated
-@GetMapping(value = "/consumesErrorCase1", consumes = MediaType.APPLICATION_JSON_VALUE)
-public ResponseEntity<String> errorCase1(@RequestBody Map<String, String> testValue){
-
-        log.info("testValue :: {}", testValue);
-        
-        return ResponseEntity.ok().body("ErrorCase");
-}
-```
-
-\- Consumes Test Client [ ☠️ Error Case ]🔽
-```javascript
-//javascript - Client
-
-/*
-    GetMethod 방식에는 Body가 들어갈수가 없음!!
-    1 ) 헤더의 내용중 BODY 데이터를 설명하는 Content-Type이라는 헤더필드는 들어가지 않는다.
-    2 ) TypeError: Failed to execute 'fetch' on 'Window': Request with GET/HEAD method cannot have body.
- */
-function errorCase(){
-    fetch("/replies/consumesErrorCase1"
-        ,{
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-                testValue: 123
-                })
-          })
-      .then((response) => response.json())
-      .then((data) => {
-        console.log(data);
-      })
-      .catch((error) => console.log(error));
-}
-```
-
-\- Consumes Test Controller [ 👍 Success Case ]🔽
-```java
-//java - Controller
-
-@PostMapping(value = "/consumesSuccess", consumes = MediaType.APPLICATION_JSON_VALUE)
-public ResponseEntity<Map<String, String>> errorCase2(@RequestBody Map<String, String> testValue){
-
-        log.info("testValue :: {}", testValue);
-
-        Map<String , String > result = new HashMap<>();
-        result.put("result","SUCCESS");
-
-        return ResponseEntity.ok().body(result);
-}
-```
-\- Consumes Test Client [ 👍 Success Case ]🔽
+#### Client 🔽
 ```javascript
 function consumesSuccess(){
     fetch("/replies/consumesSuccess"
@@ -208,192 +126,60 @@ function consumesSuccess(){
 }
 ```
 
-- Produces : Server단에서 보내주는 데이터 타입을 정의한다.
-  - client에서 받는 데이터 형식을 정하는 Header는 Accept이다.
-  - 💬 간단설명 : <strong>produces는 서버가 클라이언트에게 반환하는 데이터 타입을 명시한다</strong>
+### Produces
+- 반환 하는 데이터 타입을 정의
+- client에서 받는 데이터 형식을 정하는 Header는 `Accept`을 사용
 
-\- Produces Test Controller [ ☠️ Error Case ]🔽
+
+#### Controller 🔽
 ```java
-//java - Controller
-
-/*
- * 반환 타입과 produces 설정 또한 맞지 않음
- * */
-@Description("반환 타입과 produces가 맞지 않기에 500Error 반환")
-@Deprecated
-@GetMapping(value = "/errorCase/{bno}", produces = MediaType.TEXT_PLAIN_VALUE)
-public ResponseEntity<List<ReplyDTO>> producesErrorCase(@PathVariable Long bno){
-        log.info("bno ::: {}" , bno);
-        return ResponseEntity.ok().body(replyService.getList(bno));
-}
-
-/*
- * Server단에서는 문제가 없지만 Cleint단 에서  모순되는 문제가 있음
- * */
-@Description("Error는 없지만 Client단에서의 모순이 있음")
-@Deprecated
-@GetMapping(value = "/errorCase2/{bno}", produces = MediaType.TEXT_PLAIN_VALUE)
-public ResponseEntity<String> producesErrorCase2(@PathVariable Long bno){
-        log.info("bno ::: {}" , bno);
-        return ResponseEntity.ok().body("Yoo");
+@RestController
+class TestController{
+  @GetMapping(value = "/board/{bno}", produces = MediaType.APPLICATION_JSON_VALUE)
+  public ResponseEntity<List<ReplyDTO>> getListByBoard(@PathVariable Long bno){
+    log.info("bno ::: {}" , bno);
+    return ResponseEntity.ok().body(replyService.getList(bno));
+  }   
 }
 ```
-
-\- Produces Test Client [ ☠️ Error Case ]🔽
+#### Client 🔽
 ```javascript
-//javascript - Cleint
+const fetchRepliesByBoard = async (boardNumber) => {
+  const url = `/board/${boardNumber}`;
+  
+  try {
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json', // JSON 형식의 응답을 받기 위해 설정
+      },
+    });
 
-/**
- 이유 : Server에서 반환 타입은 [{}]형식의 JSON 형식이지만
-       produces = MediaType.TEXT_PLAIN_VALUE 로 설정하였기에
-       에러를 반환함
- Error Code :500
-*/
-function  producesErrorCase (){
-    fetch("/replies/errorCase/90")
-      .then((response) => response.json())
-      .then((data) => {
-        console.log(data);
-      })
-      .catch((error) => console.log(error));
-}
+    if (!response.ok) {
+      throw new Error(`Error fetching data: ${response.statusText}`);
+    }
 
-/**
- 이유 : 해당 테스트는 에러는 없지만 Client 의 Accept 와 Server단의 produces, return 타입이 다른
-      문제가 있고 사실상 해당 fetchAPI 사용에서도 모순되는 점이 있다
-      - header -> Accept 를 json으로 설정했으면서도
-      - 받아오는 타입의 데이터는  response.text()를 사용 [ String을 반환하기 때문 ]
-        한다. .json()은 Error가 나기 때문이다.
- Error Code : 없음
-*/
-function  producesErrorCase2 (){
-    fetch("/replies/errorCase2/90"
-        ,{
-            method : "GET" ,
-            header : {Accept : "application/json"}
-        })
-      .then((response) => response.text())
-      //.then((response) => response.json())
-      .then((data) => {
-        console.log(data);
-      })
-      .catch((error) => console.log(error));
-}
+    const data = await response.json();
+    console.log('Reply List:', data);
+    return data;
+  } catch (error) {
+    console.error('Error:', error);
+    return null;
+  }
+};
 ```
 
-\- Produces Test Controller [ 👍 Success Case ]🔽
-```java
-//java - Controller
 
-@GetMapping(value = "/board/{bno}", produces = MediaType.APPLICATION_JSON_VALUE)
-public ResponseEntity<List<ReplyDTO>> getListByBoard(@PathVariable Long bno){
-        log.info("bno ::: {}" , bno);
-        return ResponseEntity.ok().body(replyService.getList(bno));
-}
-```
-\- Produces Test Client [ 👍 Success Case ]🔽
-```javascript
-//javascript - Client
+## 5 ) application/json 과 application/x-www-from-urlencoded 차이점❔
 
-//성공
-function getReplies(){
-    fetch("/replies/board/90")
-      .then((response) => response.json())
-      .then((data) => {
-        console.log(data);
-      })
-      .catch((error) => console.log(error));
-}
-```
+- application/json 
+  - `{key: value}`의 JSON형태 사용
+- application/x-www-form-urlencoded 
+  - `key=value&key=value`의 형태로 사용
 
-<br/>
-<hr/>
 
-<h3>5 ) Content-Type의 application/json 과 application/x-www-from-urlencoded 차이점❔</h3>
 
-- 대부분의 HTTP Request에 대한 Content-Type은 application/json이 대부분이다.[ REST API 대중화 때문 ]
-<br/> <strong>단 !!!</strong> application/x-www-form-urlencoded는 html form의 기본 전송 시 Content-Type 이므로
-자주 사용되지는 않지만 가끔씩 사용된다.
-- 차이점 ?
-  - application/json : {key: value}의 JSON형태로  Server에 전송된다.
-  - application/x-www-form-urlencoded : key=value&key=value의 형태로 전달된다는 점입니다.
-- 👉 applcation/x-www-form-urlencoded 사용 시 주의점
-  -  application logic에서 applcation/x-www-form-urlencoded를 사용할 경우 body 인코딩이 
-<br/>해당 framework 혹은 library에서 자동으로 되는지 확인 후 안되면 해줘야한다.
-<br/> Ex) body : stringify(form).toString('utf8')
-\- Test Code [ Client ]🔽
-```html
-<!-- html -->
-
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
-    
-    <!--  
-      http://localhost:8081/replies/formVer?testValue=95 
-      위와 같이 값이 전달된다.
-      -->
-    <form action="/replies/formVer">
-        <input name="testValue" value="95">
-        <button>전송</button>
-    </form>
-
-    <hr/>
-    
-    <!--  Server단 파라미터 타입 다르게 테스트   -->
-    <form action="/replies/formVer2">
-        <input name="bno" value="95">
-        <button>전송</button>
-    </form>
-
-    <hr/>
-    
-    <!--  Post 방식  -->
-    <form action="/replies/formAndPostVer" method="post">
-        <input name="bno" value="95">
-        <button>전송</button>
-    </form>
-
-</body>
-</html>
-```
-
-\- Test Code [ Server ]🔽
-```java
-//java - Controller
-
-@Description("URL에 값이 담겨나옴")
-@GetMapping(value = "/formVer")
-public ResponseEntity<List<ReplyDTO>> applicationFormVerTest(Long testValue){
-        log.info("bno ::: {}" , testValue);
-        return ResponseEntity.ok().body(replyService.getList(testValue));
-}
-
-@Description("DTO에 값이 담기는지 확인")
-@GetMapping(value = "/formVer2")
-public ResponseEntity<List<ReplyDTO>> applicationFormVerTest(ReplyDTO replyDTO){
-        log.info("bno ::: {}" , replyDTO);
-        return ResponseEntity.ok().body(replyService.getList(replyDTO.getBno()));
-}
-
-/**
- * Parameter를 (Long testValue) 받았을 시 이상없음 확인 완료
- * */
-@PostMapping(value = "/formAndPostVer")
-public ResponseEntity<List<ReplyDTO>> applicationFormAndPostVerTest(ReplyDTO replyDTO){
-        log.info("bno ::: {}" , replyDTO);
-        return ResponseEntity.ok().body(replyService.getList(replyDTO.getBno()));
-}
-```
-
-<br/>
-<hr/>
-
-<h3>6 ) Swagger Setting </h3>
+## 6 ) Swagger Setting 
 
 #### Swagger를 설정하기 위한 라이브러리는 2가지가 있다 `Spring-Fox`, `Spring-Doc`  단 `Spring-Fox`의 경우는 더 이상 업데이트가 지원되지 않으므로 `Spring-Doc`를 사용한다 
 
@@ -445,8 +231,7 @@ public class SwaggerConfiguration {
 
 #### 참고 : [Swagger 설정]( https://velog.io/@jeong-god/Spring-boot-Swagger-API-%EC%97%B0%EB%8F%99%ED%95%98%EA%B8%B0)
 
-<br/>
-<hr/>
+
 
 <h3>7) RestTemplate 이란 ?</h3>
 - Spring에서 제공하는 HTTP통신 기능을 쉽게 사용할 수 있게 설계 되어 있는 템플릿이다.
@@ -1385,8 +1170,4 @@ public void syncTest(){
         log.info("result :: {}",response2);
 }
 ```
-	
-### MVC로직 사용 - [자세히 보기](https://github.com/edel1212/springBootStudy/blob/main/webClientServer/serverReq/src/main/java/com/yoo/serverReq/service/WebclientServiceImpl.java)	
 
-
----
