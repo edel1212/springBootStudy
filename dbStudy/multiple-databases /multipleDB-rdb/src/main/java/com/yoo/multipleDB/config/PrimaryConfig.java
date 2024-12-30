@@ -27,6 +27,10 @@ import javax.sql.DataSource;
 )
 public class PrimaryConfig {
 
+    /**
+     * @Primary를 사용하여 동일 타입의 여러 Bean 중에서 기본적으로 사용될 Bean을 지정하는 것
+     * */
+
     @Bean
     @Primary
     // application properties 값을 읽어옴
