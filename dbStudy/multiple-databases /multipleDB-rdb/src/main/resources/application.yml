@@ -1,9 +1,15 @@
 spring:
   datasource:
-    driver-class-name: org.mariadb.jdbc.Driver
-    url: jdbc:mariadb://localhost:3306/test
+    #url: jdbc:mariadb://localhost:3306/test
+    jdbc-url: jdbc:mariadb://localhost:3306/test
     username: root
     password: 123
+    driver-class-name: org.mariadb.jdbc.Driver
+  sub-db:
+    url: jdbc:mariadb://localhost:3333/foo
+    username: yoo
+    password: 123
+    driver-class-name: org.mariadb.jdbc.Driver
 
   ## JPA setting
   jpa:
