@@ -1,8 +1,10 @@
 package com.yoo.multipleDB.controller;
 
 import com.yoo.multipleDB.entity.primary.Dog;
+import com.yoo.multipleDB.entity.sub.Book;
 import com.yoo.multipleDB.entity.sub.Cat;
 import com.yoo.multipleDB.repository.primary.DogRepository;
+import com.yoo.multipleDB.repository.sub.BookRepository;
 import com.yoo.multipleDB.repository.sub.CatRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -21,6 +23,7 @@ public class PetController {
 
     private final DogRepository dogRepository;
     private final CatRepository catRepository;
+    private final BookRepository bookRepository;
 
     @GetMapping("/dog")
     public ResponseEntity<List<Dog>> getAllDog(){
@@ -44,4 +47,8 @@ public class PetController {
         return ResponseEntity.ok("success");
     }
 
+    @GetMapping("/book")
+    public ResponseEntity<List<Book>> getAllBook(){
+        return ResponseEntity.ok(bookRepository.findAll());
+    }
 }
