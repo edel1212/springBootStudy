@@ -177,4 +177,86 @@ public class SubConfig {
 
 #### 구조
 - 메인과 서브에서 설정한 패키지위치에 맞게 끔 사용하면 문제가 없이 구동 된다.
-![img.png](img.png)
+![img_2.png](img_2.png)
+
+
+## JPA 와 Mybatis
+```properties
+# ℹ️ 메인 DB의 경우 위와 같은 설정이기에 스킵
+```
+
+### build.gradle
+
+```groovy
+dependencies {
+	// Mybatis
+	implementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter:3.0.4'
+	testImplementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter-test:3.0.4'
+
+}
+```
+
+### application.yml
+
+- 중요 포인트
+  - **Mapper xml 경로 설정**을 yml에서 **진행하지 않는다**는 것이다.
+
+```yaml
+spring:
+  datasource:
+    jdbc-url: jdbc:mariadb://localhost:3306/test
+    username: root
+    password: 123
+    driver-class-name: org.mariadb.jdbc.Driver
+    jpa:
+      hibernate:
+        ddl-auto: update
+
+  # 서브 DB2 (MyBatis 사용)
+  sub-db2:
+    jdbc-url: jdbc:mariadb://localhost:3333/foo
+    username: yoo
+    password: 123
+    driver-class-name: org.mariadb.jdbc.Driver
+```
+
+### DB Config Class
+
+- `@MapperScan` 설정
+  - 사용할 Repository Interface **패키지 위치 지정**
+- `PathMatchingResourcePatternResolver` 인스턴스에 **MyBatis XML 파일 경로 설정** 
+
+```java
+@Configuration
+@MapperScan(basePackages = "com.yoo.multipleDB.repository.mapper", sqlSessionFactoryRef = "subMybatisSqlSessionFactory")
+public class SubMabatisConfig {
+
+    @Bean(name = "subMybatisDataSource")
+    @ConfigurationProperties(prefix = "spring.sub-db2")  // 'sub-db2' 데이터소스를 사용
+    public DataSource subMybatisDataSource() {
+        return DataSourceBuilder.create().build();
+    }
+
+    @Bean(name = "subMybatisSqlSessionFactory")
+    public SqlSessionFactory subMybatisSqlSessionFactory(@Qualifier("subMybatisDataSource") DataSource dataSource)
+            throws Exception {
+        SqlSessionFactoryBean factoryBean = new SqlSessionFactoryBean();
+        factoryBean.setDataSource(dataSource);
+
+        // MyBatis XML 파일 경로 설정
+        factoryBean.setMapperLocations(
+                new PathMatchingResourcePatternResolver().getResources("classpath:mapper/**/*.xml")
+        );
+
+        return factoryBean.getObject();
+    }
+
+    @Bean(name = "subMybatisTransactionManager")
+    public DataSourceTransactionManager subMybatisTransactionManager(@Qualifier("subMybatisDataSource") DataSource dataSource) {
+        return new DataSourceTransactionManager(dataSource);
+    }
+}
+```
+
+### 구조
+![img_1.png](img_1.png)
