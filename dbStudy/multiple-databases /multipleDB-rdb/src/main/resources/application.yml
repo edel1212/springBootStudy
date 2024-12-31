@@ -5,13 +5,30 @@ spring:
     username: root
     password: 123
     driver-class-name: org.mariadb.jdbc.Driver
+    jpa:
+      hibernate:
+        ddl-auto: update
+
   sub-db:
-    url: jdbc:mariadb://localhost:3333/foo
+    jdbc-url: jdbc:mariadb://localhost:3333/foo
     username: yoo
     password: 123
     driver-class-name: org.mariadb.jdbc.Driver
+    jpa:
+      hibernate:
+        # 검증만 진행
+        ddl-auto: validate
 
-  ## JPA setting
   jpa:
-    hibernate:
-      ddl-auto: update
+    show-sql: true # 콘솔로그로 출력하려면
+    properties:
+      hibernate:
+        format_sql: true # SQL 포맷팅
+        highlight_sql: true # ANSI 코드에 색을 나타낸다
+        use_sql_comments: true # SQL 내부에 /* */ 주석 추가
+
+
+logging:
+  level:
+    org.hibernate.SQL: debug # logger에 출력하려면
+    org.hibernate.type.descriptor.sql: trace # 파라미터 값 출력
