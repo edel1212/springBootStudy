@@ -3,9 +3,11 @@ package com.yoo.multipleDB.controller;
 import com.yoo.multipleDB.entity.primary.Dog;
 import com.yoo.multipleDB.entity.sub.Book;
 import com.yoo.multipleDB.entity.sub.Cat;
+import com.yoo.multipleDB.repository.mapper.CatMybatisRepository;
 import com.yoo.multipleDB.repository.primary.DogRepository;
 import com.yoo.multipleDB.repository.sub.BookRepository;
 import com.yoo.multipleDB.repository.sub.CatRepository;
+import com.yoo.multipleDB.vo.CatVO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.http.ResponseEntity;
@@ -24,6 +26,7 @@ public class PetController {
     private final DogRepository dogRepository;
     private final CatRepository catRepository;
     private final BookRepository bookRepository;
+    private final CatMybatisRepository catMybatisRepository;
 
     @GetMapping("/dog")
     public ResponseEntity<List<Dog>> getAllDog(){
@@ -50,5 +53,10 @@ public class PetController {
     @GetMapping("/book")
     public ResponseEntity<List<Book>> getAllBook(){
         return ResponseEntity.ok(bookRepository.findAll());
+    }
+
+    @GetMapping("/cat-mybatis")
+    public ResponseEntity<List<CatVO>> getAllCatByMybatis(){
+        return ResponseEntity.ok(catMybatisRepository.getAllList());
     }
 }

@@ -19,6 +19,13 @@ spring:
         # 검증만 진행
         ddl-auto: validate
 
+  # 서브 DB2 (MyBatis 사용)
+  sub-db2:
+    jdbc-url: jdbc:mariadb://localhost:3333/foo
+    username: yoo
+    password: 123
+    driver-class-name: org.mariadb.jdbc.Driver
+
   jpa:
     show-sql: true # 콘솔로그로 출력하려면
     properties:
@@ -26,6 +33,7 @@ spring:
         format_sql: true # SQL 포맷팅
         highlight_sql: true # ANSI 코드에 색을 나타낸다
         use_sql_comments: true # SQL 내부에 /* */ 주석 추가
+# ✅ 아래 설정을 할 경우 Code 내 정의된 Entity 정보대로 Query 함
 #    hibernate:
 #      naming:
 #        physical-strategy : org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
