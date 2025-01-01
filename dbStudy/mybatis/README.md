@@ -1,4 +1,4 @@
-# Mabatis
+# Mybatis
 
 ## Dependencies
 - `mybatis-spring-boot-starter`의 버전은 initializr를 통해 **확인**하여 **사용**
