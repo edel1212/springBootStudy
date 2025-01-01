@@ -51,4 +51,4 @@ spring:
 - 모두 같기에 스킵
 
 #### MongoDB
-- MongoDB-Study - [참고](https://github.com/edel1212/mongoDB-Study]) 
+- MongoDB-Study - [참고](https://github.com/edel1212/mongoDB-Study) 
