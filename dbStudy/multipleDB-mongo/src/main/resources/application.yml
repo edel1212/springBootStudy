@@ -1,0 +1,18 @@
+spring:
+  datasource:
+    url: jdbc:mariadb://localhost:3306/test
+    username: root
+    password: 123
+    driver-class-name: org.mariadb.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+
+  data:
+    mongodb:
+      # ⭐️ 관리자 권한을 갖는 계정일 경우 "?authSource=admin" 설정 필수
+      uri: mongodb://admin:123@localhost:27017/book?authSource=admin
+      # Spring Data MongoDB가 애플리케이션 시작 시 자동으로 인덱스를 생성하도록 할 수 있음
+      auto-index-creation: true
+
+
