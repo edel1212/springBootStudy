@@ -26,6 +26,14 @@
 - 💬 **[ [이동](https://github.com/edel1212/springBootStudy/tree/main/dbStudy) ]** :: DB
   - mybatis 적용
   - 다중 데이터베이스 적용
+    - JPA - JPA
+    - JPA - MongoRepository
+
+<hr/>
+
+- 💬 **[ [이동](https://github.com/edel1212/springBootStudy/tree/main/springBootMailStudy) ]** :: Mail
+  - 메일 발송
+  - HTML 임배디드 내 이미지 추가 발송
 
 <hr/>
 
