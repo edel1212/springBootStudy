@@ -7,4 +7,4 @@
 -  [참고](https://github.com/edel1212/springBootStudy/tree/main/dbStudy/multipleDB-rdb)
 
 ## Multiple DB JPA - MongoDB
--  [참고](https://github.com/edel1212/springBootStudy/tree/main/dbStudy/multipleDB-rdb)
+-  [참고](https://github.com/edel1212/springBootStudy/tree/main/dbStudy/multipleDB-mongo)
