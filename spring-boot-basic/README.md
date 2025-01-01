@@ -33,9 +33,6 @@
     - 2 ) @RestController 란❔
     - 3 ) @RequestMapping의 Consumes 와 Produces 란❔
     - 4 ) Content-Type의 application/json 과 application/x-www-from-urlencoded 차이점❔
-    - 5 ) Swagger Setting
-    - 6 ) RestTemplate 이란 ?
-    - 7 ) WebClient 란❔
 
 <hr/>
 
