@@ -33,17 +33,18 @@
     - 2 ) @RestController 란❔
     - 3 ) @RequestMapping의 Consumes 와 Produces 란❔
     - 4 ) Content-Type의 application/json 과 application/x-www-from-urlencoded 차이점❔
-
+정
 <hr/>
 
-- 💬 **[ [이동](https://github.com/edel1212/springBootStudy/tree/main/spring-boot-basic/board) ]** :: N:1(다 : 1) 연관관계(Join 사용), @Query, querydsl(JPQLQuery 객체)
+- 💬 **[ [이동](https://github.com/edel1212/springBootStudy/tree/main/spring-boot-basic/board) ]** :: N:1, FetchType, JQPL 페이징
     - 1 ) @ManyToOne 연관관계 ❔
-    - 2 ) 지연로딩(lazy Loading)의 장단점❔
-    - 3 ) JPQL 과 left (outer) join
-    - 4 ) Object[]를 DTO로 변경하기 - [ JPQL Pageing 반환 ]
-    - 5 ) 연관관계가 있을 경우의 삭제
-    - 6 ) QuerydslRepositorySupport의 JQPLQuery 사용 Join 및 Object[] 다루기
-        - QuerydslRepositorySuppoert은 2가지 방법이 존재( JPAQueryFactory, JPQLQuery ) 차이가 있음
+    - 2 ) FetchType ❔
+      - 2 - 1 ) 즉시 로딩(Eager loading)
+      - 2 - 2 ) 지연로딩(lazy Loading)
+    - 3 ) JPQL을 사용한 - left (outer) join
+    - 4 ) JPQL을 사용한 - Paging
+    - 5 ) Object[] -> DTO Mapping
+    - 6 ) 연관관계가 있을 경우의 삭제
 
 <hr/>
 
