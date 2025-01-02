@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
 import java.util.UUID;
 
 @RequiredArgsConstructor
@@ -25,5 +26,10 @@ public class MemberController {
                 .build();
         memberRepository.save(member);
         return ResponseEntity.ok("success");
+    }
+
+    @GetMapping("/list")
+    ResponseEntity<List<Member>> getMemberList(){
+        return ResponseEntity.ok(memberRepository.getAllList());
     }
 }
