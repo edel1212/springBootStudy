@@ -48,12 +48,18 @@
 
 <hr/>
 
-- 💬 **[ [이동](https://github.com/edel1212/springBootStudy/tree/main/spring-boot-basic/guestbook) ]** :: MappedSuperClass , Querydsl, 페이징 처리
+- 💬 **[ [이동](https://github.com/edel1212/springBootStudy/tree/main/spring-boot-basic/guestbook) ]** :: MappedSuperClass , Querydsl, 페이징 처리 - findAll
     - 1 ) MappedSuperClass 란❔
     - 2 ) Querydsl ❔
-    - 3 ) 서비스 계층과 DTO ❔
-    - 4 ) 페이징 처리 DTO 사용
-    - 5 ) @ModelAttribute 란❔
+    - 3 ) 페이징 처리 - findAll() 활용
+      - Page Request DTO
+      - Page Response DTO
+    - 4 ) @ModelAttribute 란❔
+    - 5 ) QuerydDsl Join
+    - 6 ) QuerydDsl - 페이징 처리
+      - 6 - 1 ) JPQLQuery - booleanBuilder
+      - 6 - 2 ) JPQLQuery - Tuple Sort 처리
+      - 6 - 3 ) 전체 적용 코드
 
 <hr/>
 
