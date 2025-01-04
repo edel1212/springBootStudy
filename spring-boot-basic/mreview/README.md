@@ -83,55 +83,92 @@
   -별도의 Entity Class를 설계하고, @ManyToOne을 사용하여 처리하는 방식  
     - 안정적으로 Entity 객체와 DB를 일치 시킬 수 있다. 
 
-\- 사용될 Entity Classes 🔽  
-💬 class 상단 어노테이션은 생략함
+### Entity Class
+```properties
+# ℹ️ Mapping Table은 식별 관계, 비식별 관계 두가지 방법을 정해서 사용 가능하다.
+#   > 비즈니스 모델이 간단하고 관계가 명확하게 정의된 경우에는 복합 키 방식(@EmbeddedId)을 사용하는 것이 좋습니다.
+#       ㄴ 비즈니스 로직에 맞는 직관적인 데이터 모델을 제공하기 때문입니다.
+#   > 성능이나 유지보수가 중요한 경우, 중간 테이블에 시퀀스를 사용하는 방식(@GeneratedValue)을 사용하는 것이 효율적입니다.
+#       ㄴ 성능을 최적화하고, 코드가 더 간결하고 관리가 쉬워지기 때문입니다.
+```
+#### 식벽관계 방법
 ```java
-//java - Entity Class
-
-// Movie Class
-public class Movie extends BaseEntity{
-
-  @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
-  private Long mno;
-
-  private String title;
-
+@Entity
+public class StudentCourse {
+    @EmbeddedId
+    private StudentCourseId id; // 복합 키
+  
+    /***
+     * 하위 2개의 Table을 연결 하는 필드
+     * */
+    @ManyToOne
+    @MapsId("studentId") // 복합 키에서 studentId 필드를 사용
+    @JoinColumn(name = "student_id")
+    private Student student;
+    @ManyToOne
+    @MapsId("courseId") // 복합 키에서 courseId 필드를 사용
+    @JoinColumn(name = "course_id")
+    private Course course;
 }
 
+@Embeddable
+@Getter
+@Setter
+@EqualsAndHashCode
+public class StudentCourseId implements Serializable {
+  private Long studentId;
+  private Long courseId;
+}
+```
+#### 비식벽관계 방법
+```java
+@Entity
+public class StudentCourse {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+  
+    /***
+     * 하위 2개의 Table을 연결 하는 필드
+     * */
+    @ManyToOne
+    @MapsId("studentId") // 복합 키에서 studentId 필드를 사용
+    @JoinColumn(name = "student_id")
+    private Student student;
+    @ManyToOne
+    @MapsId("courseId") // 복합 키에서 courseId 필드를 사용
+    @JoinColumn(name = "course_id")
+    private Course course;
+}
+```
+// TODO 
+### Entity Class
+```java
+@Entity
+public class Movie extends BaseEntity{
+  @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+  private Long mno;
+  private String title;
+}
 
-////////////////////////////////////////////////////////////////////////////
-
-
-//MovieImage Class
+@Entity
 public class MovieImage {
   @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long inum;
-
   private String uuid;
-
   private String imgName;
-
   private String path;
-
   @ManyToOne(fetch = FetchType.LAZY) //lazy Type 로변경
   @ToString.Exclude //toString()에서 제외
   private Movie movie;
 }
 
-
-////////////////////////////////////////////////////////////////////////////
-
-
-//Member Class
-@Table(name = "m_member") // 이전 예저 프로젝트의 member 와 테이블명 중복으로 TableName 지정
+@Entity
 public class Member extends  BaseEntity{
   @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long mid;
-
   private String email;
-
   private String pw;
-
   private String nickname;
 }
 ```
