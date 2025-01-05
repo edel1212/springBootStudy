@@ -141,8 +141,64 @@ public class StudentCourse {
     private Course course;
 }
 ```
-// TODO 
-### Entity Class
+
+## 6 ) N + 1 문제
+
+### N + 1 문제란?
+- 특정 엔티티를 조회할 때, 1번의 쿼리로 메인 엔티티를 가져오지만, 해당 엔티티와 **연관된 다른 엔티티를 로딩**하기 위해 **추가적으로 N번의 쿼리가 발생**하는 문제
+  - 부모 엔티티 1개를 조회한 뒤 자식 엔티티를 N번 각각 조회하는 상황을 의미
+
+### N + 1 문제가 발생하는 과정
+- 1 . 메인 엔티티 조회
+  -  JPA는 먼저 **메인 엔티티를 조회**합니다. 예를 들어, 부모 엔티티(Parent)를 조회 시 **10개의 데이터가 조회** 된다 가정
+    - `SELECT * FROM parent;`
+- 2 . 연관된 엔티티를 N + 1 조회 
+  - `@OneToMany` or `@ManyToOne` 관계로 설정되어 있는 경우 자식 엔티티를 조회하기 위해 별도의 쿼리를 실행
+    - **즉시 로딩 fetch = FetchType.EAGER**일 경우에는 즉시, **지연 로딩 fetch = FetchType.LAZY**일 경우에는 해당 데이터를 부를 경우 발생
+    - 결과적으로, 총 1번의 부모 쿼리와 **N(10)번의 자식 쿼리가 발생**
+  ```text
+  SELECT * FROM child WHERE parent_id = 1;
+  SELECT * FROM child WHERE parent_id = 2;
+  ...
+  SELECT * FROM child WHERE parent_id = 10;
+  ```
+### 발생 이유
+
+#### 지연 로딩(Lazy Loading)
+- 초기에는 필요한 데이터를 최소한으로 가져오지만, 이후 연관된 엔티티를 참조할 때마다 추가 쿼리가 발생 하기 때문
+#### 즉시 로딩(EAGER Loading)
+- 조회 즉시 필요한 데이터를 바로 가져옴
+#### JPA의 기본 동작
+- JPA는 연관된 엔티티를 자동으로 로딩하지 않습니다. @OneToMany 또는 @ManyToOne 관계의 데이터를 명시적으로 페치(fetch)하지 않으면, 각 엔티티마다 추가 쿼리를 실행
+
+
+### N + 1 문제 해결 방법
+
+```properties
+# ℹ️ 상황 및 조회 해야하는 상황에 맞게 적용해서 처리하는것이 좋다.
+#   ㄴ 다만 규모가 클 수록 Querydsl(fetch Join)을 적용하자
+```
+
+- Fetch Join
+- Entity Graph
+- Sub Query 
+- Querydsl  👍 
+  - fetch Join
+  - Sub Query 사용
+
+### 비교
+| **특징**              | **Entity Graph**                                           | **Fetch Join**                                      | **Sub Query**                                           |
+|-----------------------|----------------------------------------------------------|---------------------------------------------------|--------------------------------------------------------|
+| **사용 방식**          | JPA 표준 스펙으로 선언적 방식                               | JPQL로 작성, 코드에 의존적                         | JPQL로 작성, 서브 쿼리를 사용하여 특정 데이터를 로드    |
+| **쿼리 작성 필요 여부** | 필요 없음 (`@EntityGraph`로 설정)                          | 직접 쿼리를 작성                                   | 직접 쿼리를 작성해야 함                                 |
+| **유연성**             | 선언적이고 유지보수 쉬움                                    | 복잡한 조건의 조인에 적합                          | 특정 조건으로 필터링된 데이터를 가져오는 데 적합        |
+| **페이징**             | 페이징 처리에 적합                                         | 페이징 처리 시 문제 발생 가능                      | 페이징 처리와 무관하게 사용할 수 있음                  |
+| **다중 Fetch 제한**     | 여러 관계를 Fetch 가능, 하지만 무분별한 사용 시 성능 문제 발생| 여러 Fetch Join 사용 시 Cartesian Product 주의     | 관계 없이 서브 쿼리 내에서 필요한 데이터만 가져옴       |
+| **SQL 최적화**         | ORM이 생성한 쿼리를 그대로 사용                             | 직접 Join 쿼리를 작성해 최적화 가능                | 서브 쿼리를 통해 필요한 데이터만 조회 가능              |
+| **성능**              | 단순한 관계에서는 효율적                                    | 복잡한 관계의 데이터를 한 번에 로드할 때 효율적     | 적은 데이터에 대해 조건 기반 조회 시 효율적            |
+
+
+#### 에제 Entity Class
 ```java
 @Entity
 public class Movie extends BaseEntity{
@@ -158,8 +214,9 @@ public class MovieImage {
   private String uuid;
   private String imgName;
   private String path;
-  @ManyToOne(fetch = FetchType.LAZY) //lazy Type 로변경
-  @ToString.Exclude //toString()에서 제외
+  
+  @ManyToOne(fetch = FetchType.LAZY) 
+  @ToString.Exclude
   private Movie movie;
 }
 
@@ -171,31 +228,9 @@ public class Member extends  BaseEntity{
   private String pw;
   private String nickname;
 }
-```
 
-<br/>
-
-\- 매핑 테이블인 Review Class 🔽    
-👉 Review Class는 Movie와 Member를 ***양쪽으로 참조하는 매핑테이블 구조이므로 @ManyToOne으로*** 설계된다.  
-👉 @ManyToOne으로 연결된 객체는 모두 ***fetch = FetchType.LAZY*** 로 설정해 줘야햔다.  
-👉 연결된 객체들은 toString()으로 호출되지않게 exclude 시켜줘야한다.  
-```java
-//java - EntityClass [ Mapping Table Entity ]
-
-/**
- * @Description : 해당 클래스는 @ManyToMany 대신에 사용하는 방법으로
- *                해당 Class는 중간 다리 역할을 하며 동시에 정보 기록까지 같이 할수있다.
- *
- *                해당 테이블은 매핑 테이블이라 하며 주로 동사나 히스토리를 의미하는 테이블이다
- *                 - 해당 예제에서는 회원이 영화에 대한 평점을 준다를 구성할때 여기서서 <b>평점을 준다</b>
- *                   부분이 해당 Class의 역할이라 볼수있다.
- *
- *                 - 해당 Entity 구조를 보면  Movie -< Review >- m_member
- *                   로 Review 테이블을 중간에 두고 서로를 연결하고 있는 구조이다.
- *
- *                 ✔ 여기서 잊으면 안되는 Tip
- *                    - FK 기준은 항상 외래키를 가지고 있는 테이블을 기준으로 작성하자!!
- * */
+// Movie -< Review >- m_member 구조
+//  ㄴ>   FK 기준은 항상 외래키를 가지고 있는 테이블을 기준으로 작성하자!!
 public class Review extends BaseEntity{
   @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long reviewnum;
@@ -208,100 +243,31 @@ public class Review extends BaseEntity{
   @ManyToOne(fetch = FetchType.LAZY)
   private Member member;
 
+  @Setter
   private int grade;
-
+  @Setter
   private String text;
-
-  public void changeGrade(int grade){
-    this.grade = grade;
-  }
-
-  public void changeText(String text){
-    this.text = text;
-  }
-
 }
 ```
 
-<br/>
-
-- 💬 다대다 테스트에 앞서 준비된 데이터
-  - Movie : 100개의 영화 목록 ***[ PK : mno ]***
-  - MovieImage : Movie의 목록에 맞는 랜덤하게 매칭한 100개의 이미지 목록 ***[ FK : movie_mno ]***
-  - Member : 100명의 회원 ***[ PK : mid ]***
-  - Review : 200개의 영화 리뷰 (매핑 테이블) ***[ FK : member_mid, movie_mno ]***
-- 💬 테스트 목록 - <b>JQPL을 사용하며 @EntityGraph, 서브 쿼리를 활용</b>
-  - 1. **[ 목록 ]** 영화의 제목 + 영화 이미지 한개 + 영화 리뷰 개수, 평점 
-  - 2. **[ 상세 ]** 영화 이미지들 + 리뷰 평점, 리뷰 개수
-  - 3. **[ 상세 ]** 해당 리뷰에 대한 회원의 정보
-
-<br/>
-<hr/>
- 
-<h3>6 ) 상단에 명시된 테스트 목록 테스트</h3>
-
-- 테스트의 이유 ? :: N + 1 상황과 @EntityGraph 사용 예시를 보기위함
-1. **[ 목록 ]** 영화의 제목 + 영화 이미지 한개 + 영화 리뷰 개수, 평점  🔽 
+### N + 1이 발생하는 JQPL
 ```java
-//java - Repository
-
-//💬 N + 1 의 문제가 발생함 !
 public interface MovieRepository extends JpaRepository<Movie, Long> {
-  /**
-   * ☠️ 아래의 JPQL Query에는 N+1문제가 있다.
-   * 문제의 원인은 MAX(mi)에 있다.
-   * - 이유 : 목룩울 가져오는 쿼리는 문제가 없지만 max()를 이용하는 부분에 들어가면 해당 영화의
-   *          모든 이미지를 가져오는 쿼리가 실행되기 떄문이다.
-   *
-   * ✔ N+1 문제란 ?
-   *  - 한번의 쿼리로 N개의 데이터를 가져왔는데 N개의 데이터를 처리하기 위해서 필요한 추가적인 쿼리가
-   *    각각 N개의 대하서 수행되는 것임
-   *
-   *    쉽게 말하면
-   *    - 해당 예제에서는 1페이지에 해당되는 10개의 데이터를 가여오는 쿼리 1번 실행 후
-   *      각 영화의 모든 이미지를 가져오기 위한<b>Max()</b> 10번의 추가적인 쿼리가 실행되는것임
-   *
-   * 👍 해결 방법은 간단하게 Max() 집계함수를 사용하지 않는 것이다.
-   *
-   * - Movie m
-   * - MovieImage mi
-   * - Review r
-   * */
-  @Query("SELECT m" +                    //Movie 목록
-          ", MAX(mi)" +                  //MovieImage
-          ", AVG(coalesce(r.grade,0))" + // Review r 의 grade 값의 평균을 구함 coalesce -> Nvl 의 좀더 확작된 Oracle 함수
-          ", COUNT(DISTINCT r) " +       // Review r 의 중복 제거 개수
-          "FROM Movie m" +
-          " LEFT OUTER JOIN MovieImage mi ON mi.movie = m" +
-          " LEFT OUTER JOIN Review r ON r.movie = m group by m")
-  Page<Object[]> getListPage(Pageable pageable);
+    @Query("SELECT m" +                    //Movie 목록
+            ", MAX(mi)" +                  //MovieImage
+            ", AVG(coalesce(r.grade,0))" + // Review r 의 grade 값의 평균을 구함 coalesce -> Nvl 의 좀더 확작된 Oracle 함수
+            ", COUNT(DISTINCT r) " +       // Review r 의 중복 제거 개수
+            "FROM Movie m" +
+            " LEFT OUTER JOIN MovieImage mi ON mi.movie = m" +
+            " LEFT OUTER JOIN Review r ON r.movie = m group by m")
+    Page<Object[]> getListPage(Pageable pageable);
+}
+```
 
-  /*********************************************************************************************/  
-  
-  //👍 N + 1 의 문제가 해결 - 단 가장 최근것이 아닌 문제가있다. 😅
-  /**
-   * 👍 getListPage(Pageable pageable)에서 N+1 문제를 해결
-   *
-   * 👉 해결방법 Max()를 사용하지 않음
-   * 
-   * 💬 다만 간단하게 해결되긴 했지만 선택된 MovieImage는 inum가 가장 높은것이 아닌
-   *    가장 나중(처음)에 들어온 기준으로 나오는 문제가있다.
-   * */
-  @Query("SELECT m" +                    //Movie 목록
-          ", mi" +                       //MovieImage
-          ", AVG(coalesce(r.grade,0))" + // Review r 의 grade 값의 평균을 구함 coalesce -> Nvl 의 좀더 확작된 Oracle 함수
-          ", COUNT(DISTINCT r) " +       // Review r 의 중복 제거 개수
-          "FROM Movie m" +
-          " LEFT OUTER JOIN MovieImage mi ON mi.movie = m" +
-          " LEFT OUTER JOIN Review r ON r.movie = m group by m")
-  Page<Object[]> getListPageFix(Pageable pageable);
-
-  
-  /*********************************************************************************************/
-
-  
-  //👍 N + 1 의 문제가 해결 - 최근 MoiveImage를 가져옴  
-  //💬 서브 쿼리를 사용하하여 성능상에는 조금 문제가 있다.
+### Sub Query를 사용한 처리
+- 서브 쿼리를 사용하기에 성능상에는 조금 문제가 있음
+```java
+public interface MovieRepository extends JpaRepository<Movie, Long> {
   @Query("SELECT m , mi , COUNT(r) FROM Movie m " +
           "LEFT JOIN MovieImage mi ON mi.movie = m " +
           // 👍 아래와 같이 LEFT JOIN에 추가적으로 inum에 MAX값을 구하는 서브쿼리를 구한 후
@@ -309,192 +275,54 @@ public interface MovieRepository extends JpaRepository<Movie, Long> {
           "AND mi.inum = (SELECT MAX(mi2.inum) FROM MovieImage mi2 WHERE mi2.movie = m) " +
           "LEFT OUTER JOIN Review r ON r.movie = m GROUP BY m")
   Page<Object[]> getListPageOrdeyByInum(Pageable pageable);
-  
 }
-
-
-////////////////////////////////////////////////////////////////////////////////////
-
-  
-//java - Repository
-
-@Test
-public void testListPage() {
-
-    PageRequest pageRequest = PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "mno"));
-  
-    /** Result Query
-      Hibernate: 
-         select
-         movie0_.mno as col_0_0_,
-         max(movieimage1_.inum) as col_1_0_,
-         avg(coalesce(review2_.grade,
-         0)) as col_2_0_,
-         count(distinct review2_.reviewnum) as col_3_0_,
-         movie0_.mno as mno1_1_,
-         movie0_.moddate as moddate2_1_,
-         movie0_.regdate as regdate3_1_,
-         movie0_.title as title4_1_ 
-         from
-         movie movie0_ 
-         left outer join
-         movie_image movieimage1_ 
-         on (
-         movieimage1_.movie_mno=movie0_.mno
-         ) 
-         left outer join
-         review review2_ 
-         on (
-         review2_.movie_mno=movie0_.mno
-         ) 
-         group by
-         movie0_.mno 
-         order by
-         movie0_.mno desc limit ?
-     
-     ----------------------------------
-     ☠️ 아래의 쿼리가 N+1 문제 발생 :: 이유 ? Max() 집계함수가 문제다 
-      Hibernate:   👉 [ x10 번 ]
-         select
-         movieimage0_.inum as inum1_2_0_,
-         movieimage0_.img_name as img_name2_2_0_,
-         movieimage0_.movie_mno as movie_mn5_2_0_,
-         movieimage0_.path as path3_2_0_,
-         movieimage0_.uuid as uuid4_2_0_ 
-         from
-         movie_image movieimage0_ 
-         where
-         movieimage0_.inum=?
-     **/
-    
-    Page<Object[]> result = movieRepository.getListPage(pageRequest);
-      
-    for (Object[] obj : result.getContent()) {
-      log.info(Arrays.toString(obj));
-    }
-    
-  }
-
-  /*********************************************************************************************/
-
-  
-  @Description("N+1 문제를 해결 - 하지만 가장 처음 Movie Image를 가져오는 문제가 있음")
-  @Test
-  public void fixTestListPage(){
-    PageRequest pageRequest = PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "mno"));
-    /** Result - Query
-      Hibernate:
-        select
-        movie0_.mno as col_0_0_,
-                movieimage1_.inum as col_1_0_,
-        avg(coalesce(review2_.grade,
-                0)) as col_2_0_,
-        count(distinct review2_.reviewnum) as col_3_0_,
-        movie0_.mno as mno1_1_0_,
-                movieimage1_.inum as inum1_2_1_,
-        movie0_.moddate as moddate2_1_0_,
-                movie0_.regdate as regdate3_1_0_,
-        movie0_.title as title4_1_0_,
-                movieimage1_.img_name as img_name2_2_1_,
-        movieimage1_.movie_mno as movie_mn5_2_1_,
-                movieimage1_.path as path3_2_1_,
-        movieimage1_.uuid as uuid4_2_1_
-                from
-        movie movie0_
-        left outer join
-        movie_image movieimage1_
-        on (
-                movieimage1_.movie_mno=movie0_.mno
-        )
-        left outer join
-        review review2_
-        on (
-                review2_.movie_mno=movie0_.mno
-        )
-        group by
-        movie0_.mno
-        order by
-        movie0_.mno desc limit ?
-    **/
-    Page<Object[]> result = movieRepository.getListPageFix(pageRequest);
-    for(Object[] obj : result.getContent()){
-      log.info(Arrays.toString(obj));
-    }
-  }
-
-
-  /*********************************************************************************************/
-
-  
-  @Description("N+1 문제를 해결과 최근 MovieImage를 가져옴")
-  @Test
-  public void testListPageInumDesc(){
-    PageRequest pageRequest = PageRequest.of(0,10,Sort.by("mno").descending());
-    /**
-    Hibernate:
-      select
-      movie0_.mno as col_0_0_,
-              movieimage1_.inum as col_1_0_,
-      count(review3_.reviewnum) as col_2_0_,
-      movie0_.mno as mno1_1_0_,
-              movieimage1_.inum as inum1_2_1_,
-      movie0_.moddate as moddate2_1_0_,
-              movie0_.regdate as regdate3_1_0_,
-      movie0_.title as title4_1_0_,
-              movieimage1_.img_name as img_name2_2_1_,
-      movieimage1_.movie_mno as movie_mn5_2_1_,
-              movieimage1_.path as path3_2_1_,
-      movieimage1_.uuid as uuid4_2_1_
-              from
-      movie movie0_
-      left outer join
-      movie_image movieimage1_
-      on (
-              movieimage1_.movie_mno=movie0_.mno
-              and movieimage1_.inum=(
-                      select
-              max(movieimage2_.inum)
-              from
-              movie_image movieimage2_
-              where
-              movieimage2_.movie_mno=movie0_.mno
-      )
-          )
-      left outer join
-      review review3_
-      on (
-              review3_.movie_mno=movie0_.mno
-      )
-      group by
-      movie0_.mno
-      order by
-      movie0_.mno desc limit ?
-     **/
-    Page<Object[]> result = movieRepository.getListPageOrdeyByInum(pageRequest);
-    result.getContent().stream().map(Arrays::toString).forEach(log::info);
-  }
-
 ```
 
-👉 번외 : 1번 테스트 Querydls 사용 🔽  
-- 💬  아래  Querydls에서 유의깊게 보아야 하는 부분이 있다.
-  - 1 . MovieImage의 inum을 가져올경우 서브쿼리를 사용할때 :: JPAExpressions를 사용하는것
-  - 2 . tuple.groupBy(movie); 를 해주지 않아서 단건이 나왔던 문제 ,, << -- 해당 문제 때문에 삽질함..☠ ️
-    - 해당 문제는 에러가 나지 않고 단건만 나올것을 예상하지 못했음 .. 
+### EntityGraph를 사용한 처리
+- 💬 @EntityGrpah란 ?
+  - Entity의 틍정한 속성으 같이 로딩하도록 지정하는 어노테이션이다.
+- 💬 @EntityGrpah 옵션
+  - attributePath : 로딩 설정을 변경하고 싶은 속성의 이름을 **{"entity","entity"}**로 명시
+  - type : 어떠한 방식으로 적용할 것인지 설정
+- ✅ 간단하게 설명
+  - @EntityGraph는 Repository에 적용하는 어노테이션
+  - 데이터틑 불러올 때 로딩방식(FetchType)을 변경해 주는 것
+- 단순한 관계에서는 효율적이나 복잡한 연관관계에서는 효율적
+  - 무분별한 attributePaths 추가는 성눙 이슈가 생 가능함
 ```java
-// java - SupportImpl [Support Interface 및 Repository 상속 스킵 ]
+public interface ReviewRepository extends JpaRepository<Review, Long> {
+  // 👍  findByMovie를 사용할 때 member 속성을 Eager로 로딩하게 끔 설정
+  @EntityGraph(attributePaths = {"member"}, type = EntityGraph.EntityGraphType.FETCH)
+  List<Review> findByMovie(Movie movie);
+}  
+```
+### Fetch Join를 사용한 처리
+- 💬 Fetch Join이란 ?
+  - 연관된 Entity의 데이터를 한번에 불러 오는것이다.
+- Cartesian Product 주의
+  - DISTINCT 키워드 사용하여 조절 할 수 있음
+- 페이징에서 사용 불가능
+```java
+public interface ReviewRepository extends JpaRepository<Review, Long> {
+    @Query("SELECT r FROM Review r " +
+           "JOIN FETCH r.movie " +
+           "JOIN FETCH r.member " +
+           "WHERE r.movie.mno = :mno")
+    List<Review> findReviewsWithFetchJoin(@Param("mno") Long movieId);
+}
+```
 
-// SupportImpl
+### QueryDsl - Sub Query를 사용한 처리
+- MovieImage의 inum을 가져올경우 서브쿼리를 사용할때 :: JPAExpressions를 사용
+  - tuple.groupBy(movie); 를 해주지 않으면 에러 발생 -> 단건이 아니기 때뮨
+```java
 @Log4j2
 public class MovieSupportRepositoryImpl extends QuerydslRepositorySupport  implements MovieSupportRepository{
 
-  public MovieSupportRepositoryImpl() {
-    super(Movie.class);
-  }
+  public MovieSupportRepositoryImpl() { super(Movie.class); }
 
   @Override
   public Page<Object[]> getListWithQuerydsl(Pageable pageable) {
-
     // 1. Create QObject
     QMovie movie = QMovie.movie;
     QReview review = QReview.review;
@@ -524,9 +352,6 @@ public class MovieSupportRepositoryImpl extends QuerydslRepositorySupport  imple
     // 4 . Create JPQLQuery<Tuple>
     JPQLQuery<Tuple> tuple = jpqlQUery.select(movie, movieImage, review.grade.avg(), review.countDistinct());
 
-
-
-
     // 5 . Sorting
     Sort sort = pageable.getSort();
     sort.stream().forEach(order ->{
@@ -539,7 +364,6 @@ public class MovieSupportRepositoryImpl extends QuerydslRepositorySupport  imple
       // apply Sort for Tuple
       tuple.orderBy(new OrderSpecifier(direction, orderByExpression.get(prop)));
     });
-
 
     // ☠️ group By를 해주지 않을 경우 단건이 나옴!!! [ 삽질함!! ]
     tuple.groupBy(movie);
@@ -560,74 +384,14 @@ public class MovieSupportRepositoryImpl extends QuerydslRepositorySupport  imple
             , count);
   }
 }
-
-//////////////////////////////////////////////////////
-
-// Result Query
-/**
-Hibernate:
-        select
-          movie0_.mno as col_0_0_,
-          movieimage1_.inum as col_1_0_,
-          avg(review3_.grade) as col_2_0_,
-          count(distinct review3_.reviewnum) as col_3_0_,
-          movie0_.mno as mno1_1_0_,
-          movieimage1_.inum as inum1_2_1_,
-          movie0_.moddate as moddate2_1_0_,
-          movie0_.regdate as regdate3_1_0_,
-          movie0_.title as title4_1_0_,
-          movieimage1_.img_name as img_name2_2_1_,
-          movieimage1_.movie_mno as movie_mn5_2_1_,
-          movieimage1_.path as path3_2_1_,
-          movieimage1_.uuid as uuid4_2_1_
-        from
-          movie movie0_
-        left outer join
-          movie_image movieimage1_
-          on (
-            movieimage1_.movie_mno=movie0_.mno
-            and movieimage1_.inum=(
-              select
-                max(movieimage2_.inum)
-              from
-                movie_image movieimage2_
-              where
-                movieimage2_.movie_mno=movie0_.mno
-              )
-            )
-        left outer join review review3_
-        on (
-            review3_.movie_mno=movie0_.mno
-        )
-        group by
-            movie0_.mno
-            order by
-        movie0_.mno desc limit ?
-**/
 ```
-<br/>
 
-2. **[ 상세 ]** 영화 이미지들 + 리뷰 평점, 리뷰 개수 🔽
-
+### QueryDsl를 사용한 처리
+- `.fetchJoin()`을 사용하지 않아도 되는 이유은 `leftJoin()`를 사용하기에 이미 모든 데이터를 가져 오기 때문이다.
+- `fetchJoin()`의 역할
+  - fetchJoin()은 즉시 로딩을 강제하는 메서드입니다. 
+  - fetchJoin()을 사용하면 연관된 엔티티를 한 번의 쿼리로 로드하므로, Lazy Loading으로 인한 N+1 문제를 방지할 수 있습니다.
 ```java
-//java - Repository
-
-// 🔽  Movie + MovieImage + Review
-@Query("Select m" +                     // Movie
-        ", im" +                        // MovieImage
-        ", avg(coalesce(r.grade,0))" +  // Review grade
-        ", count(r)" +                  // Review Count
-        "from Movie m" +
-        " left outer join MovieImage im on im.movie = m" +
-        " left outer join Review r on r.movie = m " +
-        "where m.mno = :mno  group by im")
-    List<Object[]> getMovieWithAll(Long mno);
-
-
-///////////////////////////////////////////////////////////////////
-
-
-// 👉 Querydsl Version
 public class MovieSupportRepositoryImpl extends QuerydslRepositorySupport  implements MovieSupportRepository{
     
     public List<Object[]> testGetMovieWithAllQuerydls(Long mno) {
@@ -649,604 +413,29 @@ public class MovieSupportRepositoryImpl extends QuerydslRepositorySupport  imple
   
       return result.stream().map(Tuple::toArray).collect(Collectors.toList());
     }
-    
-}
-
-
-///////////////////////////////////////////////////////////////////
-
-
-/** Result Query 
-      Hibernate:
-        select
-          movie0_.mno as col_0_0_,
-          movieimage1_.inum as col_1_0_,
-          avg(coalesce(review2_.grade,
-          0)) as col_2_0_,
-          count(review2_.reviewnum) as col_3_0_,
-          movie0_.mno as mno1_1_0_,
-          movieimage1_.inum as inum1_2_1_,
-          movie0_.moddate as moddate2_1_0_,
-          movie0_.regdate as regdate3_1_0_,
-          movie0_.title as title4_1_0_,
-          movieimage1_.img_name as img_name2_2_1_,
-          movieimage1_.movie_mno as movie_mn5_2_1_,
-          movieimage1_.path as path3_2_1_,
-          movieimage1_.uuid as uuid4_2_1_
-        from
-            movie movie0_
-        left outer join
-            movie_image movieimage1_
-        on (
-            movieimage1_.movie_mno=movie0_.mno
-            )
-        left outer join
-            review review2_
-        on (
-            review2_.movie_mno=movie0_.mno
-        )
-        where
-            movie0_.mno=?
-        group by
-            movieimage1_.inum
-**/
-```
-<br/>
-
-3. **[ 상세 ]** 해당 리뷰에 대한 회원의 정보  ***[ 💬 @EntityGraph 사용 예제임  ]***
-
-\- ☠️ Review Entity의 변수 중 Member가 FetchType.LAZY 방식이기에 발생하는 **no Session** Error 🔽
-```java
-//java 
-
-//Review Entity
-@Entity
-public class Review extends BaseEntity{
-  
-  //... code ..  
-  
-  @ToString.Exclude
-  @ManyToOne(fetch = FetchType.LAZY)
-  private Member member;
-  
-  //... code ..
-}
-
-
-///////////////////////////////////////////////////////////////////
-
-
-//ReviewRepository
-public interface ReviewRepository extends JpaRepository<Review, Long> {
-  List<Review> findByMovie(Movie movie);
-}
-
-
-///////////////////////////////////////////////////////////////////
-
-
-//java - JUnit Test
-@Test
-public void testGetMovieReviews(){
-  Movie movie = Movie.builder().mno(90L).build();
-
-  List<Review> result = reviewRepository.findByMovie(movie);
-
-  result.forEach(data -> {
-    // ↓ Review 자체의 Data에 접근시 에는 문제가 없음 
-    log.info(data.getReviewnum());
-    log.info("--------------------");
-    log.info(data.getGrade());
-    log.info("--------------------");
-    log.info(data.getText());
-    log.info("--------------------");
-    
-    // ↓ 아래의 getMember에 접근시 Session Error가 발생한다 . ☠️
-    log.info(data.getMember().getEmail());
-    log.info("--------------------");
-  });
-}
-
-
-///////////////////////////////////////////////////////////////////
-
-
-// 👍 그렇다면 해결방안 ? 
-// @Transactional 어노테이션을 사용한다.
-// 💬 다만 성능상 문제가 있을 수 있다. Lazy 방식이기에
-//    하나의 실행 단위로 묶는 Transaction을 사용하지만
-//    그렇기에 해당 데이터에 ☠접근할때마다 조회하는 문제가 있다. 👎  
-  
-@Test
-@Transactional  // 💬 근본적인 no Session Error를 해결할수 있지만  
-                //    해당 데이터를 찾을 때마다 조회한다는 문제가 있다.
-public void testGetMovieReviews(){
-  Movie movie = Movie.builder().mno(90L).build();
-  List<Review> result = reviewRepository.findByMovie(movie);
-  result.forEach(data -> {
-    // no Session Error 해결
-    log.info(data.getMember().getEmail());
-  });
 }
 
 ```
 
-<br/>
+## 7 ) 썸네일 생성 [ Thumbnailator ]
 
-\- 👍 @EntityGraph를 사용하여 처리하는 방식
-- @EntityGraph를 사용하는 방식 말고도 JPA내장 NameMethod를 사용하지말고 @Query를 사용하여 처리하는 방법도있다.
-- 하지만 @EntityGraph를 사용하는 것이 더 간편하고 직관적 이므로 해당 방법을 사용한다.
-- 💬 @EntityGrpah란 ?
-  - Entity의 틍정한 속성으 같이 로딩하도록 지정하는 어노테이션이다.
-  - JPA에서 연관 관계를 지정한 속성을 FetchType.LAZY로 지정하는것이 일반적이나 @EntityGraph를 사용하면  
-    특정 기느을 수행할 때만 EAGER Type으로 지정하여 실행을 가능하게 끔해주는 설정이다.
-- 💬 @EntityGrpah 옵션 
-  - attributePath : 로딩 설정을 변경하고 싶은 속성의 이름을 **배열로 명시**
-  - type : 어떠한 방식으로 적용할 것인지 설정
-- ✅ 간단하게 설명하면 @EntityGraph는 Repository에 적용하는 어노테이션이고  
-     원하는 Repository에서 데이러틑 불러올 때 로딩방식(FetchType)을 변경해 주는 것이다.
-  
-```java
-//java 
-
-//Review Repository
-public interface ReviewRepository extends JpaRepository<Review, Long> {
-  // 👍  findByMovie를 사용할 때 member 속성을 Eager로 로딩하게 끔 설정
-  @EntityGraph(attributePaths = {"member"}, type = EntityGraph.EntityGraphType.FETCH)
-  List<Review> findByMovie(Movie movie);
-}  
-
-
-//////////////////////////////////////////////////////
-
-//JUnit Test Code
-@Test
-
-public void testGetMovieReviews(){
-  Movie movie = Movie.builder().mno(90L).build();
-  List<Review> result = reviewRepository.findByMovie(movie);
-  result.forEach(data -> {
-    // no Session Error 해결 및 성능상에도 문제 없음
-    log.info(data.getMember().getEmail());
-  });
-}
-
-
-//////////////////////////////////////////////////////
-
-//Result Query
-/**
-Hibernate:
-      select
-        review0_.reviewnum as reviewnu1_3_0_,
-        member1_.mid as mid1_0_1_,
-        review0_.moddate as moddate2_3_0_,
-        review0_.regdate as regdate3_3_0_,
-        review0_.grade as grade4_3_0_,
-        review0_.member_mid as member_m6_3_0_,
-        review0_.movie_mno as movie_mn7_3_0_,
-        review0_.text as text5_3_0_,
-        member1_.moddate as moddate2_0_1_,
-        member1_.regdate as regdate3_0_1_,
-        member1_.email as email4_0_1_,
-        member1_.nickname as nickname5_0_1_,
-        member1_.pw as pw6_0_1_
-      from
-        review review0_
-            left outer join
-                m_member member1_
-            on review0_.member_mid=member1_.mid
-      where
-        review0_.movie_mno=?
-**/
-```
-
-<br/>
-<hr/>
-
-<h3>7 ) 파일 업로드 처리</h3>
-
-- 파일 업로드를 위한 setting 🔽
-```properties
-## application.properties
-
-#####################
-#File upload Setting#
-#####################
-
-#upload Y/N Set
-spring.servlet.multipart.enabled=true
-
-#upload file tmp dir
-spring.servlet.multipart.location=C:\\upload
-
-# Max Request Size
-spring.servlet.multipart.max-request-size=215MB
-
-# Max file size.
-spring.servlet.multipart.max-file-size=200MB
-
-#Real Upload Dir Path # Used call Java Code  
-org.zerock.upload.path = C:\\upload
-```
-
-<br/>
-
-- Client Upload 🔽
-```html
-<!-- html -->
-<body>
-    <!-- multiple 설정 필수 -->
-    <input name="uploadFiles" type="file" multiple>
-    <button class="uploadBtn">upload</button>   
-</body>
-
-<!-- javascript -->
-<script>
-document.querySelector(".uploadBtn").addEventListener("click",()=>{
-
-            // 1. form 객체 생성
-             let formData = new FormData();
-            // 2. input name="uploadFiles"에 업로드 된 File을 읽음
-             let inputFile = document.querySelector("input[name='uploadFiles']").files;
-
-             // 2 . File을 form에 append 시킴
-             for(let i of inputFile){
-                formData.append("uploadFiles",i);
-             }//for
-
-            //비동기 통신 -ajax
-            $.ajax({
-                url : '/uploadAjax',
-                processData : false,
-                contentType : false,
-                data : formData,
-                type : 'post',
-                dataType : 'json',
-                success : function(result){
-                 console.log(result);                 
-                },
-                error : function(jqXHR, textStatus, errorThrown ){
-                    console.log(textStatus);
-                }
-            })
-
-        });// click    
-</script>
-
-```
-
-<br/>
-
-- Server Upload Logic 🔽
-```java
-//java
-
-@Controller
-@Log4j2
-public class UploadController {
-  /**
-   * 💬 반환 값이 없을 경우
-   * Error 발생 : Error resolving template [uploadAjax], template might not exist or might not be accessible by any of the configured Template Resolvers
-   * */
-  @PostMapping("/uploadAjax")
-  public ResponseEntity<List<UploadResultDTO>> uploadFile(MultipartFile[] uploadFiles){
-
-    // 1 .  결과 값을 반환할 List<> 생성
-    List<UploadResultDTO> resultDTOList = new ArrayList<>();
-
-    log.info("-----------------------");
-    log.info(uploadFiles);
-    log.info("-----------------------");
-
-    // 2 . File의 개수 만큼 Loop
-    for(MultipartFile uploadFile : uploadFiles){
-
-      // 2 - 1 . 👉 MultipartFile.getContentType()를 사용하여 확장자를 체크가 가능함
-      if(!uploadFile.getContentType().startsWith("image")){
-        log.warn("this file is not image type");
-        //이미지가 아닐경우 403 Forbidden Error
-        return new ResponseEntity<>(HttpStatus.FORBIDDEN);
-      }//if
-
-      // 2 - 2 . 👉 IE 나 Edge 에서는 전체 경로가 들어오므로
-      //            MultipartFile.getOriginalFilename()를 사용하여
-      //            파일명을 잘라서 사용
-      String originalFile = uploadFile.getOriginalFilename();
-      String fileName = originalFile.substring(originalFile.lastIndexOf("\\")+1);
-
-      log.info("fileName ::: " + fileName);
-
-      // 2 - 3 . 날짜 폴더 생성 :: 반환값 ? 오늘 날짜의 파일 경로
-      String folderPath = this.makeFolder();
-
-      // 2 - 4 . 파일명 중복방지를 위한 UUID 생성
-      String uuid = UUID.randomUUID().toString();
-
-      // 2 - 5 . 전체 파일 명 -> + UUID + 구분자 _ 사용 하여 👉 FullPath + FileName 생성
-      // 💬 문자열 내용 :: RootPath + Dir 구분자 + 오늘 날짜 폴더 Dir + Dir 구분자
-      String saveName = uploadPath + File.separator + folderPath + File.separator + uuid + "_" + fileName;
-
-      // 2 - 6 . 위에서 만든 FullPath 정보로 Path 객체 생성
-      Path savePath = Paths.get(saveName);
-      try {
-        // 2 - 6 - 1 . 파일정보를 토대로 ==> FullPath로 변환(저장)
-        uploadFile.transferTo(savePath);
-        
-        // 2 - 6 - 2 . 파일 저장 결과를 DTO에 저장 후 List에 Add해줌
-        resultDTOList.add(UploadResultDTO.builder().fileName(fileName).folderPath(folderPath).uuid(uuid).build());
-      }catch (Exception e){
-        e.printStackTrace();
-      }//try -catch
-
-    }//end loop
-
-    return ResponseEntity.ok().body(resultDTOList);
-  }
-
-  
-  /**
-   * @Description : 오늘 날짜로 Directory를 만는 Method
-   *
-   * */
-  private String makeFolder(){
-    // 1 . "yyyy/MM/dd" 패턴으로 현재 날짜를 받아옴
-    String str = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy/MM/dd"));
-
-    // 2 . "/" 를 Replace하여 운영체제에 맞는 파일 경로로 변경함
-    String folderPath = str.replace("/", File.separator);
-
-    // 3 . File 객체 생성 ( RootDir , 오늘 날자경로 )
-    File uploadPathFolder = new File(uploadPath, folderPath);
-
-    // 4 . Server에 uploadPathFolder 객체의 정보에 맞는  Directory가 있는지 확인
-    if(!uploadPathFolder.exists()){
-      // 4 - 1 . 없을 경우 해당 경로에 맞는 Directory 생성
-      boolean success = uploadPathFolder.mkdirs();
-    }//if
-
-    //파일 경로 반환
-    return folderPath;
-  }
-  
-}
-
-```
-
-<br/>
-<hr/>
-
-<h3>8 ) 저장되어 있는 이미지 불러오기</h3>
-
-<br/>
-- Client - ImageCall 🔽
-
-```html
-<!-- html -->
-<body>
-  <!-- multiple 설정 필수 -->
-  <input name="uploadFiles" type="file" multiple>
-  <button class="uploadBtn">upload</button>
-
-  <!-- 파일 업로드 시 이미지가 나올 Div -->
-  <div class="uploadResult">
-    <!--   script     -->
-  </div>
-</body>
-
-<!-- javascript -->
-<script>
- function 이미지업로드_이벤트(){
-    //비동기 통신 -ajax
-    $.ajax({
-        url : '/uploadAjax',
-        processData : false,
-        contentType : false,
-        data : formData,
-        type : 'post',
-        dataType : 'json',
-        success : function(result){
-         console.log(result);
-         // 👉 해당 메서드가 이미지 CallBack Function
-         showUploadImages(result);
-        },
-        error : function(jqXHR, textStatus, errorThrown ){
-            console.log(textStatus);
-        }
-    })
- }
- 
- 
-//get Image
-function showUploadImages(arr){
-    console.log("arr",arr);
-    // 1 . 이미지를 넣을 Div 지정
-    const divArea = document.querySelector(".uploadResult");
-    // 2 . 파일 업로드 후 받아온 데이터를 파싱하여 URL에 추가
-    arr.map( (data) => {
-       return "<img src='/display?fileName=" +  data['imageURL'] + "'>" })
-    .forEach( (img) => divArea.insertAdjacentHTML("beforeend",img));
-}
- 
-</script>
-
-```
-
-<br/>
-- Result DTO Class 🔽
-
-```java
-//java
-
-/**
- * 💬 Serializable(직렬화) 란 ?
- * - 자바 시스템 내부에서 사용되는 객체 또는 데이터를 외부의 자바 시스템에서도
- *   사용할 수 있도록 <strong>Byte(바이트)</strong> 형태로 데이터를 변환하는 기술이다.
- * - 시스템적으로 JVM의 Runtime Data Area(Heap 또는 Stack영역)에 상주하고 있는 객체 데이터를
- *   Byte(바이트) 형태로 변환하는 기술과 직렬화된 바이트 형태의 데이터를 객체로 변환하여 JVM으로 상주시키는
- *   형태를 말하기도한다.
- *
- * 💬 Serializable(직렬화) 사용이유 ?
- * - 서블릿 세션들은 대부분의 세션의 Java 직렬화를 지원하고 있다, 단순히 서블릿 메모리 위에서
- *   어플리케이션을 사용할 것이면 굳이 직렬화가 필요없지만, <strong>파일로 저장하거나
- *   세션 클러스트링, DB를 저장하는 옵션등을 선택하게되면 직렬화가 필요하다.</strong>
- * */
-public class UploadResultDTO implements Serializable {
-
-  private String fileName;
-  private String uuid;
-  private String folderPath;
-
-
-  /***
-   * 👍 하단 getter Method는
-   *   - ImageURL
-   *   - ThumbnailURL
-   *   라는 2개의 변수가 없지만 해당 class의 객체 생성 시
-   *   자동으로 추가된다.
-   *
-   *  ✔ 단 메서드 명의 get 부분을 바꿀 시 생성 X getter 로 인식하지 못해서임!
-   * **/
-
-  /**
-   * Full Path 를 가져올떄 사용하기 위함
-   * */
-  public String getImageURL() {
-    try {
-      // 💬  URLEncoder.encode() 란 ?
-      //     URL에는 여러가지 규칙이 있고 그 규칙에 사용되는 문자들이 정해져있기 때문에 특정한 값들은 규칙에 맞게 변환되어야 합니다.
-      //     또는 쿠키와 같이 한글을 표현하지 못하는 경우 한글을 ASCII값으로 인코딩해주야 합니다.
-      return URLEncoder.encode(folderPath + File.separator + uuid + "_" + fileName, StandardCharsets.UTF_8);
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
-    return "";
-  }
-}    
-```
-
-<br/>
-- 이미지를 가져오는 Business Logic 🔽
-
-```java
-//java - Controller
-
-@Controller
-@Log4j2
-public class UploadController {
-  @GetMapping("/display")
-  public ResponseEntity<byte[]> geFile(String fileName, String size){
-
-    // 1 . return Data
-    ResponseEntity<byte[]> result = null;
-
-    try {
-      // 2 . 받아온 File src 를 decoding : UTF-8
-      String srcFileName = URLDecoder.decode(fileName, StandardCharsets.UTF_8);
-
-      log.info("fileName :: "+ srcFileName);
-
-      /** 👉 현재 Default로 썸네일 경로가 들어오고 있음
-       * File.separator+ srcFileName   :: \2022\11\21/s_7b71fbdc-90dd-44e2-92ba-27a23e3597be_권정열-R10421.jpg
-       * */
-      // 3 . File 객체 생성 ( Root Path + 디코딩된 파일 경로 + 파일명 )
-      File file = new File(uploadPath + File.separator+ srcFileName);
-
-      //파일의 Dir + 썸네일 경로
-      log.info("file ::" + file);
-      
-      /**
-       * @Description : 원본이미지를 구하기 위한 로직
-       *               Parameter인 Size의 유무체르로 구분한다
-       * */
-      if(size != null && size.equals("1")){
-        /***
-         * file.getParent(),              :: 파일의 Dir 경로
-         * file.getName().substring(2)    :: 7b71fbdc-90dd-44e2-92ba-27a23e3597be_권정열-R10421.jpg
-         *
-         * @Description : .substring(2) 이유는 받다오는 이미지의 주소값은 썸네일의 주소값으로 항상
-         *                 _s 가붙어 있으므로 해당 앞부분을 제외하면 원본 이미지의 주소임!
-         *
-         */
-        file = new File(file.getParent(), file.getName().substring(2));
-        /*
-         * 파일의 Dir 경로 + 7b71fbdc-90dd-44e2-92ba-27a23e3597be_권정열-R10421.jpg
-         **/
-
-      } 
-      
-      
-      // 4 . Header 객체 생성
-      HttpHeaders headers = new HttpHeaders();
-
-      /** 5 . Header 값 추가
-       * MIME타입 처리
-       *
-       * 해주는 이유❔
-       *  - 파일의 확장자에따라 브라우저에 전송하는 MIME타입이 달려쟈아 하므로
-       *
-       *  Files.probeContentType(Path)❔
-       *  - 해당 경로의 파일의 확장자를 확인함 단! 확인하지 못하면 null을 반환함
-       * */
-      headers.add("Content-Type", Files.probeContentType(file.toPath()));
-      //파일 데이터 처리
-
-      result = ResponseEntity.ok()                        // 200 oK
-              .headers(headers)                           // Header 추가
-              .body(FileCopyUtils.copyToByteArray(file)); // byte[]로 만들어서 반환
-
-    }catch (Exception e){
-      e.printStackTrace();
-      return new ResponseEntity<byte[]>(HttpStatus.INTERNAL_SERVER_ERROR);
-    }
-
-    return result;
-  }    
-}
-
-```
-
-<br/>
-<hr/>
-
-<h3>9 ) 썸네일 생성 [ Thumbnailator ]</h3>
-
-- Dependencies 추가 🔽
+### Dependencies 
 ```groovy
-//build.gradle
-
-//...code...
-
 dependencies {
-
-  //...code...   
-  
   // https://mvnrepository.com/artifact/net.coobird/thumbnailator
   implementation group: 'net.coobird', name: 'thumbnailator', version: '0.4.18'
-
-  //...code...
-  
 }
-
-//...code...
-
 ```
 
-<br/>
-
-- Thumbnailator 저장 Business Logic  🔽
+### Thumbnailator 저장 
 
 ```java
-//java - Controller 
-
 @Controller
 @Log4j2
 public class UploadController {
 
   @PostMapping("/uploadAjax")
   public ResponseEntity<List<UploadResultDTO>> uploadFile(MultipartFile[] uploadFiles) {
-    // 👉 내부코드는 같기에 스킵 추가 부분만 작성함.  
-    //...code ...
     
     Path savePath = Paths.get(saveName);
     try {
@@ -1268,50 +457,8 @@ public class UploadController {
       e.printStackTrace();
     }//try -catch
     
-    //...code ...
   }
     
 }
 
-```
-
-<br/>
-- Thumbnailator 가져오는 Business Logic 🔽
-
-```java
-//java - Controller
-
-@Controller
-@Log4j2
-public class UploadController {
-  @GetMapping("/display")
-  public ResponseEntity<byte[]> geFile(String fileName, String size){
-    // 👉 내부코드는 같기에 스킵 추가 부분만 작성함.  
-    //...code ...
-    
-    //try...
-    
-      // 2 . 받아온 File src 를 decoding : UTF-8
-      String srcFileName = URLDecoder.decode(fileName, StandardCharsets.UTF_8);
-
-      log.info("fileName :: "+ srcFileName);
-
-      /** 👉 현재 Default로 썸네일 경로가 들어오고 있음
-       * File.separator+ srcFileName   :: \2022\11\21/s_7b71fbdc-90dd-44e2-92ba-27a23e3597be_권정열-R10421.jpg
-       * */
-      // 3 . File 객체 생성 ( Root Path + 디코딩된 파일 경로 + 파일명 )
-      File file = new File(uploadPath + File.separator+ srcFileName);
-
-      //파일의 Dir + 썸네일 경로
-      log.info("file ::" + file);
-
-      result = ResponseEntity.ok()                        // 200 oK
-              .headers(headers)                           // Header 추가
-              .body(FileCopyUtils.copyToByteArray(file)); // ✅ byte[]로 만들어서 반환 핵심 로직
-    
-    //try End...
-    
-    //...code ...
-  }
-}
 ```
