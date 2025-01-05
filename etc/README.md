@@ -58,111 +58,136 @@ private String AppleID;
 
 ## 2 ) Dependencies 스코프 관련
 
-- `Test Scope`로 설정 시 프로젝트가 실행 시 해당 디팬던시는 사용되지 않는다.
-  - 필요 경우에 따라 **스코프를 변경하여 개발하는 습관**을 들이자.
-    - 테스트에 사용할 DB는 스코프를 그에 맞게 변경
-- ex) h2 Database의 경우 테스트로만 사용 예정
-  - Maven
-    ```xml
-    <deepndency>
-      <groupId>com.h2database</groupId>
-      <artifactId>h2</artifactId>
-      <!--    <scope>runtime</scope> -->
-      <!-- 변경 -->
-      <scope>test</scope>
-    </deepndency>
-    ```
-  - Gradle
-    ```groovy
-    dependencies {
-    //runtimeOnly 'com.h2database:h2'
-    /** 변경  */
-    testImplementation 'com.h2database:h2'
-    }
-    ```
-    | 스코프 | Maven 설정 | Gradle 설정 | 설명 |
-    |-----------------|--------------------------------------|--------------------------------------------|--------------------------------------------|
-    | 컴파일 | `<scope>compile</scope>` | `implementation 'group:artifact:version'` | 모든 빌드 단계에서 사용되는 기본적인 의존성 범위 |
-    | 컴파일 전용 | `<scope>provided</scope>` | `compileOnly 'group:artifact:version'` | 컴파일 시에만 사용되며, 런타임에서는 제외됨 |
-    | 런타임 전용 | `<scope>runtime</scope>` | `runtimeOnly 'group:artifact:version'` | 런타임 시에만 사용되며, 컴파일 시에는 사용되지 않음 |
-    | 시스템 | `<scope>system</scope>` | 사용하지 않음 (사용 시에는 추가 설정 필요) | 시스템에 직접 설치된 JAR 파일과 같은 외부 JAR 파일에 대한 의존성 |
-    | 테스트 | `<scope>test</scope>` | `testImplementation 'group:artifact:version'`| 테스트 코드에서만 사용되는 의존성 |
-    | 어노테이션 프로세서 | `<scope>compile</scope>` + 어노테이션 프로세서 플러그인 | `annotationProcessor 'group:artifact:version'` | 컴파일 시에만 사용되는 어노테이션 프로세서 |
-
-## 3 ) Entity 생성
-
-- Java Bean 스팩에 맞게 구현하며,  빌더 패턴만 사용하게 끔 하지 말자
-- `@Builer`는 매개변수가 없는 **디폴트 생성자를 생성** 메서드를 **만들어 주지 않는다.**
-  - 따라서 `@NoArgsConstructor`를 사용하라면 `@AllArgsConstructor`는 항상 같이 따라 다닌다 보면 된다.
-- `@EqualsAndHashCode`를 사용하면 `StackOverFlow`가 생길 수 있는 일을 미연에 방지가 가능하다.
-  - 지정한 값을 기준으로 `Entity`간의 비교가 가능해지기 떄문
-  - Set형태로 여러개 지정이가능하다
-- `@Data`를 사용하지 않는 이유 또한 위와 같은 이유이다 **EqualsAndHashCode**를 모든 필드로 만들어 버림
-  - 다른 Entity를 `상호참조`로 인해 `StackOverFlow`가 발생 할 수 있다.
-
-- ### Entity 코드
-  ```java
-  @Builder 
-  @AllArgsConstructor
-  @NoArgsConstructor
-  @Getter
-  @Setter
-  /**
-  * 지정한 값을 기준으로 entity간의 비교가 가능해짐
-  * - 사용을 하지 않으면 모든 값을 기준으로 비교하는데 이떄 "상호 참조"떄문에 stackoverflow가 발생할 수 도 있음
-  * - 원한다먄 Set 형태로도 여러개의 비교 값을 지정이 가능함
-  *   - ex) ( of = {"id", "name"})
-  * ✨ 여기서도 중요한건  stackoverflow가 발생하지 않게 EqualsAndHashCode에는
-  *    다른 Entity를 참조하는 필드를 넣지 않느 것이다.
-  * */
-  @EqualsAndHashCode( of = "id")
-  // 😱 @Data  <<가 있지만 Entity에서는 사용하지말자 위에서 말한 EqualsAndHashCode를 모든 필드를 대상으로 만들기 떄문이다.
-  public class Event {
-    private Integer id;
-    private boolean offline;
-    /** code.. */
+- `Test Scope`로 설정 시 프로젝트가 실행 시 **해당 dependencies는 사용되지 않음**
+  - 필요 경우에 따라 **scop를 변경하여 개발하는 습관**을 들이자.
+    - 테스트에 사용할 DB는 scop를 그에 맞게 변경
+### ex) h2 Database의 경우 Test 에만 사용 시
+- Maven
+  ```xml
+  <deepndency>
+    <groupId>com.h2database</groupId>
+    <artifactId>h2</artifactId>
+    <!--    <scope>runtime</scope> -->
+    <!-- 변경 -->
+    <scope>test</scope>
+  </deepndency>
+  ```
+- Gradle
+  ```groovy
+  dependencies {
+  //runtimeOnly 'com.h2database:h2'
+  /** 변경  */
+  testImplementation 'com.h2database:h2'
   }
   ```
 
+| 스코프 | Maven 설정 | Gradle 설정 | 설명 |
+|-----------------|--------------------------------------|--------------------------------------------|--------------------------------------------|
+| 컴파일 | `<scope>compile</scope>` | `implementation 'group:artifact:version'` | 모든 빌드 단계에서 사용되는 기본적인 의존성 범위 |
+| 컴파일 전용 | `<scope>provided</scope>` | `compileOnly 'group:artifact:version'` | 컴파일 시에만 사용되며, 런타임에서는 제외됨 |
+| 런타임 전용 | `<scope>runtime</scope>` | `runtimeOnly 'group:artifact:version'` | 런타임 시에만 사용되며, 컴파일 시에는 사용되지 않음 |
+| 시스템 | `<scope>system</scope>` | 사용하지 않음 (사용 시에는 추가 설정 필요) | 시스템에 직접 설치된 JAR 파일과 같은 외부 JAR 파일에 대한 의존성 |
+| 테스트 | `<scope>test</scope>` | `testImplementation 'group:artifact:version'`| 테스트 코드에서만 사용되는 의존성 |
+| 어노테이션 프로세서 | `<scope>compile</scope>` + 어노테이션 프로세서 플러그인 | `annotationProcessor 'group:artifact:version'` | 컴파일 시에만 사용되는 어노테이션 프로세서 |
+
+## 3 ) Entity 생성
+
+- Java Bean 스팩에 맞게 구현 필요
+- JPA는 리플렉션을 통해 객체를 생성하기 때문에 기본 생성자가 반드시 필요 하기에 `@NoArgsConstructor`가 꼭 필요
+- `@Builer`는 매개변수가 없는 **기본 생성자** 메서드를 **만들어 주지 않는다.**
+  - 빌더 클래스에서 객체를 생성할 때 모든 필드를 초기화하는 생성자를 호출하기에  `@AllArgsConstructor`는 필수이다.
+- `@EqualsAndHashCode`를 사용하면 `StackOverFlow`가 생길 수 있는 일을 미연에 방지가 가능하다.
+  - 지정한 값을 기준으로 `Entity`간의 비교가 가능해지기 떄문
+  - Set형태로 여러개 지정이가능하다
+    - `of = {"id", "name"}`
+- `@Data`를 사용하지 않는 이유 또한 위와 같은 이유이다 **EqualsAndHashCode**를 모든 필드로 만들어 버림
+  - 다른 Entity를 `상호참조`로 인해 `StackOverFlow`가 발생 할 수 있다.
+
+### Entity - 상속이 없을 경우
+```java
+@Builder 
+@AllArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Getter
+@Setter
+@EqualsAndHashCode( of = "id")
+// 😱 @Data  <<가 있지만 Entity에서는 사용하지말자 위에서 말한 EqualsAndHashCode를 모든 필드를 대상으로 만들기 떄문이다.
+public class Event {
+  private Integer id;
+  private boolean offline;
+}
+```
+
+### Entity - 상속이 있을 경우
+```java
+@Entity
+@ToString
+@Getter
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper=false)
+public class Memo {
+
+    @Comment("PK")
+    @EqualsAndHashCode.Include
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long mno;
+
+    @Comment("메모")
+    @Column(length = 200, nullable = false)
+    private String memoText;
+
+}
+```
+
 ## 4 ) ModelMapper
 
-- `DTO -> Entity` 혹은 `Entity -> DTO`와 같은 변환에 유용한 **라이브러리**이다
+```properties
+# ℹ️ `DTO -> Entity` 혹은 `Entity -> DTO`와 같은 변환에 유용한 **라이브러리** 
+```
 
-- 사용 방법
-  - 의존성 추가
-    - `implementation group: 'org.modelmapper', name: 'modelmapper', version: '3.2.0'`
-  - Bean 등록
-    ```java
-    @SpringBootApplication
-    public class RestApiApplication {
-      // Application Start Code 생략 ...
-      @Bean
-      public ModelMapper modelMapper(){ return new ModelMapper(); }
-    }
-    ```
-  - 비즈니스 로직 사용
-    -  DTO -> Entity 변환
-    - `Event event = modelMapper.map(eventDTO, Event.class);`
+### dependencies
+```groovy
+dependencies{
+  implementation 'org.modelmapper:modelmapper:3.2.0'
+}
+```
+### Config Class 추가
+```java
+@Configuration
+public class ModelMapperConfig {
+  @Bean
+  public ModelMapper modelMapper(){
+    return new ModelMapper();
+  }
+}
+```
 
-- ### ModelMapper - 사용 시 TestCode 문제
-  - 이슈 사항
-    - `@WebMvcTest` 테스트는 웹 관련 빈만 등록하기 떄문
-      - 다른 빈이 필요하면 직접 추가해야 함
-      - 특히, 테스트 시 ModelMapper와 같은 빈은 자동으로 주입되지 않는다
-      - `@MockBean`을 통해 사용하여 필요한 객체를 주입이 가능하나 번거롭다.
+### 사용 예시
+-  DTO -> Entity 변환
+  - `Event event = modelMapper.map(eventDTO, Event.class);`
 
-  - 해결 방법
-    - 테스트 시 전체 프로세싱으로 테스트한다 (통합 테스트 환경)
-      - `@SpringBootTest,@AutoConfigureMockMvc`를 통해 스터빙을 끊고 자동으로 전체 주입 받는 형식으로 구현
+### ModelMapper - 사용 시 TestCode 문제
+- 이슈 사항
+  - `@WebMvcTest` 테스트는 웹 관련 빈만 등록하기 떄문
+    - 다른 빈이 필요하면 직접 추가해야 함
+    - 특히, 테스트 시 ModelMapper와 같은 빈은 자동으로 주입되지 않는다
+    - `@MockBean`을 통해 사용하여 필요한 객체를 주입이 가능하나 번거롭다.
 
-  - 🤔 고민 했던 문제
-    - 위와 같이 통합 테스트 환경으로 테스트를 진행하는게 맞는지 고민함
-      - 강의에서는 웹쪽 관련 테스트 코드는 해당 방법일 선호하며 추천한다고 함
-        - 웹 테스트 시 많은 모킹이 필요여 번거롭고 관리 또한 힘들다
-          - 코드가 바뀌면서 전체적인 설정이 바뀔 수도 있고 그에 따라 위험도가 올라가는 문제 또한 있다
-        - 시간이 많이 들며 그럴 바에는 차라리 전체 빈을 주입받아 테스트하는 것이 효율적이라 하였다.
-    - `@SpringBootTest`를 사용하면 Application에 설정되어있는 모든 빈을 주입하여 테스트하며 실제 어플리케이션과 가장 가까운 형태로 테스트가 가능하다.
-      - API 테스트 시 슬라이싱 테스트 보다 해당 방법을 선호한다.
+- 해결 방법
+  - 테스트 시 전체 프로세싱으로 테스트한다 (통합 테스트 환경)
+    - `@SpringBootTest,@AutoConfigureMockMvc`를 통해 스터빙을 끊고 자동으로 전체 주입 받는 형식으로 구현
+
+- 🤔 고민 했던 문제
+  - 위와 같이 통합 테스트 환경으로 테스트를 진행하는게 맞는지 고민함
+    - 강의에서는 웹쪽 관련 테스트 코드는 해당 방법일 선호하며 추천한다고 함
+      - 웹 테스트 시 많은 모킹이 필요여 번거롭고 관리 또한 힘들다
+        - 코드가 바뀌면서 전체적인 설정이 바뀔 수도 있고 그에 따라 위험도가 올라가는 문제 또한 있다
+      - 시간이 많이 들며 그럴 바에는 차라리 전체 빈을 주입받아 테스트하는 것이 효율적이라 하였다.
+  - `@SpringBootTest`를 사용하면 Application에 설정되어있는 모든 빈을 주입하여 테스트하며 실제 어플리케이션과 가장 가까운 형태로 테스트가 가능하다.
+    - API 테스트 시 슬라이싱 테스트 보다 해당 방법을 선호한다.
 
 
 ## 5 ) properties 설정 Class Mapping
@@ -207,3 +232,176 @@ private String AppleID;
       }
   }
   ```
+## 6 ) @JsonUnwrapped
+
+```properties
+# ℹ️ JSON 직렬화(serialization) 및 역직렬화(deserialization) 과정에서 중첩된 객체의 필드를 
+#     부모 객체의 필드처럼 평탄화(flatten) 하는 데 사용함
+```
+
+### 사용 방법
+- `prefix = "foo"`를 사용할 경우 직렬화 되는 대상에 prefix가 붙는다
+#### Class
+```java
+public class Address {
+    private String street;
+    private String city;
+}
+
+public class User {
+    private String name;
+
+    @JsonUnwrapped
+    // @JsonUnwrapped(prefix = "addr_")
+    private Address address;
+}
+```
+
+#### 응답 값
+- @JsonUnwrapped를 사용하지 않을 때
+```javascirpt
+{
+  "name": "John",
+  "address": {
+    "street": "123 Main St",
+    "city": "New York"
+  }
+}
+```
+
+- @JsonUnwrapped를 사용할 때:
+```javascirpt
+{
+  "name": "John",
+  "street": "123 Main St",
+  "city": "New York"
+}
+```
+
+## 7 ) MvcResult 결과 값 받기
+```java
+@SpringBootTest
+@AutoConfigureMockMvc
+class AuthControllerTest {
+    @Autowired
+    MockMvc mockMvc;
+
+    @Autowired
+    MemberRepository memberRepository;
+
+    @DisplayName("로그인_통과")
+    @Test
+    void login_통과() throws Exception {
+        String requestMemberName = "seohae";
+        // 1. MvcResult 생성 
+        MvcResult result = mockMvc.perform(post("/auth/login")
+                        .param("memberName", requestMemberName)
+                        .param("password", "12341234"))
+                .andExpect(status().isOk())
+                .andReturn();
+        
+        // 2. 응답 body 값을 문자열로 변환
+        String response = result.getResponse().getContentAsString();
+        // 3. Jackson2JsonParser 생성
+        var parser = new Jackson2JsonParser();
+        // 4. JSON구조에서 지정 key 값을 가져옴
+        String memberName = parser.parseMap(response).get("memberName").toString();
+    }
+}
+```
+
+## 8 ) SpringSecurity 인증 정보 가져오기
+```properties
+# ℹ️ 2가지 방법이 있다.
+```
+
+### SecurityContextHolder에서 받기
+```java
+public class TestClass{
+    public void getPrincipal(){
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        UserDetails userDetails = (UserDetails)principal;
+        String username = principal.getUsername();
+        String password = principal.getPassword();
+    }     
+}
+```
+
+### @AuthenticationPrincipal를 사용해서 받기
+- `@AuthenticationPrincipal`로 주입 받는 객체는 **User를 상속한 객체여야 함**
+- @AuthenticationPrincipal(experssion = "대상키") : 대상 키를 바로 뽑아 쓸 수 있음
+```java
+public class wrapClass{
+    @GetMapping("/")
+    public void test(@AuthenticationPrincipal UserAccount userAccount){ 
+    }   
+}
+```
+#### AnnotationClass 활용
+- 메타 어노테이션을 지원하므로 간소화 가능
+```java
+@Target(ElementType.PARAMETER)      // 파라미터 형태로 사용 명시
+@Retention(RetentionPolicy.RUNTIME) // 언제까지 해당 어노테이션 지정 여부 : 런타임
+/**
+* ✅ 접근 대상이 anonymousUser 권한이 들어올 경우 User 객체를 타고 넘어오지 않아 응답 값이
+*    anonymousUser라는 문자열로 들어오기에 해당 expression의 유연함을 활용해서 적용해주자
+* */
+@AuthenticationPrincipal(expression = "#this == 'anonymousUser' ? null : targetKey")
+public @interface CurrentUser { }
+```
+
+## 9 ) Log 컬러 추가 방법
+### properties
+```properties
+spring.output.ansi.enabled=always
+```
+### yaml
+```yaml
+spring:
+  output:
+    ansi:
+      enabled: always
+```
+
+## 10 ) 문자 인코딩을 강제로 지정
+```properties
+# ℹ️ HTTP 응답 헤더의 Content-Type에 명시된 문자 인코딩이 항상 적용되도록 강제합니다.
+#  ㄴ> 예를 들어, 응답 헤더에 Content-Type: text/html; charset=UTF-8가 포함되도록 함
+```
+### application.yml
+```yaml
+server:
+  servlet:
+    encoding:
+      charset: UTF-8    # UTF-8 인코딩을 지정
+      force: true       # 요청(Request)에도 UTF-8 인코딩 강제 적용
+      force-response: true  # 응답(Response)에도 UTF-8 인코딩 강제 적용
+```
+
+## 11 ) Request 검증
+
+### 엄격한 Request 값 제한
+```properties
+# ℹ️ 사용 유무는 권장이 아니며 개발 상황에 맞게 사용한다.
+#    ㄴ 좀 더 엄격하게 사용자의 요청값에 제한을 두는 것
+```
+#### properties
+```properties
+spring.jackson.deserialization.fail-on-unknown-properties=true
+```
+
+#### 흐름
+- Client
+  - Send Request To Server : `{name : "yoo",age : 100}`
+- Server DTO
+```java
+@Getter
+class RequestDTO{
+    private String name;
+}
+```
+- Result 
+  - Error 발생
+  - 서버가 허용하지 않는 age를 넘기므로 예외를 발생 시킴
+
+// TODO Request 값 체크
