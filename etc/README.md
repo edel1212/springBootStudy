@@ -306,6 +306,11 @@ class AuthControllerTest {
         var parser = new Jackson2JsonParser();
         // 4. JSON구조에서 지정 key 값을 가져옴
         String memberName = parser.parseMap(response).get("memberName").toString();
+
+        // 또 다른 방법
+        //  String response = result.getResponse().getContentAsString();
+        // String floorPlanDataId = JsonPath.parse(response).read("$.data.floorPlanData.id");
+
     }
 }
 ```
