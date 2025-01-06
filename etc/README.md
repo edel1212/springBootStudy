@@ -409,4 +409,142 @@ class RequestDTO{
   - Error 발생
   - 서버가 허용하지 않는 age를 넘기므로 예외를 발생 시킴
 
-// TODO Request 값 체크
+## 11 ) Request Validation Check
+
+### dependencies
+```groovy
+dependencies{
+  implementation 'org.springframework.boot:spring-boot-starter-validation'
+}
+```
+
+### DTO 
+- `@NotEmpty, @NotNull, @Min(0), @Max(0)` 등을 사용하여 검증
+```java
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
+public class LoginReq {
+    @NotNull
+    private String id;
+    @NotNull
+    private String password;
+}
+```
+
+### Controller
+- Parameter 내 `@Valid` 지정으로 감시 대상 설정
+- DTO내 검증 기준에 맞지 않으면 BindingResult 객채 내 에러를 담고 있음
+  - boolean Type
+```java
+public class MemberController{
+    @PostMapping(value = "/sign-in", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<EntityModel<JwtToken>> signIn(@Valid @RequestBody LoginReq loginReq
+            // ℹ️ 해당 객체에 검증 결과를 담고 있음
+            , BindingResult bindingResult){
+        // 값 검증
+        if(bindingResult.hasErrors()) throw new InputValidException();
+        // code..
+        return ResponseEntity.ok().body(entityModel);
+    }
+}
+```
+### 11 - 1 ) Request Validation Check - @Component  활용
+- 복잡한 예외 처리를 할 수 있는 Class 를 만들어 예외 처리
+#### Validation Check Config Class
+```java
+@Component // Bean 등록
+public class EventValidator {
+    /**
+     * ℹ️ 실제 검증을 처리할 Method
+     * - 각각 Parmamter로 ( 검증 대상DTO, 예외를 핸들링할 객체 )
+     * */
+    public void validate(EventDTO eventDTO, BindingResult bindingResult){
+        // 👉 최대 값을 넘는지 체크하는 로직
+        if(eventDTO.getBasePrice() > eventDTO.getMaxPrice()
+            && eventDTO.getMaxPrice() > 0 ){
+            // 👉 rejectValue()를 통해 에러 주입 ( 필드명, 에러코드, 에러 메세지 )
+            bindingResult.rejectValue("basePrice", "wrongValue", "BasePrice is wrong");
+            bindingResult.rejectValue("maxPrice", "wrongValue", "MaxPrice is wrong");
+        }//if
+
+        // 예외 처리 두번째
+        LocalDateTime eventEndTime =  eventDTO.getEndEventDateTime();
+        if(eventEndTime.isBefore(eventDTO.getBeginEventDateTime())){
+            bindingResult.rejectValue("endEventDateTime", "wrongValue", " endEventDateTime is wrong");
+        }
+
+        /** 위와 같은 방식으로 차례차례 검증 로직을 늘려 전부 Pass해야 정상 Request로 지정 */
+    }
+}
+```
+
+#### Controller
+-  의존성 주입을 통해 `BindingResult` 내 예러 추가
+```java
+public class EventController{
+    // 👉 의존성 주입
+    private final EventValidator eventValidator;
+    
+    @PostMapping(value = "/event", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<EntityModel<JwtToken>> eventTest(@Valid @RequestBody EventDTO eventDTO
+            , BindingResult bindingResult){
+        
+        // 👉 검증 로직으로 확인
+        eventValidator.validate(LoginReq, bindingResult);
+        
+        // 값 검증
+        if(bindingResult.hasErrors()) throw new InputValidException();
+        // code..
+        return ResponseEntity.ok().body(entityModel);
+    }
+}
+```
+
+## 12 ) `Resource` Interface
+```properties
+# ℹ️ 로우 레벨 자원들에 접근을 추상화하기 위한 인터페이스
+```  
+## 주요 메서드
+- getInputStream() :
+  - 자원을 탐색하여 열고 자원을 읽기 위해서 **InputStream 타입으로 반환**
+- exists() : 
+  - 접근하고자 하는 **자원 존재하는지 확인**
+- isOpen() : 
+  - **해당 자원에 접근**하고 있는 **스트림**이 있는지 **여부를 확인**
+  - `true`일 경우 입력 스트림을 여러번 읽을 수 없음, 자원 누수를 방 지하기 위해 한번만 읽은 다음 닫아야 함
+- getDescription() :
+  - 자원을 사용할때 **오류 출력**에 사용되는 **설명을 반환**
+
+### 12 - 1 ) Resource 구현 Class
+- UrlResource
+  - 파일 시스템, 웹 서버, FTP 서버, 클래스패스 등 다양한 위치의 리소스를 URL로 참조할 수 있다
+    - 모든 URL들은 **표준화된 문자열 접두어**를 가짐
+    - **접두어에 따른** Resource 인스턴스가 생성
+    - URL 경로와 같이 API 메서드 호출시 묵시적으로 UrlResource 인스턴스 생성됨
+      -  파일 경로 시 : `file:`   FileSystemResource 인스턴스로 생성
+      -  HTTP 시 : `https:`  UrlResource 인스턴스가 생성
+      -  FTP 시 : `ftp:`
+- ClassPathResource
+  - 프로젝트 내부의 파일을 읽어올 경우 사용
+  -  쓰레드 컨텍스트 클래스 로더를 사용하거나  자원들을 불러오기 위해 사용
+  - `src/main/resoruces/` 부터 **바로 접근 가능**
+  - EX) 
+  - `ClassPathResource resource = new ClassPathResource("data.json");`
+- FileSystemResource
+  -  **"java.io.File"** 클래스를 다루기 위한 클래스
+- PathResource
+  - `java.nio.file.Path`를 기반으로 파일 시스템의 리소스를 처리
+  - 파일 경로를 독립적으로 다룰 수 있도록 하며, **File보다 더 유연하고 현대적인 파일 작업을 지원**
+- ServletContextResource
+  - 웹 애플리케이션의 루트 디렉토리 내부에서 상대적인 경로를 해석하는 ServletContext 자원들을 위해서 구현된 클래스
+  - 루트 디렉토리를 기준으로 상대 경로를 해석하여 리소스를 처리
+- InputStreamResource
+  - 특정 리소스 구현이 적용되지 않는 경우에만 사용해야 합니다. 
+    - 특히 ByteArrayResource나 파일 기반의 Resource 구현체가 해당 함
+  - 반복 읽기가 필요한 작업에는 부적합
+  - 주로 간단한 데이터 스트림 전달 작업에 사용
+- ByteArrayResource
+  - 클래스는 바이트 배열을 래핑하는 클래스
+  - 파일 시스템을 사용하지 않고도 데이터를 다룰 수 있어, 임시 데이터 처리, 메모리 내 데이터 처리, 테스트 환경에서 유용
