@@ -506,7 +506,7 @@ public class EventController{
 ```properties
 # ℹ️ 로우 레벨 자원들에 접근을 추상화하기 위한 인터페이스
 ```  
-## 주요 메서드
+### 12 - 1 ) 주요 메서드
 - getInputStream() :
   - 자원을 탐색하여 열고 자원을 읽기 위해서 **InputStream 타입으로 반환**
 - exists() : 
@@ -517,7 +517,7 @@ public class EventController{
 - getDescription() :
   - 자원을 사용할때 **오류 출력**에 사용되는 **설명을 반환**
 
-### 12 - 1 ) Resource 구현 Class
+### 12 - 2 ) Resource 구현 Class
 - UrlResource
   - 파일 시스템, 웹 서버, FTP 서버, 클래스패스 등 다양한 위치의 리소스를 URL로 참조할 수 있다
     - 모든 URL들은 **표준화된 문자열 접두어**를 가짐
@@ -548,3 +548,42 @@ public class EventController{
 - ByteArrayResource
   - 클래스는 바이트 배열을 래핑하는 클래스
   - 파일 시스템을 사용하지 않고도 데이터를 다룰 수 있어, 임시 데이터 처리, 메모리 내 데이터 처리, 테스트 환경에서 유용
+
+### 12 - 3 ) Header Content-Disposition 통한 다운로드
+```properties
+# ✅ HTTP Response Header에 들어가는 Content-Disposition은 HTTP Response Body에 오는 컨텐츠의 기질/성향을 알려주는 속성이다.
+#    -  Content-Disposition에 attachment를 주는 경우로, 이때 filename과 함께 주게 되면 Body에 오는 값을 다운로드 받으라는 뜻이 된다.
+#       ㄴ Ex) `Content-Disposition: attachment; filename="hello.jpg"`
+```
+#### Controller
+```java
+public class FileStorageController {
+    private final FileStorageService fileStorageService;
+    
+    // 파일 다운로드
+    @GetMapping("/download/model/{fileId}")
+    public ResponseEntity<Resource> downloadModel(@PathVariable Long fileId) throws IOException {
+        FileStorageDto fileStorageDto   = fileStorageService.getFileInfo(fileId);
+        String contentDisposition ="attachment; filename=" + fileStorageDto.getOriginFileName() + "";
+        String fullFilePath             = fileStorageService.fullFilePath(fileStorageDto);
+        Resource resource               = new FileSystemResource(fullFilePath);
+        String contentType              = Files.probeContentType(resource.getFile().toPath());
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, contentDisposition)
+                .header(HttpHeaders.CONTENT_TYPE, contentType)
+                .body(resource);
+    }
+
+    // 이미지를 불러옴
+    @GetMapping("/icon/{fileId}")
+    public ResponseEntity<Resource> downloadIcon(@PathVariable Long fileId) throws IOException {
+        FileStorageDto fileStorageDto   = fileStorageService.getFileInfo(fileId);
+        String fullFilePath             = fileStorageService.fullFilePath(fileStorageDto);
+        Resource resource               = new FileSystemResource(fullFilePath);
+        String contentType              = Files.probeContentType(resource.getFile().toPath());
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_TYPE, contentType)
+                .body(resource);
+    }
+}  
+```
