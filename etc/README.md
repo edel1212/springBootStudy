@@ -587,3 +587,43 @@ public class FileStorageController {
     }
 }  
 ```
+## 13 ) ServletUriComponentsBuilder
+```properties
+✅ HTTP 요청의 현재 컨텍스트를 기반으로 URI를 생성할 때 사용
+```
+
+### 주요 메서드
+- `fromCurrentRequest()`: 현재 요청 정보를 기반으로 URI를 빌드합니다.
+- `fromCurrentContextPath()`: 컨텍스트 경로를 기반으로 URI를 빌드합니다.
+- `path(String path)`: URI 경로에 추가적인 경로를 설정합니다.
+- `queryParam(String name, Object value)`: URI에 쿼리 파라미터를 추가합니다.
+- `build()`: URI를 빌드합니다.
+- `toUri()`: 최종 URI 객체를 반환합니다.
+
+### 사용 예시
+- fromCurrentRequest()
+  - 현재 요청의 URI 정보를 기반으로 URI 빌드를 시작합니다.
+- path("/{id}")
+  - URI 경로에 추가적인 요소를 추가합니다.
+
+- buildAndExpand(savedUser.getId())
+  - 경로 변수({id})에 값을 동적으로 바인딩합니다.
+
+- toUri()
+  - 최종적으로 URI 객체를 생성합니다
+```java
+@PostMapping("/users")
+public ResponseEntity<User> createUser(@RequestBody User user) {
+    User savedUser = userService.save(user);
+
+    // 생성된 리소스의 URI 생성
+    URI location = ServletUriComponentsBuilder
+            .fromCurrentRequest()
+            .path("/{id}")
+            .buildAndExpand(savedUser.getId())
+            .toUri();
+
+    // Location 헤더와 함께 응답 반환
+    return ResponseEntity.created(location).body(savedUser);
+}
+```
