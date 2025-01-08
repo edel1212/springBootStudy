@@ -627,3 +627,68 @@ public ResponseEntity<User> createUser(@RequestBody User user) {
     return ResponseEntity.created(location).body(savedUser);
 }
 ```
+### Load Balancing 환경 일 경우
+
+#### X-Forwarded를 사용해서 처리
+
+- ##### Nginx 설정
+  - `X-Forwarded-*` 헤더를 설정
+```yaml
+server {
+    listen 80;
+    server_name yourdomain.com;
+
+    location / {
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-Host $host;
+        proxy_set_header X-Forwarded-Port $server_port;
+        proxy_pass http://backend_servers;
+    }
+}
+```
+
+- ##### SpringBoot 설정
+- properties 설정 혹은 Filter 설정을 통해 적용 가능
+
+##### properties 방식일 경우
+- 쉽게 설정이 가능함 2.6 버전 이상부터 사용 가눙
+```properties
+server.forward-headers-strategy=framework
+```
+##### filter 사용일 경우
+- 세부적인 설정이 가능함
+```java
+@Configuration
+public class AppConfig {
+
+  @Bean
+  public FilterRegistrationBean<ForwardedHeaderFilter> forwardedHeaderFilter() {
+    // ForwardedHeaderFilter 인스턴스를 생성합니다.
+    ForwardedHeaderFilter filter = new ForwardedHeaderFilter();
+
+    // ForwardedHeaderFilter를 등록하기 위한 FilterRegistrationBean 객체를 생성합니다.
+    FilterRegistrationBean<ForwardedHeaderFilter> registration = new FilterRegistrationBean<>(filter);
+
+    // 필터가 작동할 DispatcherType을 설정합니다.
+    // - REQUEST: 클라이언트 요청에 대해 작동
+    // - ASYNC: 비동기 요청 처리 중 작동
+    // - ERROR: 오류 처리 중 작동
+    registration.setDispatcherTypes(DispatcherType.REQUEST, DispatcherType.ASYNC, DispatcherType.ERROR);
+
+    // 필터의 우선순위를 설정합니다.
+    // - Ordered.HIGHEST_PRECEDENCE: 필터 체인에서 가장 먼저 실행되도록 설정
+    registration.setOrder(Ordered.HIGHEST_PRECEDENCE);
+
+    // 필터가 동작할 URL 패턴을 설정합니다.
+    // - "/absoluteURLWithFilter": 이 경로로 들어오는 요청에 대해서만 필터가 적용됩니다.
+    registration.setUrlPatterns(List.of("/absoluteURLWithFilter"));
+
+    // FilterRegistrationBean 객체를 반환하여 Spring Context에 필터를 등록합니다.
+    return registration;
+  }
+
+}
+```
+
+![img.png](img.png)
