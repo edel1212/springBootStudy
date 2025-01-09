@@ -13,6 +13,7 @@
     - 2 ) JPA(Java Persistence API)❔
     - 3 ) JPA, DB 추가 및 DB접속 정보 설정
     - 4 ) Entity Class란❔
+      - 4 - 1 ) 복합키 처리 방법
     - 5 ) JpaRepository란❔
     - 6 ) JpaRepository를 사용한 CRUD
     - 7 ) JpaRepository를 사용한 Paging
@@ -28,7 +29,7 @@
 
 <hr/>
 
-- 💬 **[ [이동](https://github.com/edel1212/springBootStudy/tree/main/spring-boot-basic/ex04) ]** :: REST API, Swagger, RestTemplate, WebClient 사용 방법
+- 💬 **[ [이동](https://github.com/edel1212/springBootStudy/tree/main/spring-boot-basic/ex04) ]** :: REST API, Swagger
     - 1 ) REST API 란❔
     - 2 ) @RestController 란❔
     - 3 ) @RequestMapping의 Consumes 와 Produces 란❔
