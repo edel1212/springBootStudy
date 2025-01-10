@@ -26,7 +26,8 @@ s}
     - 기존과 같은 spring -> **datasource** 하위 작성
   - 서브
     - spring -> **<사용자 지정 값>** 하위 작성
-
+- ✅ ddl-auto 설정
+  - 일반적인 JPA의 ddl 설정과 같게 설정해도 해당 설정을 읽지 않기에 `ConfigClass`에서 **추가 설정**이 **필요**하다	
 
 ```yaml
 spring:
@@ -36,9 +37,10 @@ spring:
     username: root
     password: 123
     driver-class-name: org.mariadb.jdbc.Driver
-    jpa:
-      hibernate:
-        ddl-auto: update
+  # 사실상 적용되지 않음 - Config Class에서 해당 값을 읽어 처리 필요
+  jpa:
+    hibernate:
+      ddl-auto: update
 
   sub-db:
     jdbc-url: jdbc:mariadb://localhost:3333/foo
@@ -62,6 +64,9 @@ spring:
   - transactionManagerRef : **트랜잭션 설정** 값을 읽을 **Bean 이름**
 - `@ConfigurationProperties(prefix = "spring.datasource")` 
   - 설정을 통해 DB Connection 설정 값을 properties에서 읽음
+- `Environment`를 통해 환경 변수를 읽어옴
+  - JPA ddl 설정을 위해 필요
+  -  `environment.getProperty("해당 yml 내 값 위치", "없을 경우 기본 값");`
 
 ```java
 @Configuration
@@ -93,13 +98,26 @@ public class PrimaryConfig {
     @Bean(name = "primaryEntityManager")
     public LocalContainerEntityManagerFactoryBean primaryEntityManager(
             EntityManagerFactoryBuilder builder,
-            @Qualifier("primaryDataSource") DataSource dataSource) {
+            @Qualifier("primaryDataSource") DataSource dataSource,
+            // 환경 변수를 읽기 위함
+            Environment environment  ) {
+
+        // Hibernate DDL 옵션 설정
+        Map<String, String> jpaProperties = new HashMap<>();
+        // 설정 파일에서 DDL 옵션 값 읽기
+        String ddlAuto = environment.getProperty("spring.jpa.hibernate.ddl-auto", "validate"); // 기본값 "validate"
+        System.out.println("--------------------");
+        System.out.println(ddlAuto);
+        System.out.println("--------------------");
+        jpaProperties.put("hibernate.hbm2ddl.auto", ddlAuto);
+
         return builder
                 .dataSource(dataSource)
                 // Entity 클래스가 위치한 패키지를 지정
                 .packages("com.yoo.multipleDB.entity.primary")
                 // 해당 데이터 소스의 persistence unit 이름 지정
                 .persistenceUnit("primarydb")
+                .properties(jpaProperties) 
                 .build();
     }
 
