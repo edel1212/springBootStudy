@@ -1,5 +1,6 @@
 package com.yoo.webflux_study.config;
 
+import io.netty.channel.ChannelOption;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 import io.netty.handler.timeout.WriteTimeoutHandler;
 import org.springframework.context.annotation.Bean;
@@ -24,7 +25,7 @@ public class WebClientConfig {
         HttpClient httpClient = HttpClient.create()
                 // 연결 타임아웃 설정 (5000ms)
                 .responseTimeout(Duration.ofMillis(5000)) // 응답 대기 시간
-                .option(io.netty.channel.ChannelOption.CONNECT_TIMEOUT_MILLIS, 5000) // 연결 타임아웃
+                .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 5000) // 연결 타임아웃
                 // 이 핸들러는 서버로부터 응답을 읽을 때 지정된 시간(밀리초) 동안 응답이 오지 않으면 타임아웃을 발생시킵니다.
                 .doOnConnected(conn -> conn
                         // 1.	읽기 타임아웃: 서버에서 응답을 받는 데 5초를 초과하면 타임아웃 에러 발생
