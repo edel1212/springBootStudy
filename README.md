@@ -37,7 +37,7 @@
 
 <hr/>
 
-- 💬 **[ [이동](**https://github.com/edel1212/springBootStudy/tree/main/springBootMailStudy**) ]** :: Web-Flux
+- 💬 **[ [이동](https://github.com/edel1212/springBootStudy/tree/main/webflux-study) ]** :: Web-Flux
   - 비동기 처리
   - 동기 처리
 
