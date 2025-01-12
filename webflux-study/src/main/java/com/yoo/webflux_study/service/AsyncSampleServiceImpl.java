@@ -59,6 +59,7 @@ public class AsyncSampleServiceImpl {
                  * */
                 // 스트림이 어떻게 종료되었는지에 상관없이 무조건 실행되는 종료 시점 처리용 메서드로, 주로 로그 남기기, 리소스 정리, 모니터링 같은 작업에 활용됩니다.
                 .doOnTerminate(() -> log.info("Request to /path completed"))
+
                 ;
     }
 
