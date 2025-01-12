@@ -12,7 +12,6 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 @Log4j2
 public class SyncServiceImpl {
-
     private final WebClient webClient;
 
     public ResDTO getPathVariable(String variable) {
@@ -48,5 +47,4 @@ public class SyncServiceImpl {
             return new ResDTO("9999", "Unknown Error", "Error occurred");
         }
     }
-
 }

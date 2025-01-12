@@ -271,3 +271,94 @@ public class AsyncSampleServiceImpl {
     }
 }
 ```
+
+#### 2 ) 동기식
+- `block()`을 사용한다.
+- 예와 처리 방법이 다르다.
+  - try - catch 사용
+
+```java
+@Service
+@RequiredArgsConstructor
+@Log4j2
+public class SyncServiceImpl {
+    private final WebClient webClient;
+
+    public ResDTO getPathVariable(String variable) {
+        try {
+            // Synchronous blocking call
+            return webClient
+                    .get()
+                    .uri("/path/{variable}", variable)
+                    .retrieve()
+                    .onStatus(
+                            HttpStatus.INTERNAL_SERVER_ERROR::equals,
+                            response -> response.bodyToMono(String.class).map(Exception::new))
+                    .onStatus(
+                            HttpStatus.BAD_REQUEST::equals,
+                            response -> response.bodyToMono(String.class).map(Exception::new))
+                    .bodyToMono(ResDTO.class)
+                    // Error handling
+                    .onErrorMap(error -> {
+                        log.error("Mapping error for /path: {}", error.getMessage());
+                        return new RuntimeException("Custom Exception: " + error.getMessage());
+                    })
+                    .onErrorResume(error -> {
+                        log.error("Error during request to /path: {}", error.getMessage());
+                        // Return default ResDTO in case of error
+                        return Mono.just(new ResDTO("9999", "연계 에러 발생", "Error!!"));
+                    })
+                    .doOnTerminate(() -> log.info("Request to /path completed"))
+                    // Block the Mono to get the result synchronously
+                    .block();
+        } catch (Exception e) {
+            log.error("Error occurred during synchronous request: {}", e.getMessage());
+            // Handle or propagate the exception as needed
+            return new ResDTO("9999", "Unknown Error", "Error occurred");
+        }
+    }
+}
+```
+
+## 비동기, 동기 차이점 확인 테스트
+```java
+@SpringBootTest
+public class CompareTest {
+
+    @Autowired
+    private AsyncSampleServiceImpl asyncSampleService;
+    @Autowired
+    private SyncServiceImpl syncService;
+
+    @Test
+    public void testAsync() {
+        // 비동기식 테스트
+        long asyncStart = System.currentTimeMillis();
+        System.out.println("asyncStart ::: " + asyncStart);
+        for (int i = 0; i < 5; i++) {
+            System.out.println(asyncSampleService.getPathVariable("path" + i));  // 동기식 호출
+        }
+        System.out.println("멈추지 않고 하위 로직 진행 가능!!!");
+        System.out.println("멈추지 않고 하위 로직 진행 가능!!!");
+        System.out.println("멈추지 않고 하위 로직 진행 가능!!!");
+        System.out.println("멈추지 않고 하위 로직 진행 가능!!!");
+        System.out.println("멈추지 않고 하위 로직 진행 가능!!!");
+        long asyncElapsed = System.currentTimeMillis() - asyncStart;
+        System.out.println("Total Async Time: " + asyncElapsed + "ms");
+
+    }
+
+    @Test
+    public void testSync() {
+        // 비동기식 테스트
+        long syncStart = System.currentTimeMillis();
+        System.out.println("syncStart ::: " + syncStart);
+        for (int i = 0; i < 5; i++) {
+            syncService.getPathVariable("path" + i);  // 비동기식 호출
+        }
+        System.out.println("멈추지 않고 하위 로직 진행 불가능!!!");
+        long syncElapsed = System.currentTimeMillis() - syncStart;
+        System.out.println("Total Sync Time: " + syncElapsed + "ms");
+    }
+}
+```
