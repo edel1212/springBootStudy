@@ -197,6 +197,32 @@ public class SubConfig {
 - 메인과 서브에서 설정한 패키지위치에 맞게 끔 사용하면 문제가 없이 구동 된다.
 ![img_2.png](img_2.png)
 
+### Querydls
+```properties
+# ℹ️ Querydsl 사용 설정은 Skip
+```
+- JPA의 @PersistContext 어노테이션을 사용할 경우 EntityManager 에 프록시 인스턴스를 주입시켜준다.
+- Primary DB는 기본 EntityManager를 사용하기 때문에 setEntityManager를 명시적으로 선언하지 않아도 된다.
+-  다른 데이터베이스를 사용할 때는 명시적으로 `@PersistenceContext(unitName="subEntityManager")`를 선언해야 하고, 이때 setEntityManager를 통해 EntityManager를 **수동으로 설정하는 방식이 필요**
+
+
+#### 설정 방법
+- `QuerydslRepositorySupport` Class의 setEntityManager() 메서드를 @Override 후 **PersistenceContext** 지정
+- `@PersistenceContext(unitName="subEntityManager")`에서 지정하는 unitName명은 SubDB 설정때 명시했던 EntityManager 명이다. 	
+```java
+public class EventInfoSupportImpl extends QuerydslRepositorySupport implements EventInfoSupport {
+    public EventInfoSupportImpl() { super(EventInfoView.class); }
+
+    @Override
+    @PersistenceContext(unitName="subEntityManager")
+    public void setEntityManager(EntityManager entityManager) {
+        super.setEntityManager(entityManager);
+    }
+}
+```
+
+
+
 
 ## JPA 와 Mybatis
 ```properties
